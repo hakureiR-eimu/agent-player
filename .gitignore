@@ -1,0 +1,7 @@
+node_modules/
+
+# 局内生长的数据不进版本库（profile 和目录结构进）
+agents/*/world/chat/*.md
+!agents/*/world/chat/.gitkeep
+agents/*/memory/*.md
+!agents/*/memory/.gitkeep
