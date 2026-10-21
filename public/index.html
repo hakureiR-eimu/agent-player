@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>游戏 agent 控制台</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>游戏 agent 控制台</h1>
+    <span id="modeBadge" class="badge">…</span>
+    <span id="configHint" class="hint"></span>
+  </header>
+
+  <!-- 建局 -->
+  <section id="setup" class="card hidden">
+    <h2>开一局</h2>
+    <label class="row">
+      局名：<input id="gameName" placeholder="比如：第一局" maxlength="30" />
+    </label>
+    <p class="hint">局名一身四用：游戏名目、局文件夹名、公屏大群群名、DM 的名字。飞书应用改不了名（没有 API），DM 的名字要提前在开发者后台手动改成局名。</p>
+    <fieldset>
+      <legend>拉起哪些国家</legend>
+      <div id="countries" class="countries"></div>
+    </fieldset>
+    <fieldset>
+      <legend>agent 用真的还是假的</legend>
+      <label><input type="radio" name="kind" value="fake" checked /> 假 agent（固定回复的小脚本，不调大模型，先验链路）</label>
+      <label><input type="radio" name="kind" value="real" /> 真 agent（Claude 会话，按 profile 扮演国家）</label>
+    </fieldset>
+    <button id="createBtn" class="primary">创建这局</button>
+    <p id="setupError" class="error"></p>
+  </section>
+
+  <!-- 局进行中 -->
+  <section id="game" class="hidden">
+    <section class="card">
+      <h2 id="gameTitle"></h2>
+      <p id="gameMeta" class="hint"></p>
+      <h3>公屏大群</h3>
+      <p id="mainGroup"></p>
+      <div class="row">
+        <input id="humanIds" placeholder="真人玩家的 open_id 或 user_id，逗号分隔" style="flex:1" />
+        <button id="addHumanBtn">拉真人进群</button>
+      </div>
+      <p class="hint">真人都由 DM 拉进群（DM 当群主）。open_id 在飞书开发者后台的 API 调试台能查到。</p>
+      <h3>agent</h3>
+      <table id="agentTable">
+        <thead><tr><th>国家</th><th>类型</th><th>状态</th><th>排队</th><th>轮数</th><th>会话</th><th>备注</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h3>群</h3>
+      <ul id="groupList"></ul>
+      <button id="stopBtn">结束这局（停 agent，文件夹保留）</button>
+    </section>
+
+    <section class="card">
+      <h2>聊天</h2>
+      <div id="chat" class="chat"></div>
+      <div id="sayRow" class="row hidden">
+        <input id="sayName" placeholder="你的名字" style="width:120px" />
+        <input id="sayContent" placeholder="以真人身份在公屏说话（回车发送）" style="flex:1" />
+        <button id="sayBtn">说</button>
+      </div>
+      <p id="chatHint" class="hint hidden">飞书模式下请直接去飞书群里说话，控制台只看不说。</p>
+    </section>
+  </section>
+
+  <section class="card">
+    <h2>运行日志</h2>
+    <div id="logs" class="logs"></div>
+  </section>
+
+  <script src="/app.js"></script>
+</body>
+</html>

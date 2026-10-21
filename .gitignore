@@ -1,7 +1,13 @@
 node_modules/
 
+# 飞书应用凭证不进版本库
+config/feishu.json
+
 # 局内生长的数据不进版本库（profile 和目录结构进）
 agents/*/world/chat/*.md
 !agents/*/world/chat/.gitkeep
 agents/*/memory/*.md
 !agents/*/memory/.gitkeep
+
+# 局文件夹（建局时生成在仓库根，形如 局名/agents/<tag>/）整局不进 git
+/*/agents/

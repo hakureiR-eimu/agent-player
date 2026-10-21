@@ -1,0 +1,84 @@
+body {
+  margin: 0;
+  padding: 16px;
+  background: #14161a;
+  color: #dfe3ea;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+}
+header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 16px; margin: 4px 0 10px; }
+h3 { font-size: 14px; margin: 14px 0 6px; color: #9aa4b2; }
+.badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; }
+.badge.ok { background: #1d5c3a; color: #9fe6c0; }
+.badge.local { background: #5c4a1d; color: #f0d9a0; }
+.hint { color: #8a93a0; font-size: 12px; margin: 6px 0; }
+.warn { color: #e8b45a; font-size: 12px; }
+.error { color: #ef8080; }
+.hidden { display: none !important; }
+
+.card {
+  background: #1d2026;
+  border: 1px solid #2c313a;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  max-width: 900px;
+}
+.row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+
+input, button {
+  background: #14161a;
+  border: 1px solid #3a414d;
+  border-radius: 6px;
+  color: #dfe3ea;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+input:focus { outline: 1px solid #5a86c9; }
+button { cursor: pointer; }
+button:hover { background: #262b33; }
+button.primary { background: #2b4a75; border-color: #3d6296; }
+
+fieldset { border: 1px solid #2c313a; border-radius: 8px; margin: 10px 0; }
+legend { color: #9aa4b2; font-size: 13px; padding: 0 6px; }
+.countries { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 4px; }
+.countries label, fieldset label { display: flex; align-items: center; gap: 6px; }
+
+table { border-collapse: collapse; width: 100%; margin: 6px 0; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #2c313a; font-size: 13px; }
+th { color: #9aa4b2; font-weight: normal; }
+.mono { font-family: Consolas, monospace; color: #8a93a0; }
+
+ul { margin: 6px 0; padding-left: 18px; }
+li { margin: 2px 0; }
+
+.chat {
+  height: 360px;
+  overflow-y: auto;
+  background: #14161a;
+  border: 1px solid #2c313a;
+  border-radius: 8px;
+  padding: 10px;
+}
+.msg { margin: 3px 0; line-height: 1.5; }
+.msg .time { color: #5c6470; font-size: 12px; margin-right: 4px; }
+.msg .who { font-weight: bold; }
+.msg.human .who { color: #7fc7ff; }
+.msg.agent .who { color: #9fe6c0; }
+.msg.system { color: #8a93a0; font-style: italic; }
+
+.logs {
+  height: 160px;
+  overflow-y: auto;
+  background: #14161a;
+  border: 1px solid #2c313a;
+  border-radius: 8px;
+  padding: 8px;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}
+.logline { margin: 1px 0; color: #9aa4b2; }
+.logline.warn { color: #e8b45a; }
+.logline.error { color: #ef8080; }
