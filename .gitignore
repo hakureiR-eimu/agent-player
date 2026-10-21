@@ -1,7 +1,8 @@
 node_modules/
 
-# 飞书应用凭证不进版本库
+# 飞书应用凭证和大模型 APIKey 不进版本库
 config/feishu.json
+config/llm.json
 
 # 局内生长的数据不进版本库（profile 和目录结构进）
 agents/*/world/chat/*.md

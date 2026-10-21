@@ -7,10 +7,8 @@ import { emit, log } from "./bus.js";
 import { ChatHub } from "./chatHub.js";
 import { FeishuHub, type InboundFeishuMessage } from "./feishuHub.js";
 import { RealAgent, type AgentToolContext, type IAgent } from "./agent.js";
-import { FakeAgent } from "./fakeAgent.js";
 import {
   speakerName,
-  type AgentKind,
   type AppState,
   type GroupInfo,
   type Speaker,
@@ -24,7 +22,6 @@ interface Game {
   name: string;
   dir: string;
   createdAt: string;
-  kind: AgentKind;
   mainGroupId: string;
   agents: Map<string, IAgent>;
 }
@@ -35,13 +32,17 @@ export class GameManager {
   private feishu: FeishuHub | null = null;
   private game: Game | null = null;
   private available: { tag: string; name: string }[] = [];
+  /** 会话用的模型名（config/llm.json 的 model，没配就不传） */
+  private model: string | undefined;
 
   constructor(
     private rootDir: string,
     private conf: { dm?: { appId: string; appSecret: string }; countries?: Record<string, { appId: string; appSecret: string }> },
     feishuMode: boolean,
+    model?: string,
   ) {
     this.mode = feishuMode ? "feishu" : "local";
+    this.model = model;
   }
 
   async init(): Promise<void> {
@@ -68,7 +69,7 @@ export class GameManager {
 
   // ---------- 建局 ----------
 
-  async createGame(name: string, tags: string[], kind: AgentKind): Promise<void> {
+  async createGame(name: string, tags: string[]): Promise<void> {
     if (this.game) throw new Error("已经有一局在跑，先结束这一局再开新的");
     name = name.trim();
     if (!name || name.length > 30) throw new Error("局名要在 1–30 个字之间");
@@ -111,7 +112,7 @@ export class GameManager {
       log("info", `本地模式：公屏群（${mainGroup.id}）已建，${tags.length} 个国家入座`);
     }
 
-    this.game = { name, dir: gameDir, createdAt: new Date().toISOString(), kind, mainGroupId: mainGroup.id, agents: new Map() };
+    this.game = { name, dir: gameDir, createdAt: new Date().toISOString(), mainGroupId: mainGroup.id, agents: new Map() };
 
     // 3. 群里发一条系统消息（真人侧能看到开局提示）
     const sysLine = `新的一局「${name}」开始了，本局玩家：${tags.join("、")}。真人玩家稍后进场。`;
@@ -122,13 +123,13 @@ export class GameManager {
 
     // 4. 拉起 agent，错开几秒免得挤在一起
     for (const tag of tags) {
-      const agent = this.buildAgent(tag, kind, tags);
+      const agent = this.buildAgent(tag, tags);
       this.game.agents.set(tag, agent);
     }
     this.emitState();
     void this.launchSequence(tags, mainGroup.name);
 
-    log("info", `局「${name}」开起来了：${tags.length} 个 ${kind === "real" ? "真" : "假"} agent 正在报到`);
+    log("info", `局「${name}」开起来了：${tags.length} 个 agent 正在报到`);
   }
 
   private launchSequence(tags: string[], mainGroupName: string): Promise<void> {
@@ -140,7 +141,7 @@ export class GameManager {
     })();
   }
 
-  private buildAgent(tag: string, kind: AgentKind, allTags: string[]): IAgent {
+  private buildAgent(tag: string, allTags: string[]): IAgent {
     const gameDir = this.game!.dir;
     const agentDir = path.join(gameDir, "agents", tag);
     const ctx: AgentToolContext = {
@@ -149,10 +150,9 @@ export class GameManager {
       listMembers: (t, g) => this.listMembersFor(t, g),
       createGroup: (t, n, m) => this.agentCreateGroup(t, n, m),
     };
-    if (kind === "fake") return new FakeAgent(tag, allTags, ctx);
     const system = fs.readFileSync(path.join(agentDir, "profile", "system.md"), "utf8");
     const country = fs.readFileSync(path.join(agentDir, "profile", "country.md"), "utf8");
-    return new RealAgent(tag, agentDir, `${system}\n\n---\n\n${country}`, ctx);
+    return new RealAgent(tag, agentDir, `${system}\n\n---\n\n${country}`, ctx, this.model);
   }
 
   private chatDir(gameDir: string, tag: string): string {

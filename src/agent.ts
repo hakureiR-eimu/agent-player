@@ -1,6 +1,6 @@
-// 真正的 agent：一个国家一个 Claude Agent SDK 会话（同一进程里的多会话，不是多进程）。
-// 阶段一在试跑环境里验证过的组装方式原样搬过来：profile 拼系统提示词、cwd 是自己的
-// 文件夹、权限读限自己写限 memory/、聊天走 MCP 工具；飞书的实现换成本运行时的回调。
+// agent：一个国家一个 Claude Agent SDK 会话（同一进程里的多会话，不是多进程）。
+// 组装方式在阶段一验证过：profile 拼系统提示词、cwd 是自己的文件夹、权限读限自己
+// 写限 memory/、聊天走 MCP 工具。大模型认证由入口的 config/llm.json 或环境变量解决。
 
 import path from "node:path";
 import { query, tool, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
@@ -45,7 +45,7 @@ export class RealAgent implements IAgent {
   private throttled = 0;
   private baseOptions: any;
 
-  constructor(tag: string, agentDir: string, systemPrompt: string, ctx: AgentToolContext) {
+  constructor(tag: string, agentDir: string, systemPrompt: string, ctx: AgentToolContext, model?: string) {
     this.tag = tag;
     this.agentDir = agentDir;
     this.ctx = ctx;
@@ -106,6 +106,7 @@ export class RealAgent implements IAgent {
       systemPrompt,
       cwd: this.agentDir,
       permissionMode: "default",
+      ...(model ? { model } : {}),
       mcpServers: { feishu: server },
       canUseTool: async (toolName: string, input: Record<string, unknown>) => {
         if (toolName.startsWith("mcp__feishu__")) {
@@ -147,7 +148,6 @@ export class RealAgent implements IAgent {
   state(): AgentState {
     return {
       tag: this.tag,
-      kind: "real",
       status: this.stopped ? "stopped" : this.status,
       sessionId: this.sessionId,
       rounds: this.rounds,

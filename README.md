@@ -9,10 +9,10 @@ npm install
 npm start
 ```
 
-启动后自动打开控制台（默认 http://localhost:5678，端口被占用时 `GAME_AGENT_PORT=5699 npm start`）。控制台上：给局起名 → 勾国家 → 选真/假 agent → 创建。建局会在仓库根生成 局名/agents/<tag>/（profile 自动从模板＋资料装好）。
+启动后自动打开控制台（默认 http://localhost:5678，端口被占用时 `GAME_AGENT_PORT=5699 npm start`）。控制台上：给局起名 → 勾国家 → 创建。建局会在仓库根生成 局名/agents/<tag>/（profile 自动从模板＋资料装好）。
 
 - 没配飞书 = 本地模式：群只在控制台里，页面下方可以以真人身份发言——这就是新的试跑环境。
-- agent 类型：假 agent 是固定回复的小脚本（不调大模型，验链路用）；真 agent 是 Claude 会话，按 profile 扮演国家（认证走 ANTHROPIC_* 环境变量或 ~/.claude/settings.json）。
+- agent 是真的 Claude 会话，按 profile 扮演国家。大模型认证：把 config/llm.example.json 拷成 config/llm.json 填 GLM 的 APIKey（走智谱的 Anthropic 兼容端点）；不配就回落到环境变量 ANTHROPIC_* 或 ~/.claude/settings.json。
 
 ## 接飞书
 
@@ -25,4 +25,4 @@ npm start
 
 ## 代码
 
-src/ 是运行时（TypeScript）：main 入口、server 控制台服务、gameManager 建局编排、agent 真会话、fakeAgent 薄链路、chatHub 聊天账本与扇入、feishuHub 飞书收发。`npm run typecheck` 查类型。
+src/ 是运行时（TypeScript）：main 入口、server 控制台服务、gameManager 建局编排、agent 会话、chatHub 聊天账本与扇入、feishuHub 飞书收发。`npm run typecheck` 查类型。

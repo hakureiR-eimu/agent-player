@@ -65,9 +65,7 @@ function renderSetup() {
 function renderGame() {
   const g = state.game;
   $("gameTitle").textContent = `局「${g.name}」`;
-  const kindName = g.agents[0]?.kind === "fake" ? "假" : "真";
-  $("gameMeta").textContent =
-    `开了 ${g.agents.length} 个${kindName} agent；局文件夹：${state.gameDir}`;
+  $("gameMeta").textContent = `开了 ${g.agents.length} 个 agent；局文件夹：${state.gameDir}`;
   $("mainGroup").textContent =
     `「${g.mainGroupName}」（${g.mainGroupId ?? ""}）—— 群主是 DM` +
     (g.mode === "local" ? "，本地群，说话用下面的输入框" : "，真话去飞书里说");
@@ -78,7 +76,7 @@ function renderGame() {
     const tr = document.createElement("tr");
     const note = a.lastError ? `出错：${a.lastError}` : a.throttled > 0 ? `限速压了 ${a.throttled} 次` : "";
     tr.innerHTML =
-      `<td><b>${a.tag}</b></td><td>${a.kind === "fake" ? "假" : "真"}</td>` +
+      `<td><b>${a.tag}</b></td>` +
       `<td>${statusName(a.status)}</td><td>${a.queued}</td><td>${a.rounds}</td>` +
       `<td class="mono">${a.sessionId ? a.sessionId.slice(0, 8) : "—"}</td><td class="warn">${note}</td>`;
     tbody.appendChild(tr);
@@ -146,9 +144,8 @@ async function post(path, body) {
 $("createBtn").onclick = async () => {
   $("setupError").textContent = "";
   const tags = [...document.querySelectorAll("#countries input:checked")].map((i) => i.value);
-  const kind = document.querySelector('input[name="kind"]:checked').value;
   try {
-    await post("/api/game", { name: $("gameName").value, tags, kind });
+    await post("/api/game", { name: $("gameName").value, tags });
   } catch (e) {
     $("setupError").textContent = e.message;
   }

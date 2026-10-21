@@ -48,12 +48,10 @@ export interface ChatMessage {
   ts: string;
 }
 
-export type AgentKind = "real" | "fake";
 export type AgentStatus = "starting" | "idle" | "busy" | "error" | "stopped";
 
 export interface AgentState {
   tag: string;
-  kind: AgentKind;
   status: AgentStatus;
   sessionId: string | null;
   rounds: number;

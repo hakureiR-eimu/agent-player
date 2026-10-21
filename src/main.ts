@@ -12,8 +12,19 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const port = Number(process.env.GAME_AGENT_PORT ?? 5678);
 
 async function main(): Promise<void> {
-  const { conf, feishuMode } = loadConfig(rootDir);
-  const manager = new GameManager(rootDir, conf, feishuMode);
+  const { feishu, feishuMode, llm } = loadConfig(rootDir);
+
+  // 大模型认证：config/llm.json 优先（GLM 的 Anthropic 兼容端点），没配就走
+  // 环境变量 / ~/.claude/settings.json 的默认认证
+  if (llm) {
+    if (llm.baseUrl) process.env.ANTHROPIC_BASE_URL = llm.baseUrl;
+    if (llm.apiKey) process.env.ANTHROPIC_AUTH_TOKEN = llm.apiKey;
+    log("info", `大模型认证走 config/llm.json（${llm.baseUrl ?? "默认地址"}，模型 ${llm.model ?? "默认"}）`);
+  } else {
+    log("info", "没配 config/llm.json，会话认证走环境变量 ANTHROPIC_* 或 ~/.claude/settings.json");
+  }
+
+  const manager = new GameManager(rootDir, feishu, feishuMode, llm?.model);
   await manager.init();
 
   const publicDir = path.join(rootDir, "public");

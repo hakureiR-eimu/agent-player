@@ -1,26 +1,37 @@
-// 读配置：config/feishu.json 存在且含 DM 应用时走飞书模式，否则本地模式。
+// 读配置：两份文件都在 config/ 下，都不进 git。
+// - feishu.json：飞书应用凭证，配了且含 DM 应用就走飞书模式，否则本地模式
+// - llm.json：大模型认证（GLM 的 Anthropic 兼容端点），配了就设进环境变量给会话用
 
 import fs from "node:fs";
 import path from "node:path";
 import type { FeishuConf } from "./types.js";
 
 export interface LoadedConfig {
-  conf: FeishuConf;
+  feishu: FeishuConf;
   /** 飞书模式 = DM 应用凭证齐了 */
   feishuMode: boolean;
+  llm: LlmConf | null;
+}
+
+export interface LlmConf {
+  baseUrl?: string;
+  apiKey?: string;
+  model?: string;
 }
 
 export function loadConfig(rootDir: string): LoadedConfig {
-  const file = path.join(rootDir, "config", "feishu.json");
-  if (!fs.existsSync(file)) {
-    return { conf: {}, feishuMode: false };
-  }
-  let conf: FeishuConf;
+  const feishu = loadJson<FeishuConf>(rootDir, "feishu.json");
+  const llm = loadJson<LlmConf>(rootDir, "llm.json");
+  const feishuMode = Boolean(feishu?.dm?.appId && feishu?.dm?.appSecret);
+  return { feishu: feishu ?? {}, feishuMode, llm };
+}
+
+function loadJson<T>(rootDir: string, file: string): T | null {
+  const full = path.join(rootDir, "config", file);
+  if (!fs.existsSync(full)) return null;
   try {
-    conf = JSON.parse(fs.readFileSync(file, "utf8")) as FeishuConf;
+    return JSON.parse(fs.readFileSync(full, "utf8")) as T;
   } catch (e) {
-    throw new Error(`config/feishu.json 不是合法 JSON：${(e as Error).message}`);
+    throw new Error(`config/${file} 不是合法 JSON：${(e as Error).message}`);
   }
-  const feishuMode = Boolean(conf.dm?.appId && conf.dm?.appSecret);
-  return { conf, feishuMode };
 }

@@ -24,11 +24,6 @@
       <legend>拉起哪些国家</legend>
       <div id="countries" class="countries"></div>
     </fieldset>
-    <fieldset>
-      <legend>agent 用真的还是假的</legend>
-      <label><input type="radio" name="kind" value="fake" checked /> 假 agent（固定回复的小脚本，不调大模型，先验链路）</label>
-      <label><input type="radio" name="kind" value="real" /> 真 agent（Claude 会话，按 profile 扮演国家）</label>
-    </fieldset>
     <button id="createBtn" class="primary">创建这局</button>
     <p id="setupError" class="error"></p>
   </section>
@@ -47,7 +42,7 @@
       <p class="hint">真人都由 DM 拉进群（DM 当群主）。open_id 在飞书开发者后台的 API 调试台能查到。</p>
       <h3>agent</h3>
       <table id="agentTable">
-        <thead><tr><th>国家</th><th>类型</th><th>状态</th><th>排队</th><th>轮数</th><th>会话</th><th>备注</th></tr></thead>
+        <thead><tr><th>国家</th><th>状态</th><th>排队</th><th>轮数</th><th>会话</th><th>备注</th></tr></thead>
         <tbody></tbody>
       </table>
       <h3>群</h3>

@@ -48,11 +48,10 @@ async function handleApi(manager: GameManager, req: http.IncomingMessage, res: h
       send(200, { ...manager.state(), chats: recentChats(), logs: recentLogs() });
       return;
     case "POST /api/game": {
-      const { name, tags, kind } = body as { name?: string; tags?: string[]; kind?: string };
+      const { name, tags } = body as { name?: string; tags?: string[] };
       if (!name || typeof name !== "string") return send(400, { error: "局名没填" });
       if (!Array.isArray(tags)) return send(400, { error: "国家没勾" });
-      if (kind !== "real" && kind !== "fake") return send(400, { error: "agent 类型要选真或假" });
-      await manager.createGame(name, tags, kind);
+      await manager.createGame(name, tags);
       send(200, { ok: true });
       return;
     }
