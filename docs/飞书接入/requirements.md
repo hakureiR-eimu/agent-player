@@ -46,6 +46,17 @@
 - 定案（2026-10-21，再次修订）：大群、小群都由 DM 创建并当群主，玩家（真人或 agent）一律由 DM 拉进群；小群由玩家发起，DM 先拉 2 人群（发起者和 DM），再拉其他玩家。DM 名字改成局名（人工，见上一条）。此前"第一个拉起的国家应用建群"作废。
 - 来源：建群 https://open.feishu.cn/document/server-docs/group/chat/create 、拉人 https://open.feishu.cn/document/server-docs/group/chat-member/create 、更新群信息（转让群主）https://open.feishu.cn/document/server-docs/group/chat/update-2 、应用改名 https://www.feishu.cn/hc/zh-CN/articles/360024984973
 
+### Vercel Chat SDK 官方飞书适配器（2026-10-21，官方文档，不引入）
+
+飞书发布了 Vercel Chat SDK（多平台聊天机器人框架）的官方适配器 @larksuite/vercel-chat-adapter，底层是 @larksuiteoapi/node-sdk 里的 Channel SDK（LarkChannel）。查证后不引入：
+
+- 它解决的问题（一套代码接 Slack/Teams/Discord 等多平台、单 bot 的 @ 提及/私信回调模型）和我们的形状不匹配：我们只上飞书，一国一应用是 9 个 bot 身份的编排（DM 建群拉人、各国自己发消息），收发路由、排队打包、扇入、限速都是局规则，不是通用 bot 框架能替的。我们已用同一个底层 node-sdk 自建了这一层（src/feishuHub.ts），薄且已验。
+
+两个可借鉴的点，留档：
+
+1. `registerLarkApp` 扫码授权一键建应用（自动返回 client_id/secret 并预配权限）——如果它能自定义应用名，可以省掉"人工建 9 个应用"里的一部分手工；待查证：扫码建的应用能不能指定名字（国家应用名必须等于 tag）、预配的权限是不是我们要的那套。来源：https://open.feishu.cn/document/mcp_open_tools/integrating-agents-with-feishu/vercel-chat-sdk-lark-message-publish
+2. Channel SDK 的 cardkit 流式输出（typewriter 打字机效果，非轮询）——以后做沉浸感打磨时可以考虑让 agent 的长消息在群里流式出现；现在用不上。
+
 ## 实测清单（待做）
 
 1. 群聊里 bot A 发消息，bot B（开 `im:message.group_msg.include_bot:read`）能否收到 `im.message.receive_v1` 事件。
