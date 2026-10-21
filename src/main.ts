@@ -6,7 +6,7 @@ import { exec } from "node:child_process";
 import { log } from "./bus.js";
 import { loadConfig } from "./config.js";
 import { GameManager } from "./gameManager.js";
-import { attachSse, startServer } from "./server.js";
+import { startServer } from "./server.js";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const port = Number(process.env.GAME_AGENT_PORT ?? 5678);
@@ -29,7 +29,6 @@ async function main(): Promise<void> {
 
   const publicDir = path.join(rootDir, "public");
   const server = startServer(manager, port, publicDir);
-  attachSse(server, manager, publicDir);
 
   const url = `http://localhost:${port}`;
   log("info", `控制台已就绪：${url}（局文件夹建在仓库根，按局名一个文件夹）`);

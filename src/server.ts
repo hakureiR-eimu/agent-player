@@ -16,18 +16,52 @@ const MIME: Record<string, string> = {
 };
 
 export function startServer(manager: GameManager, port: number, publicDir: string): http.Server {
+  // SSE 客户端们：聊天、日志实时推；另有每 3 秒一次全量状态（agent 队列之类的小变化）
+  const clients = new Set<http.ServerResponse>();
+  const pushState = () => {
+    const s = manager.state();
+    const payload = `event: state\ndata: ${JSON.stringify({ ...s, chats: recentChats(), logs: recentLogs() })}\n\n`;
+    for (const res of clients) res.write(payload);
+  };
+  const openSse = (req: http.IncomingMessage, res: http.ServerResponse) => {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+    res.write(`retry: 3000\n\n`);
+    clients.add(res);
+    const unsub = subscribe((e) => {
+      if (e.type === "state") pushState();
+      else res.write(`data: ${JSON.stringify(e)}\n\n`);
+    });
+    const ping = setInterval(() => res.write(`: ping\n\n`), 25000);
+    req.on("close", () => {
+      clearInterval(ping);
+      clients.delete(res);
+      unsub();
+    });
+  };
+
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://localhost:${port}`);
     try {
+      if (url.pathname === "/api/events") {
+        openSse(req, res);
+        return;
+      }
       if (url.pathname.startsWith("/api/")) {
         await handleApi(manager, req, res, url);
-      } else {
-        serveStatic(publicDir, url, res);
+        return;
       }
+      serveStatic(publicDir, url, res);
     } catch (e) {
       const msg = (e as Error).message ?? String(e);
-      log("error", `接口 ${url.pathname} 出错：${msg}`);
-      json(res, 500, { error: msg });
+      if (!res.headersSent) {
+        log("error", `接口 ${url.pathname} 出错：${msg}`);
+        json(res, 500, { error: msg });
+      }
+      // SSE 连接中途的写入异常不用回 500，断开交给浏览器自动重连
     }
   });
 
@@ -36,6 +70,7 @@ export function startServer(manager: GameManager, port: number, publicDir: strin
     process.exit(1);
   });
   server.listen(port);
+  setInterval(pushState, 3000);
   return server;
 }
 
@@ -111,37 +146,4 @@ function serveStatic(publicDir: string, url: URL, res: http.ServerResponse): voi
   }
   res.writeHead(200, { "Content-Type": MIME[path.extname(full)] ?? "application/octet-stream" });
   fs.createReadStream(full).pipe(res);
-}
-
-/** SSE：聊天、日志、状态变化实时推给页面；另加每 3 秒一次全量状态（agent 队列之类的小变化）。 */
-export function attachSse(server: http.Server, manager: GameManager, publicDir: string): void {
-  const clients = new Set<http.ServerResponse>();
-  const pushState = () => {
-    const s = manager.state();
-    const payload = `event: state\ndata: ${JSON.stringify({ ...s, chats: recentChats(), logs: recentLogs() })}\n\n`;
-    for (const res of clients) res.write(payload);
-  };
-  const timer = setInterval(pushState, 3000);
-
-  server.on("request", (req, res) => {
-    const url = new URL(req.url ?? "/", "http://localhost");
-    if (url.pathname !== "/api/events" || req.headers.accept !== "text/event-stream") return;
-    res.writeHead(200, {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    });
-    res.write(`retry: 3000\n\n`);
-    clients.add(res);
-    const unsub = subscribe((e) => {
-      if (e.type === "state") pushState();
-      else res.write(`data: ${JSON.stringify(e)}\n\n`);
-    });
-    const ping = setInterval(() => res.write(`: ping\n\n`), 25000);
-    req.on("close", () => {
-      clearInterval(ping);
-      clients.delete(res);
-      unsub();
-    });
-  });
 }
