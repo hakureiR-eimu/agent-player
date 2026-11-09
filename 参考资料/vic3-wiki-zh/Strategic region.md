@@ -1,0 +1,67 @@
+---
+translated: 2026-10-27
+translator: machine (glm-5.3)
+title: Strategic region
+source: https://vic3.paradoxwikis.com/Strategic_region
+pageid: 5183
+categories: [1.13, Game_concepts, Lists]
+fetched: 2026-10-27
+---
+本文已针对游戏当前 [版本](https://vic3.paradoxwikis.com/Victoria_3_Wiki:Versioning)（1.13）进行核实。
+
+有关
+州
+地区的详细信息，请参见
+州地区列表
+。
+**战略区域**（Strategic regions）是[州地区](https://vic3.paradoxwikis.com/State_region)的集合。它们既是外交[利益](https://vic3.paradoxwikis.com/Interests)也是军事[总部](Warfare overview.md)的基础。
+
+战略区域地图
+
+## 战略区域列表
+
+下表列出了在每个区域中开局时拥有一个或多个州的国家。这会在游戏过程中发生变化。
+
+| 战略区域 | 脚本名称 | 州 | 州数量 | 存在的国家 | 国家数量 |
+|---|---|---|---|---|---|
+| 阿拉伯 | region_arabia | Hail Hedjaz Nejd Oman Trucial Coast Yemen | 6 | Azal Bahrain Hedjaz Jabal Shammar Kathiri Lahej Mahra Nejd Oman Trucial States | 10 |
+| 大西洋海岸 | region_atlantic_coast | Alabama Bermuda Connecticut Delaware District of Columbia Florida Georgia Illinois Indiana Kentucky Maine Maritimes Maryland Massachusetts Michigan Mississippi New Hampshire New Jersey New York North Carolina Ohio Pennsylvania Rhode Island South Carolina Tennessee Vermont Virginia West Virginia Wisconsin | 29 | America Great Britain New Brunswick Nova Scotia Yat’siminoli | 5 |
+| 巴尔干 | region_balkans | Albania Attica Banat Bessarabia Bosnia Bukovina Bulgaria Crete Croatia Dalmatia Dobrudja Eastern Serbia Eastern Thrace Great Hungarian Plain Ionian Islands Kosovo Macedonia Moldavia Montenegro Northern Thrace Northern Transylvania Partium Peloponnese Ruthenia Skopia Slavonia Slovakia Slovenia Southern Transylvania Thessaly Transdanubia Vojvodina Wallachia West Aegean Islands Western Serbia Western Thrace | 36 | Austria Croatia Egypt Greece Hungary Ionian Islands Moldavia Montenegro Russia Serbia Transylvania Turkey Wallachia | 13 |
+| 巴西 | region_brazil | Amazonas Bahia Ceará Goiás Maranhão Mato Grosso Minas Gerais Paraná Paraíba Pará Pernambuco Piauí Rio Grande do Norte Rio Grande do Sul Rio de Janeiro Santa Catarina São Paulo Uruguay | 18 | Bolivia Brazil Colombia Grão-Pará Paraguay Piratini Uruguay | 7 |
+| 加拿大 | region_canada | Alberta Manitoba Newfoundland Northwest Territories Nunavut Ontario Quebec Saskatchewan | 8 | Great Britain Hudson's Bay Company Iron Confederacy Niitsitapi Ontario Quebec | 6 |
+| 中美洲 | region_central_america | Bahamas Baja California Bajío Central Cuba Chiapas Chihuahua Costa Rica Durango Eastern Cuba Guatemala Guerrero Haiti Honduras Jalisco Jamaica México Nicaragua Oaxaca Panama Porto Rico Río Grande San Salvador Santo Domingo Sinaloa Sonora Veracruz West Indies Western Cuba Yucatán Zacatecas | 30 | Central America Colombia Cuba Denmark France Great Britain Haiti Mexico Miskitia Netherlands Puerto Rico Venezuela | 12 |
+| 中亚 | region_central_asia | Akmolinsk Aktobe Chorasmia Dzungaria Fergana Ili Kirghizia Merv Semipalatinsk Syrdarya Tajikistan Tarim Basin Turkmenia Uralsk Uzbekia | 15 | Bukhara China Khiva Kishi Zhuz Kokand Orta Zhuz Russia Turkmenia Uly Zhuz | 9 |
+| 中欧 | region_central_europe | Anhalt Austria Baden Bavaria Bohemia Brandenburg Brunswick East Switzerland Elbe Franconia Hanover Hesse Lower Silesia Mecklenburg Moravia Pomerania Ruhr Saxony Schleswig-Holstein Styria Tyrol Upper Silesia West Switzerland Westphalia Württemberg | 25 | Anhalt Austria Baden Bavaria Bremen Brunswick Frankfurt Hamburg Hanover Hesse Hesse-Kassel Hohenzollern Holstein Lippe Lübeck Mecklenburg Mecklenburg-Strelitz Nassau Oldenburg Prussia Saxe-Coburg-Gotha Saxe-Meiningen Saxe-Weimar Saxony Schaumburg-Lippe Schleswig Schwarzburg Switzerland Waldeck Württemberg | 30 |
+| 东非 | region_east_africa | Amhara Eritrea Gonder Indian Ocean Territory Kazembe Kenya Lourenço Marques Mocambique North Madagascar Oromia Rift Valley Rufiji Somaliland South Madagascar Tanganyika Uganda Zambezi Zambezia Zambia Zanzibar | 20 | Acholi Ajuran Angoche Ankole Anuak Arsiland Aulihan Aussa Barotse Begemder Bemba Borana Buganda Bunyoro Burundi Egypt France Gaza Geledi Gogo Gojjam Great Britain Hadiya Harar Hehe Isaaq Kaffa Karagwe Kazembe Kikuyu Luo Madagascar Majerteen Manica Maravi Masai Maseko Mashona Mijikenda Mombasa Mutapa Ogaden Oman Omo Orma Portugal Qwara Rwanda Sakuye Sangu Shewa Sidamo Tigray Tungi Turkana Unyamwezi Usukuma Warsangali Welega Witu Wolaita | 61 |
+| 东欧 | region_eastern_europe | Aleksandrovsk Chernihiv Courland Crimea East Galicia East Prussia Hrodna Kharkiv Kyiv Lithuania Lublin Magiliow Minsk North Livonia Odessa Posen Płock South Livonia Talinn Vilnius Vitsyebsk Volhynia Warszawa West Galicia West Prussia | 25 | Austria Krakow Prussia Russia United Baltic Provinces | 5 |
+| 赤道非洲 | region_equatorial_africa | Chad Congo East Angola Equateur Gabon Kasai Katanga Lower Congo Lualaba North Angola North Cameroon South Angola South Cameroon Ubangi-Shari Waddai | 15 | Azande Bagirmi Bamum Bangala Barotse Bobangi Bornu Chokwe Dar al Kuti Duala Fang Hemba Herero Kasanje Kazembe Kongo Kuba Lega Loango Luba Lunda Mangbetu Ovambo Ovimbundu Portugal Sierra Leone Sokoto Teke Tubu Wadai Yaka | 31 |
+| 大哥伦比亚 | region_gran_colombia | Antioquia Bolívar Cauca Cundinamarca Guaviare Guyana Miranda Zulia | 8 | Colombia France Great Britain Netherlands Venezuela | 5 |
+| 大平原 | region_great_plains | Arkansas Colorado Iowa Kansas Louisiana Minnesota Missouri Montana Nebraska New Mexico North Dakota Oklahoma South Dakota Texas Wyoming | 15 | Absaroka America Apache Arapaho Comanche Indian Territory Lakota Mexico Navajo Niitsitapi Pannakwati Pawnee Séliš Texas Ute | 15 |
+| 大波斯 | region_greater_persia | Arabistan Armenia Baku Baluchistan Bampur Elizavetpol Fars Hazaristan Herat Hormuz Irak-i-Ajami Isfahan Kabulistan Kandahar Kerman Khorasan Luristan Mazandaran Northern Baluchistan Pashtunistan Persian Kurdistan Quetta Semnan Southern Turkestan Tabriz Tiflis Urmia | 27 | Arabistan Bahrain Bukhara Chitral Herat Kabul Kafiristan Kalat Kandahar Kunduz Maimana Makran Oman Persia Punjab Russia | 16 |
+| 喜马拉雅 | region_himalayas | Eastern Himalayas Kashmir Lhasa Ngari Qinghai Western Himalayas | 6 | Bhutan China Chitral Kashmir Ladakh Nepal Sikkim Tibet | 8 |
+| 印度支那 | region_indochina | Annam Arakan Bangkok Cambodia Chiang Mai Laos Malaya Mandalay Mekong Nakhon Ratchasima Pegu Sagaing Shan States Tenasserim Tonkin | 15 | Burma Cambodia Champasak Chiang Mai Dai Nam Degar Denmark East India Great Britain Johore Khmer Loeu Kuki Luang Prabang Perak Selangor Shan Siam Sip Song Chau Tai | 18 |
+| 印度尼西亚 | region_indonesia | Aceh Celebes Central Java East Borneo East Java Eastern New Guinea Luzón Mindanao Moluccas North Borneo North Sumatra South Sumatra Sunda Islands Visayas West Borneo West Java Western New Guinea | 17 | Aceh Bali Banjar Brunei Bulungan Buton East Indies Jambi Kutai Lanfang Maguindanao Mindanao Papua Philippines Pontianak Portugal Sambas Siak Sintang Sulawesi Sulu Surakarta Tidore Yogyakarta | 24 |
+| 拉普拉塔 | region_la_plata | Alto Paraguay Araucania Bajo Paraguay Buenos Aires Chaco Corrientes Córdoba Los Ríos Mendoza Patagonia Santa Fe Santiago South Atlantic Islands Tucumán | 14 | Argentina Chile Great Britain Guarani (GNI) Mapuche Paraguay Selk’nam Tehuelche | 8 |
+| 近东 | region_near_east | Adana Aleppo Ankara Aydin Baghdad Basra Cyprus Deir-Ez-Zor Diyarbakir East Aegean Islands Erzurum Hudavendigar Kars Kastamonu Konya Lebanon Mosul Palestine Syria Trabzon Transjordan | 21 | Egypt Russia Turkey | 3 |
+| 尼罗河流域 | region_nile_basin | Blue Nile Darfur Dongola Egyptian Desert Equatoria Kordofan Lower Egypt Matruh Middle Egypt Sinai Upper Egypt | 11 | Dar Fertit Darfur Dinka Egypt Nuer Toposa | 6 |
+| 北非 | region_north_africa | Algiers Constantine Cyrenaica East Sahara Fez Fezzan Inner Morocco Marrakech Oran Sahara Tripoli Tunisia West Sahara al Rif | 14 | Ait Abbas Chaamba Constantine Delim Fezzan France Kel Adagh Kel Ahaggar Kel Ajjer Mascara Morocco Mzab Reguibat Spain Tekna Touggourt Tripolitania Tuat Tubu Tunis Zuwayya | 21 |
+| 华北 | region_north_china | Alxa Beijing Gansu Hebei Henan Inner Mongolia Jiangsu Ningxia Northern Anhui Shandong Shanxi Uliastai Urga Xi’an | 14 | China | 1 |
+| 北印度 | region_north_india | Agra Assam Bihar Bundelkhand Central Provinces Delhi East Bengal Gujarat Malwa Orissa Oudh Punjab Punjab Hills Rajputana Sindh West Bengal | 16 | Alwar Assam Awadh Bahawalpur Baroda Bastar Bhavnagar Bhopal Bikaner Cooch Behar Dharampur Dhundhar East India Garhwal Gwalior Hindustan Hyderabad Idar Indore Jaisalmer Jhansi Junagadh Khasi Kotah Kuki Kutch Manipur Marwar Mayurbhanj Mewar Naga Nagpur Narsinghpur Nawanagar Orchha Palanpur Patiala Patna Portugal Punjab Rewah Sindh Surguja Tipperah | 44 |
+| 东北亚 | region_northeast_asia | Chugoku Chukotka Gwanbuk Gyeonggi Hokushin'etsu Kamchatka Kanto Kyoto Kyushu Northern Heilongjiang Northern Jilin Okhotsk Osaka Ryukyu Islands Sakhalin Shengjing Shikoku Southern Heilongjiang Southern Jilin Tohoku Tokai Yangho Yangseo Yeongnam Yezo | 25 | Ainu Mosir Alaska China Evenki Ezochi Japan Korea Russia Ryukyu Ulta | 10 |
+| 北欧 | region_northern_europe | East Karelia Eastern Norway Gotland Greenland Götaland Iceland Jutland Kola Kuopio Norrland Northern Norway Ostrobothnia Oulu Scania Svealand Uusimaa West Karelia Western Norway Zealand Åland | 20 | Denmark Finland Norway Russia Sweden | 5 |
+| 大洋洲 | region_oceania | Bougainville East Micronesia Fiji Hawaiian Islands Kanak Nauru New South Wales North Island Northern Territory Queensland Solomon Islands South Australia South Island Tahiti Tasmania Tonga Vanuatu Victoria West Micronesia Western Australia | 20 | Anangu Arnhem Arrernte Bilua Douriango Fiji Garawa Halia Hawaii Kanak Karna Kartu Kaurna Kulin Larrakia Mara Micronesia Mirning Nauru New South Wales Ngumpin-Yapa Ngāi Tahu Ngāti Toa Noongar Paakintyi Pama Philippines Pilbara South Australia Tahiti Tasmania Tonga United Tribes Vanuatu Waka-Gabi Western Australia Wiradjuri Worrorra Yolngu Yura | 40 |
+| 太平洋海岸 | region_pacific_coast | Alaska Arizona California Idaho Nevada Northern Columbia Oregon Southern Columbia Utah Yukon Territory | 10 | Alaska Apache Athabaska Hudson's Bay Company Mexico Navajo Nimíipuu Oregon Pannakwati Ute | 10 |
+| 俄罗斯 | region_russia | Arkhangelsk Astrakhan Cheboksary Dagestan Ingria Kalmykia Kazan Kuban Kursk Moscow Nenetsia Nizhny Novgorod North Caucasus Novgorod Perm Pskov Rostov Ryazan Samara Saratov Smolensk Stavropol Tambov Tula Tver Ufa Vologda Vyatka Yaroslavl | 29 | Chechnya Circassia Kishi Zhuz Russia | 4 |
+| 西伯利亚 | region_siberia | Altai Buryatia Chelyabinsk Chita Irkutsk Kolyma Krasnoyarsk Ob Surgut Tobolsk Tomsk Tuva Upper Yeniseysk Ural Yakutsk | 15 | China Kishi Zhuz Orta Zhuz Russia | 4 |
+| 华南 | region_south_china | Chongqing Eastern Guangdong Eastern Hubei Formosa Fujian Guangxi Guizhou Hunan Jiangxi Nanjing Sichuan Southern Anhui Suzhou Western Guangdong Western Hubei Yunnan Zhejiang | 17 | China Portugal | 2 |
+| 南印度 | region_south_india | Bombay Carnatic Ceded Districts Ceylon Hyderabad Malabar Mysore Northern Circars | 8 | Ceylon Cochin Denmark East India France Great Britain Hyderabad Jeypore Kolhapur Kurnool Maldives Mysore Portugal Pudukottai Satara Travancore | 16 |
+| 南部非洲 | region_southern_africa | Botswana Cape Colony Eastern Cape Hereroland Namaqualand Northern Cape Transorangia Transvaal Zululand | 9 | Barotse Basutoland Griqualand Herero Nama Ndebele Oranje Ovambo Pedi Philippolis San South Africa Swaziland Transvaal Tswana Venda Xhosa Zulu | 18 |
+| 南欧 | region_southern_europe | Abruzzo Alentejo Apulia Aquitaine Aragon Asturias Auvergne-Limousin Azores Balearic Islands Basque Country Beira Calabria Campania Canary Islands Cape Verde Catalonia Corsica Emilia Entre Douro and Minho Estremadura Extremadura Galicia Guyenne Istria Languedoc Lazio Leon Lombardy Lower Andalusia Madeira Malta Murcia New Castile Old Castile Piedmont Provence Rhône Romagna Sardinia Savoy Sicily South Tyrol Tuscany Umbria Upper Andalusia Valencia Venetia | 47 | Austria Carlist Spain France Great Britain Lucca Modena Parma Portugal Rome Sardinia-Piedmont Spain Tuscany Two Sicilies | 13 |
+| 安第斯 | region_andes | Acre Antofagasta Arequipa Cajamarca Ecuador Ica Jujuy La Paz Lima Pastaza Potosí Santa Cruz Tarapacá | 13 | Argentina Bolivia Ecuador Iquicha North Peru South Peru | 6 |
+| 西非 | region_west_africa | Benin Bornu Dahomey East Hausaland Eastern Mali Gold Coast Grain Coast Guinea Hausaland Inner Mauritania Ivory Coast Mauritania Niger Niger Delta Nigeria Outer Hausaland Senegal Sierra Leone Timbuktu Togo Volta Western Mali Windward Coast Yoruba States | 24 | Adrar Anyi Ashanti Baule Benin Borgu Bornu Brakna Bundu Cayor Dahomey Delim Denmark Diola Ewe France Futa Jallon Futa Toro Gobir Igbo Jolof Kaabu Kaarta Kabadougou Kel Adagh Kel Air Kel Ajjer Kel Ataram Kel Dinnik Kong Kru Liberia Mandinka Massina Mossi Netherlands Oyo Portugal Reguibat Segou Serer Sierra Leone Sokoto Susu Tagant Temne Trarza Tubu | 48 |
+| 西欧 | region_western_europe | Alsace-Lorraine Brittany Burgundy Champagne Connaught East Anglia Flanders Franche-Comté French Low Countries Friesland Gelre Highlands Holland Home Counties Lancashire Leinster Lorraine Lowlands Maine-Anjou Midlands Munster Normandy North Rhine Orléanais-Berry Picardy Poitou-Saintonge Rhineland Ulster Wales Wallonia West Country Yorkshire Île-de-France | 33 | Bavaria Belgium France Great Britain Luxembourg Netherlands Prussia | 7 |
+
+## 参考
+
+- 战略区域定义于 /Victoria 3/game/common/strategic_regions/
+- 每个战略区域都可以定义一种“graphical culture”，用于设定该区域所含州的地图图形。
