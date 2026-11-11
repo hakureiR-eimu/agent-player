@@ -16,3 +16,6 @@ agents/*/memory/*.md
 
 # 当前局指针（保存并退出/继续游戏用）
 state.json
+
+# wiki 镜像原始抓取缓存（~90MB API JSON，可随时重新抓取）
+.cache/
