@@ -12,3 +12,7 @@ agents/*/memory/*.md
 
 # 局文件夹（建局时生成在仓库根，形如 局名/agents/<tag>/）整局不进 git
 /*/agents/
+/*/game.json
+
+# 当前局指针（保存并退出/继续游戏用）
+state.json

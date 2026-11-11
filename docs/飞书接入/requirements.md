@@ -46,6 +46,17 @@
 - 定案（2026-10-21，再次修订）：大群、小群都由 DM 创建并当群主，玩家（真人或 agent）一律由 DM 拉进群；小群由玩家发起，DM 先拉 2 人群（发起者和 DM），再拉其他玩家。DM 名字改成局名（人工，见上一条）。此前"第一个拉起的国家应用建群"作废。
 - 来源：建群 https://open.feishu.cn/document/server-docs/group/chat/create 、拉人 https://open.feishu.cn/document/server-docs/group/chat-member/create 、更新群信息（转让群主）https://open.feishu.cn/document/server-docs/group/chat/update-2 、应用改名 https://www.feishu.cn/hc/zh-CN/articles/360024984973
 
+### 各应用要开的权限（2026-10-21，官方接口文档的"权限要求"段）
+
+- 国家应用（玩家）：只要 `im:message:send_as_bot`（在群里发言）。收消息权限一个不用开——运行时把 agent 的话直接扇入其他 agent 的会话，不靠飞书平台转投 bot 消息。
+- DM（主持人）：三个权限——
+  - `im:message.group_msg.include_bot:read`：收群里所有用户和 bot 的消息（配合事件订阅 im.message.receive_v1、长连接方式）；
+  - `im:message:send_as_bot`：发系统通知；
+  - `im:chat`：一个覆盖建群、拉人、查群成员三个接口（三者的"开启任一权限即可"列表里都有它）。
+- 单接口的备选权限（开任一即可，供对照）：建群 `im:chat` 或 `im:chat:create`；拉人 `im:chat` 或 `im:chat.members:write_only`；查成员 `im:chat`、`im:chat:readonly`、`im:chat.members:read` 等。
+- 权限和应用配置（开机器人能力、事件订阅、发版）都只能登录开发者后台人工操作，官方没有开放 API/CLI 代办——"申请 API 权限"文档给的步骤就是后台点按钮；2026 年的官方 CLI（lark-cli）管的是用应用操作飞书内容（消息/文档/表格），管不了应用自己的配置。
+- 来源：建群 https://open.feishu.cn/document/server-docs/group/chat/create 、拉人 https://open.feishu.cn/document/server-docs/group/chat-member/create 、查成员 https://open.feishu.cn/document/server-docs/group/chat-member/get 、申请权限流程 https://open.feishu.cn/document/server-docs/application-scope/introduction
+
 ### Vercel Chat SDK 官方飞书适配器（2026-10-21，官方文档，不引入）
 
 飞书发布了 Vercel Chat SDK（多平台聊天机器人框架）的官方适配器 @larksuite/vercel-chat-adapter，底层是 @larksuiteoapi/node-sdk 里的 Channel SDK（LarkChannel）。查证后不引入：

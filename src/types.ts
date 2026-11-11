@@ -5,26 +5,25 @@ export interface FeishuAppConf {
   appSecret: string;
 }
 
-/** config/feishu.json 的形状。没有这个文件就是本地模式。 */
+/** config/feishu.json 的形状。dm 必配（缺了启动报错），countries 配多少国家上多少。 */
 export interface FeishuConf {
-  dm?: FeishuAppConf;
+  dm: FeishuAppConf;
   countries?: Record<string, FeishuAppConf>;
 }
 
-/** 真人玩家。id 是飞书 open_id（本地模式下就是控制台里填的名字）。 */
+/** 真人玩家。id 是飞书 open_id。 */
 export interface HumanMember {
   id: string;
   name: string;
 }
 
-/** 群。id 是飞书 chat_id（本地模式下是 g001 这样的自造 ID）。 */
+/** 群。id 是飞书 chat_id。 */
 export interface GroupInfo {
   id: string;
   name: string;
   agents: string[];
   humans: HumanMember[];
   owner: "dm" | string;
-  local: boolean;
 }
 
 /** 谁在说话。agent 用国家 tag，真人在飞书侧用群成员表里的名字。 */
@@ -63,7 +62,6 @@ export interface AgentState {
 
 export interface GameSummary {
   name: string;
-  mode: "feishu" | "local";
   createdAt: string;
   mainGroupId: string | null;
   mainGroupName: string | null;
@@ -71,13 +69,19 @@ export interface GameSummary {
   groups: GroupInfo[];
 }
 
+/** 根 state.json 的形状：当前局指针。同时只有一局，飞书应用多局复用。 */
+export interface CurrentGameRef {
+  name: string;
+  status: "running" | "saved";
+}
+
 /** 前端可见的全量状态。 */
 export interface AppState {
-  mode: "feishu" | "local";
-  /** 飞书配置到位情况：DM 配了没、各国配了没 */
-  dmConfigured: boolean;
+  /** 飞书配置到位情况：各国配了没（DM 必配，能跑起来就是配了） */
   countryConfigured: Record<string, boolean>;
   availableCountries: { tag: string; name: string }[];
+  /** 存着没跑的局（可继续）。运行中有局时为 null。 */
+  saved: { name: string; savedAt: string | null } | null;
   game: GameSummary | null;
   gameDir: string | null;
 }

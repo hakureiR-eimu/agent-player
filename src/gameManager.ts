@@ -10,6 +10,8 @@ import { RealAgent, type AgentToolContext, type IAgent } from "./agent.js";
 import {
   speakerName,
   type AppState,
+  type CurrentGameRef,
+  type FeishuConf,
   type GroupInfo,
   type Speaker,
 } from "./types.js";
@@ -26,33 +28,39 @@ interface Game {
   agents: Map<string, IAgent>;
 }
 
+/** 局名/game.json 的形状：继续游戏要恢复的一切（群登记、各 agent 的会话 ID）。 */
+interface GameRecord {
+  name: string;
+  createdAt: string;
+  savedAt: string;
+  mainGroupId: string;
+  groups: GroupInfo[];
+  agents: Record<string, { sessionId: string | null }>;
+}
+
 export class GameManager {
-  readonly mode: "feishu" | "local";
   private hub = new ChatHub();
   private feishu: FeishuHub | null = null;
   private game: Game | null = null;
   private available: { tag: string; name: string }[] = [];
+  /** 存着没跑的局（state.json 指着，可继续）。飞书应用多局复用，agent 状态在局文件夹里不跨局。 */
+  private saved: { name: string; savedAt: string | null } | null = null;
   /** 会话用的模型名（config/llm.json 的 model，没配就不传） */
   private model: string | undefined;
 
   constructor(
     private rootDir: string,
-    private conf: { dm?: { appId: string; appSecret: string }; countries?: Record<string, { appId: string; appSecret: string }> },
-    feishuMode: boolean,
+    private conf: FeishuConf,
     model?: string,
   ) {
-    this.mode = feishuMode ? "feishu" : "local";
     this.model = model;
   }
 
   async init(): Promise<void> {
     this.available = this.loadAvailableCountries();
-    if (this.mode === "feishu") {
-      this.feishu = new FeishuHub(this.conf, (m) => this.onFeishuMessage(m));
-      await this.feishu.start();
-    } else {
-      log("info", "没配飞书（config/feishu.json 缺失或没有 DM 应用），本地模式：群只在控制台里");
-    }
+    this.feishu = new FeishuHub(this.conf, (m) => this.onFeishuMessage(m));
+    await this.feishu.start();
+    this.loadCurrent();
   }
 
   private loadAvailableCountries(): { tag: string; name: string }[] {
@@ -81,7 +89,7 @@ export class GameManager {
     if (tags.length === 0) throw new Error("至少勾一个国家");
     for (const tag of tags) {
       if (!this.available.some((c) => c.tag === tag)) throw new Error(`没有国家 ${tag} 的资料（资料/主要国家/）`);
-      if (this.mode === "feishu" && !this.conf.countries?.[tag]) {
+      if (!this.conf.countries?.[tag]) {
         throw new Error(`国家 ${tag} 没配飞书应用（config/feishu.json 的 countries），先配上再拉它`);
       }
     }
@@ -99,36 +107,39 @@ export class GameManager {
     log("info", `局文件夹已建：${name}/agents/（${tags.join("、")}）`);
 
     // 2. 建公屏大群，DM 当群主；拉各国 bot 进群
-    let mainGroup: GroupInfo;
-    if (this.mode === "feishu") {
-      const chatId = await this.feishu!.createGroup(name);
+    // 中途失败就清掉局文件夹，别让残留把重试挡住（飞书侧可能已建出群，那个只能手动删）
+    let chatId: string;
+    try {
+      chatId = await this.feishu!.createGroup(name);
       await this.feishu!.addCountryBots(chatId, tags);
-      const humans = await this.feishu!.refreshMembers(chatId);
-      mainGroup = { id: chatId, name, agents: tags, humans, owner: "dm", local: false };
-      this.hub.registerGroup(mainGroup, tags.map((t) => this.chatDir(gameDir, t)));
-      log("info", `大群「${name}」已建（${chatId}），${tags.length} 个国家 bot 已进群`);
-    } else {
-      mainGroup = this.hub.newLocalGroup("公屏", tags, [], tags.map((t) => this.chatDir(gameDir, t)));
-      log("info", `本地模式：公屏群（${mainGroup.id}）已建，${tags.length} 个国家入座`);
+    } catch (e) {
+      fs.rmSync(gameDir, { recursive: true, force: true });
+      log("warn", `建局失败，局文件夹已清（飞书侧可能建出的群要手动删）：${(e as Error).message}`);
+      throw e;
     }
+    const humans = await this.feishu!.refreshMembers(chatId);
+    const mainGroup: GroupInfo = { id: chatId, name, agents: tags, humans, owner: "dm" };
+    this.hub.registerGroup(mainGroup, tags.map((t) => this.chatDir(gameDir, t)));
+    log("info", `大群「${name}」已建（${chatId}），${tags.length} 个国家 bot 已进群`);
 
     this.game = { name, dir: gameDir, createdAt: new Date().toISOString(), mainGroupId: mainGroup.id, agents: new Map() };
 
     // 3. 群里发一条系统消息（真人侧能看到开局提示）
     const sysLine = `新的一局「${name}」开始了，本局玩家：${tags.join("、")}。真人玩家稍后进场。`;
-    if (this.mode === "feishu") {
-      await this.feishu!.sendSystem(mainGroup.id, `（系统）${sysLine}`);
-    }
+    await this.feishu!.sendSystem(mainGroup.id, `（系统）${sysLine}`);
     this.hub.record(mainGroup.id, { kind: "system" }, sysLine);
 
     // 4. 拉起 agent，错开几秒免得挤在一起
     for (const tag of tags) {
-      const agent = this.buildAgent(tag, tags);
+      const agent = this.buildAgent(tag);
       this.game.agents.set(tag, agent);
     }
     this.emitState();
-    void this.launchSequence(tags, mainGroup.name);
+    void this.launchSequence(tags, mainGroup.name).then(() => this.persistGame());
 
+    this.saved = null; // 开新局顶掉存档（前端已确认过）
+    this.persistGame(); // 先落一版（sessionId 还是空），报到完成后再落一次
+    this.writeCurrent(name, "running");
     log("info", `局「${name}」开起来了：${tags.length} 个 agent 正在报到`);
   }
 
@@ -141,7 +152,8 @@ export class GameManager {
     })();
   }
 
-  private buildAgent(tag: string, allTags: string[]): IAgent {
+  /** resumeSessionId：继续游戏时接着存档里的会话跑。 */
+  private buildAgent(tag: string, resumeSessionId?: string | null): IAgent {
     const gameDir = this.game!.dir;
     const agentDir = path.join(gameDir, "agents", tag);
     const ctx: AgentToolContext = {
@@ -152,7 +164,7 @@ export class GameManager {
     };
     const system = fs.readFileSync(path.join(agentDir, "profile", "system.md"), "utf8");
     const country = fs.readFileSync(path.join(agentDir, "profile", "country.md"), "utf8");
-    return new RealAgent(tag, agentDir, `${system}\n\n---\n\n${country}`, ctx, this.model);
+    return new RealAgent(tag, agentDir, `${system}\n\n---\n\n${country}`, ctx, this.model, resumeSessionId);
   }
 
   private chatDir(gameDir: string, tag: string): string {
@@ -178,13 +190,11 @@ export class GameManager {
     const g = this.hub.getGroup(groupId);
     if (!g) return `没有这个群：${groupId}。先用 list_groups 看 ID。`;
     if (!g.agents.includes(tag)) return `你不在群【${g.name}】里，发不了。`;
-    if (this.mode === "feishu") {
-      try {
-        await this.feishu!.sendAs(tag, groupId, content);
-      } catch (e) {
-        log("error", `${tag} 发消息到【${g.name}】失败：${(e as Error).message}`);
-        return `发到【${g.name}】失败了：${(e as Error).message}`;
-      }
+    try {
+      await this.feishu!.sendAs(tag, groupId, content);
+    } catch (e) {
+      log("error", `${tag} 发消息到【${g.name}】失败：${(e as Error).message}`);
+      return `发到【${g.name}】失败了：${(e as Error).message}`;
     }
     this.inbound(groupId, { kind: "agent", tag }, content);
     const n = g.agents.length + g.humans.length;
@@ -206,19 +216,6 @@ export class GameManager {
       if (m.senderName.startsWith("用户")) void this.feishu!.refreshMembers(m.chatId);
     }
     this.inbound(m.chatId, { kind: "human", name: m.senderName }, m.text);
-  }
-
-  /** 本地模式下控制台里的真人发言。 */
-  say(humanName: string, content: string): void {
-    if (!this.game) throw new Error("还没有局");
-    if (this.mode !== "local") throw new Error("飞书模式下请直接在飞书群里说话");
-    const g = this.hub.getGroup(this.game.mainGroupId);
-    if (!g) throw new Error("公屏群不见了");
-    if (!g.humans.some((h) => h.name === humanName)) {
-      g.humans.push({ id: `local:${humanName}`, name: humanName });
-      this.hub.recordMemberChange(g, `${humanName} 加入了【${g.name}】`);
-    }
-    this.inbound(g.id, { kind: "human", name: humanName }, content);
   }
 
   // ---------- agent 的群工具 ----------
@@ -251,21 +248,18 @@ export class GameManager {
       }
     }
     let g: GroupInfo;
-    if (this.mode === "feishu") {
-      const openIds: string[] = [];
-      for (const n of humanNames) {
-        const id = this.feishu!.openIdByName(n);
-        if (!id) return `知道有 ${n} 这个人，但查不到 open_id，拉不了。`;
-        openIds.push(id);
-      }
-      const chatId = await this.feishu!.createSubGroup(name, tag, botTags, openIds);
-      const humans = humanNames.map((n) => ({ id: this.feishu!.openIdByName(n) ?? "", name: n }));
-      g = { id: chatId, name, agents: [...new Set([tag, ...botTags])], humans, owner: "dm", local: false };
-      this.hub.registerGroup(g, g.agents.map((t) => this.chatDir(this.game!.dir, t)));
-    } else {
-      g = this.hub.newLocalGroup(name, [tag, ...botTags], humanNames, [...new Set([tag, ...botTags])].map((t) => this.chatDir(this.game!.dir, t)));
+    const openIds: string[] = [];
+    for (const n of humanNames) {
+      const id = this.feishu!.openIdByName(n);
+      if (!id) return `知道有 ${n} 这个人，但查不到 open_id，拉不了。`;
+      openIds.push(id);
     }
+    const chatId = await this.feishu!.createSubGroup(name, tag, botTags, openIds);
+    const humans = humanNames.map((n) => ({ id: this.feishu!.openIdByName(n) ?? "", name: n }));
+    g = { id: chatId, name, agents: [...new Set([tag, ...botTags])], humans, owner: "dm" };
+    this.hub.registerGroup(g, g.agents.map((t) => this.chatDir(this.game!.dir, t)));
     this.hub.recordMemberChange(g, `${tag} 建立了群「${name}」，成员：${[...g.agents, ...g.humans.map((h) => h.name)].join("、")}`);
+    this.persistGame(); // 群登记变了，落盘免得崩了丢
     return `群「${name}」已建立（DM 替你建的，DM 当群主），ID ${g.id}，成员：${[...g.agents, ...g.humans.map((h) => h.name)].join("、")}。可以 send_message 了。`;
   }
 
@@ -277,27 +271,133 @@ export class GameManager {
     if (ids.length === 0) throw new Error("没填 ID");
     const g = this.hub.getGroup(this.game.mainGroupId);
     if (!g) throw new Error("公屏群不见了");
-    if (this.mode === "feishu") {
-      const added = await this.feishu!.addHumans(g.id, ids);
-      for (const h of added) {
-        if (!g.humans.some((x) => x.id === h.id)) g.humans.push(h);
-      }
-      this.hub.recordMemberChange(g, `DM 把 ${added.map((h) => h.name).join("、")} 拉进了【${g.name}】`);
-      return added.map((h) => h.name);
+    const added = await this.feishu!.addHumans(g.id, ids);
+    for (const h of added) {
+      if (!g.humans.some((x) => x.id === h.id)) g.humans.push(h);
     }
-    for (const n of ids) {
-      if (!g.humans.some((h) => h.name === n)) g.humans.push({ id: `local:${n}`, name: n });
-    }
-    this.hub.recordMemberChange(g, `${ids.join("、")} 进了【${g.name}】`);
-    return ids;
+    this.hub.recordMemberChange(g, `DM 把 ${added.map((h) => h.name).join("、")} 拉进了【${g.name}】`);
+    this.persistGame(); // 成员变了，落盘免得崩了丢
+    return added.map((h) => h.name);
   }
 
   // ---------- 状态与收尾 ----------
 
+  /** 继续存着的局：恢复群登记和各 agent 会话。 */
+  async resumeGame(): Promise<void> {
+    if (this.game) throw new Error("已经有一局在跑，先处理它");
+    if (!this.saved) throw new Error("没有存着的局");
+    const name = this.saved.name;
+    const gameDir = path.join(this.rootDir, name);
+    const recordFile = path.join(gameDir, "game.json");
+    if (!fs.existsSync(recordFile)) {
+      throw new Error(`局「${name}」的 game.json 不见了，没法继续（局文件夹还在的话翻档案：${name}/）`);
+    }
+    const record = JSON.parse(fs.readFileSync(recordFile, "utf8")) as GameRecord;
+    for (const g of record.groups) {
+      this.hub.registerGroup(g, g.agents.map((t) => this.chatDir(gameDir, t)));
+    }
+    this.game = { name, dir: gameDir, createdAt: record.createdAt, mainGroupId: record.mainGroupId, agents: new Map() };
+    for (const [tag, a] of Object.entries(record.agents)) {
+      this.game.agents.set(tag, this.buildAgent(tag, a.sessionId));
+    }
+    this.saved = null;
+    this.writeCurrent(name, "running");
+    await this.feishu!.sendSystem(record.mainGroupId, `（系统）「${name}」继续进行，各位接着聊。`);
+    void this.refreshAllGroups(); // 群成员可能有进出，后台刷一遍
+    this.emitState();
+    log("info", `局「${name}」已继续：${this.game.agents.size} 个 agent 回来了`);
+  }
+
+  /** 保存并退出：停 agent、状态落盘，控制台回到可继续/可新开。 */
+  async saveGame(): Promise<void> {
+    if (!this.game) throw new Error("还没有局");
+    const name = this.game.name;
+    for (const a of this.game.agents.values()) await a.stop();
+    const savedAt = new Date().toISOString();
+    this.persistGame(savedAt);
+    this.game = null;
+    this.saved = { name, savedAt };
+    this.writeCurrent(name, "saved");
+    this.emitState();
+    log("info", `局「${name}」已保存退出（想接着玩用「继续」）`);
+  }
+
+  /** 结束游戏：局不可再继续，局文件夹和飞书群留档。 */
   async stopGame(): Promise<void> {
     if (!this.game) return;
+    const name = this.game.name;
     for (const a of this.game.agents.values()) await a.stop();
-    log("info", `局「${this.game.name}」的 agent 都停了（局文件夹保留：${this.game.name}/）`);
+    try {
+      await this.feishu!.sendSystem(this.game.mainGroupId, `（系统）「${name}」本局结束，感谢各位。`);
+    } catch (e) {
+      log("warn", `发结束通知失败：${(e as Error).message}`);
+    }
+    this.game = null;
+    this.saved = null;
+    this.clearCurrent();
+    this.emitState();
+    log("info", `局「${name}」结束了（局文件夹保留：${name}/，翻档直接看文件）`);
+  }
+
+  // ---------- 持久化：局状态落盘，进程崩了也能续 ----------
+
+  private persistGame(savedAt?: string): void {
+    if (!this.game) return;
+    const record: GameRecord = {
+      name: this.game.name,
+      createdAt: this.game.createdAt,
+      savedAt: savedAt ?? new Date().toISOString(),
+      mainGroupId: this.game.mainGroupId,
+      groups: this.hub.allGroups(),
+      agents: Object.fromEntries([...this.game.agents].map(([tag, a]) => [tag, { sessionId: a.state().sessionId }])),
+    };
+    fs.writeFileSync(path.join(this.game.dir, "game.json"), JSON.stringify(record, null, 2));
+  }
+
+  private writeCurrent(name: string, status: CurrentGameRef["status"]): void {
+    fs.writeFileSync(path.join(this.rootDir, "state.json"), JSON.stringify({ current: { name, status } }, null, 2));
+  }
+
+  private clearCurrent(): void {
+    const file = path.join(this.rootDir, "state.json");
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+  }
+
+  /** 启动时读当前局指针；上次在跑时退了进程的，按存档处理。 */
+  private loadCurrent(): void {
+    const file = path.join(this.rootDir, "state.json");
+    if (!fs.existsSync(file)) return;
+    try {
+      const { current } = JSON.parse(fs.readFileSync(file, "utf8")) as { current?: CurrentGameRef };
+      if (!current?.name) return;
+      if (current.status === "running") {
+        log("warn", `上次「${current.name}」在跑的时候进程退了，按存档处理（可以继续）`);
+      }
+      this.saved = { name: current.name, savedAt: this.readSavedAt(current.name) };
+    } catch (e) {
+      log("warn", `state.json 读不了：${(e as Error).message}`);
+    }
+  }
+
+  private readSavedAt(name: string): string | null {
+    try {
+      const r = JSON.parse(fs.readFileSync(path.join(this.rootDir, name, "game.json"), "utf8")) as GameRecord;
+      return r.savedAt ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** 把所有群的真人成员刷新一遍（继续游戏后用，单个群失败不挡别的）。 */
+  private async refreshAllGroups(): Promise<void> {
+    for (const g of this.hub.allGroups()) {
+      try {
+        g.humans = await this.feishu!.refreshMembers(g.id);
+      } catch (e) {
+        log("warn", `刷新【${g.name}】成员失败（群可能被解散）：${(e as Error).message}`);
+      }
+    }
+    this.persistGame();
     this.emitState();
   }
 
@@ -311,15 +411,13 @@ export class GameManager {
       countryConfigured[c.tag] = Boolean(this.conf.countries?.[c.tag]);
     }
     return {
-      mode: this.mode,
-      dmConfigured: Boolean(this.conf.dm),
       countryConfigured,
       availableCountries: this.available,
+      saved: this.game ? null : this.saved,
       gameDir: this.game?.dir ?? null,
       game: this.game
         ? {
             name: this.game.name,
-            mode: this.mode,
             createdAt: this.game.createdAt,
             mainGroupId: this.game.mainGroupId,
             mainGroupName: this.hub.getGroup(this.game.mainGroupId)?.name ?? null,

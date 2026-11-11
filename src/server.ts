@@ -97,15 +97,18 @@ async function handleApi(manager: GameManager, req: http.IncomingMessage, res: h
       send(200, { ok: true, added });
       return;
     }
-    case "POST /api/game/stop": {
-      await manager.stopGame();
+    case "POST /api/game/resume": {
+      await manager.resumeGame();
       send(200, { ok: true });
       return;
     }
-    case "POST /api/say": {
-      const { name, content } = body as { name?: string; content?: string };
-      if (!name || !content) return send(400, { error: "名字和内容都要填" });
-      manager.say(name, content);
+    case "POST /api/game/save": {
+      await manager.saveGame();
+      send(200, { ok: true });
+      return;
+    }
+    case "POST /api/game/stop": {
+      await manager.stopGame();
       send(200, { ok: true });
       return;
     }

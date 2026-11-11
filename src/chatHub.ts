@@ -11,7 +11,6 @@ export class ChatHub {
   private groups = new Map<string, GroupInfo>();
   /** 群 ID -> 各成员 agent 的聊天账本文件路径（world/chat/<群ID>.md） */
   private chatFiles = new Map<string, string[]>();
-  private localSeq = 0;
 
   registerGroup(g: GroupInfo, memberChatDirs: string[]): void {
     this.groups.set(g.id, g);
@@ -24,21 +23,6 @@ export class ChatHub {
     for (const f of this.chatFiles.get(g.id) ?? []) {
       if (!fs.existsSync(f)) fs.writeFileSync(f, header, { flag: "wx" });
     }
-  }
-
-  /** 本地模式下自造一个群（飞书的群由 DM 建好后调 registerGroup 登记）。 */
-  newLocalGroup(name: string, agentTags: string[], humans: string[], memberChatDirs: string[]): GroupInfo {
-    const id = `g${String(++this.localSeq).padStart(3, "0")}`;
-    const g: GroupInfo = {
-      id,
-      name,
-      agents: [...new Set(agentTags)],
-      humans: humans.map((n) => ({ id: `local:${n}`, name: n })),
-      owner: "dm",
-      local: true,
-    };
-    this.registerGroup(g, memberChatDirs);
-    return g;
   }
 
   getGroup(id: string): GroupInfo | undefined {

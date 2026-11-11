@@ -1,6 +1,6 @@
 {
   "dm": {
-    "appId": "cli_a1b2c3d4e5f6g7h8",
+    "appId": "cli_主持人应用的appId",
     "appSecret": "DM应用的密钥，改成真实的"
   },
   "countries": {

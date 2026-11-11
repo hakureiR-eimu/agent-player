@@ -12,7 +12,7 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const port = Number(process.env.GAME_AGENT_PORT ?? 5678);
 
 async function main(): Promise<void> {
-  const { feishu, feishuMode, llm } = loadConfig(rootDir);
+  const { feishu, llm } = loadConfig(rootDir);
 
   // 大模型认证：config/llm.json 优先（GLM 的 Anthropic 兼容端点），没配就走
   // 环境变量 / ~/.claude/settings.json 的默认认证
@@ -24,7 +24,7 @@ async function main(): Promise<void> {
     log("info", "没配 config/llm.json，会话认证走环境变量 ANTHROPIC_* 或 ~/.claude/settings.json");
   }
 
-  const manager = new GameManager(rootDir, feishu, feishuMode, llm?.model);
+  const manager = new GameManager(rootDir, feishu, llm?.model);
   await manager.init();
 
   const publicDir = path.join(rootDir, "public");

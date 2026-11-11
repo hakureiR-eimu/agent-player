@@ -45,10 +45,12 @@ export class RealAgent implements IAgent {
   private throttled = 0;
   private baseOptions: any;
 
-  constructor(tag: string, agentDir: string, systemPrompt: string, ctx: AgentToolContext, model?: string) {
+  /** resumeSessionId：继续游戏时带上存档里的会话 ID，下一轮接着那个会话跑。 */
+  constructor(tag: string, agentDir: string, systemPrompt: string, ctx: AgentToolContext, model?: string, resumeSessionId?: string | null) {
     this.tag = tag;
     this.agentDir = agentDir;
     this.ctx = ctx;
+    this.sessionId = resumeSessionId ?? null;
 
     const server = createSdkMcpServer({
       name: "feishu",

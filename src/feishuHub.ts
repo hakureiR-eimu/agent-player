@@ -32,8 +32,8 @@ export class FeishuHub {
     private onMessage: (m: InboundFeishuMessage) => void,
   ) {
     this.dmClient = new lark.Client({
-      appId: conf.dm!.appId,
-      appSecret: conf.dm!.appSecret,
+      appId: conf.dm.appId,
+      appSecret: conf.dm.appSecret,
       domain: lark.Domain.Feishu,
       loggerLevel: lark.LoggerLevel.warn,
     });
@@ -58,8 +58,8 @@ export class FeishuHub {
   /** 连 DM 的长连接开始收消息。各国应用只发不收，不连。 */
   async start(): Promise<void> {
     const ws = new lark.WSClient({
-      appId: this.conf.dm!.appId,
-      appSecret: this.conf.dm!.appSecret,
+      appId: this.conf.dm.appId,
+      appSecret: this.conf.dm.appSecret,
       domain: lark.Domain.Feishu,
       loggerLevel: lark.LoggerLevel.warn,
     });
@@ -71,7 +71,7 @@ export class FeishuHub {
         },
       }),
     });
-    log("info", `飞书长连接已建立（DM 应用 ${this.conf.dm!.appId}），开始收群消息`);
+    log("info", `飞书长连接已建立（DM 应用 ${this.conf.dm.appId}），开始收群消息`);
   }
 
   private handleEvent(data: any): void {
