@@ -29,11 +29,16 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
 - 大不列颠财政：同一钩子里特判 tag GBR，追加财政行——`gold_reserves`（金库，wiki Trigger 文档已证）、债务本金（debt 一族，值名以 script docs 为准）、每周收支待查。GBR 即使跌出 rank 1–16 也照写财政行——它是 agent 本体所在国，无门槛
 
-- 写日志：一行一国，统一前缀＋年份＋rank＋tag＋数据。`debug_log` 的消息支持本地化字符串内插（ROOT/SCOPE/PREV 可用，wiki Effect 文档已证），数值经内插写进字符串
+- 写日志：一行一国，`debug_log` 的消息支持本地化字符串内插（ROOT/SCOPE/PREV 可用，wiki Effect 文档已证），数值经内插写进字符串。行格式（`<>` 为占位）：
+
+  - 国家行（rank 1–16 每国一行）：`vic3-GreatBritain state tag=<tag> year=<年> rank=<名次> gdp=<GDP> army=<营队数>`
+    - 示例：`vic3-GreatBritain state tag=FRA year=1836 rank=3 gdp=12345.6 army=20`
+  - 财政行（仅 GBR，每年追加一行）：`vic3-GreatBritain fin tag=<tag> year=<年> gold=<金库> debt=<债务本金> week_net=<每周收支>`
+    - 示例：`vic3-GreatBritain fin tag=GBR year=1836 gold=54321.0 debt=0.0 week_net=12.3`
 
 待实测清单（首次跑 mod 一起验证）：
 
-- debug.log 落点与 -debug_mode 依赖（即前提节的待验项）
+- debug.log 落点与 -debug_mode 依赖（即前提节的待验项），含行是否带游戏加的时间戳/来源头（影响 mcp 侧的过滤与解析写法）
 - 内插直接引用取值的写法是否可行；不行则回退：effect 里 set_variable 存数、内插取变量
 - 债务、每周收支的具体值名（游戏安装目录 documentation/ 的 script docs 是全量表，wiki 只列了部分）
 
