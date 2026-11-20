@@ -3,7 +3,7 @@
 	"id": "local.vic3-greatbritain.state-export",
 	"version": "0.1.0",
 	"game_id": "victoria3",
-	"supported_game_version": "*",
+	"supported_game_version": "1.15.2",
 	"short_description": "Yearly world snapshot into debug.log for the GB agent read side.",
 	"tags": ["utilities"],
 	"relationships": [],
