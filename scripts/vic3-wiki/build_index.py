@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Build README.md / INDEX.md / console quick reference for docs/vic3-wiki."""
+"""Build README.md / INDEX.md / console quick reference for 游戏wiki/vic3-wiki-en."""
 import json
 import re
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
-OUT = Path(r"D:\work\game-agent\参考资料\vic3-wiki-en")
+OUT = Path(r"D:\work\game-agent\游戏wiki\vic3-wiki-en")
 man = json.loads((OUT / "pages.json").read_text(encoding="utf-8"))
 by_title = {m["title"]: m for m in man}
 

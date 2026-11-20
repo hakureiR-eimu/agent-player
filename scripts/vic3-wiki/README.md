@@ -1,15 +1,15 @@
 # Victoria 3 Wiki 本地镜像工具
 
-产出物在 `参考资料/vic3-wiki-en/`（627 页 Markdown + README + INDEX + 控制台速查表，`-en` 后缀标注内容语言）
-与 `参考资料/vic3-wiki-zh/`（同结构的中文版，机器翻译＋规则保真，见下文「中文版」）。
+产出物在 `游戏wiki/vic3-wiki-en/`（627 页 Markdown + README + INDEX + 控制台速查表，`-en` 后缀标注内容语言）
+与 `游戏wiki/vic3-wiki-zh/`（同结构的中文版，机器翻译＋规则保真，见下文「中文版」）。
 
 ## 文件
 
 | 文件 | 用途 |
 |---|---|
-| `convert_to_md.py` | 把 `.cache/vic3-wiki-raw/*.json`（MediaWiki parse API 响应）转成 `参考资料/vic3-wiki-en/*.md`。幂等，可反复重跑。 |
+| `convert_to_md.py` | 把 `.cache/vic3-wiki-raw/*.json`（MediaWiki parse API 响应）转成 `游戏wiki/vic3-wiki-en/*.md`。幂等，可反复重跑。 |
 | `build_index.py` | 生成 `README.md`、`INDEX.md`（分组全量索引）、`console-quick-reference.md`（从 Console commands.md 自动提取的命令速查表）。需在 convert 之后运行。 |
-| `translate_to_zh.py` | 把 en 镜像全量翻译成 `参考资料/vic3-wiki-zh/`。读 `config/llm.json` 走智谱 Anthropic 兼容端点，断点续跑（分块缓存在 `.cache/vic3-wiki-zh/chunks/`）。 |
+| `translate_to_zh.py` | 把 en 镜像全量翻译成 `游戏wiki/vic3-wiki-zh/`。读 `config/llm.json` 走智谱 Anthropic 兼容端点，断点续跑（分块缓存在 `.cache/vic3-wiki-zh/chunks/`）。 |
 | `glossary_zh.json` | 翻译术语表：Vic3 官方简体中文明译名 + 保留英文的脚本概念词，翻译时注入提示词。 |
 | `verify_zh.py` | zh 版全量校验：对照 en 源逐文件检查 front matter、围栏/图片/链接/标题数、中文占比、残留占位符。 |
 | `fill_blocked.py` | 兜底：仍缺的 zh 文件用英文原版填充并标注 kept-english（保证文件齐全、链接可解析）。 |

@@ -11,8 +11,8 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "参考资料" / "vic3-wiki-en"
-DST = ROOT / "参考资料" / "vic3-wiki-zh"
+SRC = ROOT / "游戏wiki" / "vic3-wiki-en"
+DST = ROOT / "游戏wiki" / "vic3-wiki-zh"
 
 FENCE_RE = re.compile(r"^\s*```")
 IMG_RE = re.compile(r"!\[[^\]]*\]\([^)]*\)")

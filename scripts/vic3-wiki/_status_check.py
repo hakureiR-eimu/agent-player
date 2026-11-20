@@ -7,7 +7,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parents[2]
-DST = ROOT / "参考资料" / "vic3-wiki-zh"
+DST = ROOT / "游戏wiki" / "vic3-wiki-zh"
 CACHE = ROOT / ".cache" / "vic3-wiki-zh"
 
 print("cache exists:", CACHE.exists())

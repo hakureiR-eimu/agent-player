@@ -5,7 +5,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
-zh = Path(__file__).resolve().parents[2] / "参考资料" / "vic3-wiki-zh"
+zh = Path(__file__).resolve().parents[2] / "游戏wiki" / "vic3-wiki-zh"
 
 kept, untr, translators = [], [], Counter()
 for p in sorted(zh.glob("*.md")):

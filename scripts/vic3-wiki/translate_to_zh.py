@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把 参考资料/vic3-wiki-en/ 的 Markdown 翻译成中文，落到 参考资料/vic3-wiki-zh/。
+"""把 游戏wiki/vic3-wiki-en/ 的 Markdown 翻译成中文，落到 游戏wiki/vic3-wiki-zh/。
 
 用法：
     python scripts/vic3-wiki/translate_to_zh.py                 # 全量（断点续跑，已完成的跳过）
@@ -25,8 +25,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "参考资料" / "vic3-wiki-en"
-DST = ROOT / "参考资料" / "vic3-wiki-zh"
+SRC = ROOT / "游戏wiki" / "vic3-wiki-en"
+DST = ROOT / "游戏wiki" / "vic3-wiki-zh"
 CACHE = ROOT / ".cache" / "vic3-wiki-zh"
 CHUNKS_DIR = CACHE / "chunks"
 GLOSSARY = Path(__file__).resolve().parent / "glossary_zh.json"

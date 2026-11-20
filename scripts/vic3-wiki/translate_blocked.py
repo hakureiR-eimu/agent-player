@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """补翻被内容风控拦截的页面（translate_to_zh.py 的接力者，独立实现）。
 
-目标自动发现：参考资料/vic3-wiki-zh/ 里 front matter 带 `translator: kept-english` 的文件。
+目标自动发现：游戏wiki/vic3-wiki-zh/ 里 front matter 带 `translator: kept-english` 的文件。
 级联策略（逐块，一个模型被 1301 拦就换下一个）：
     glm-4.7 → glm-4.6 → glm-4.5-air → glm-5.3 → glm-4.7(精简提示词，不带术语表)
 保真机制：链接目标 {#n} 占位符还原、多余链接降级、围栏/图片/链接/标题计数校验、带反馈重试。
@@ -26,8 +26,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "参考资料" / "vic3-wiki-en"
-DST = ROOT / "参考资料" / "vic3-wiki-zh"
+SRC = ROOT / "游戏wiki" / "vic3-wiki-en"
+DST = ROOT / "游戏wiki" / "vic3-wiki-zh"
 CACHE_DIR = ROOT / ".cache" / "vic3-wiki-zh" / "blocked-chunks"
 GLOSSARY = Path(__file__).resolve().parent / "glossary_zh.json"
 TODAY = "2026-10-28"

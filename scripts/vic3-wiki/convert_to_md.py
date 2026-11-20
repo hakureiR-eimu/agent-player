@@ -2,7 +2,7 @@
 """Convert cached MediaWiki parse-API JSON (Victoria 3 wiki) into Markdown files.
 
 Input : .cache/vic3-wiki-raw/*.json   (MediaWiki action=parse, formatversion=2)
-Output: docs/vic3-wiki/<Title>.md + pages.json manifest (for index building)
+Output: 游戏wiki/vic3-wiki-en/<Title>.md + pages.json manifest (for index building)
 
 Usage: python scripts/vic3-wiki/convert_to_md.py
 """
@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup, CData, Comment, Doctype, ProcessingInstruction, N
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / ".cache" / "vic3-wiki-raw"
-OUT_DIR = ROOT / "参考资料" / "vic3-wiki-en"
+OUT_DIR = ROOT / "游戏wiki" / "vic3-wiki-en"
 WIKI_BASE = "https://vic3.paradoxwikis.com/"
 
 # ---------------------------------------------------------------- utilities
