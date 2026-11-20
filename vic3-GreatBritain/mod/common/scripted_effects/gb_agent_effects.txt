@@ -13,14 +13,15 @@ gb_agent_export_state = {
 			# 比较国家世界名次的 trigger（wiki Trigger 文档已证，同族示例 global_country_ranking > 42）
 			global_country_ranking <= 16
 		}
-		# 各字段（均 wiki GUI 脚本函数表已证存在于 Country 对象）：
-		#   tag   GetTagName      输出是否为三字码待实测
-		#   year  TimeKeeper.GetCurrentDate.GetString（原版 debug_log 用例写法），
-		#         输出为完整日期字符串，是否纯年份待实测；不行为纯年时试 Date.Format 或 mcp 侧截取
-		#   rank  GetRankNumber   国家名次数字，是否即 world ranking 待实测
-		#   gdp   GetGDP          与 trigger gdp 同义（yearly predicted GDP）
-		#   army  GetNumBattalions 是否排除已征召兵待实测；不符则换 GetBattalions
-		debug_log = "vic3-GreatBritain state tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] rank=[THIS.GetCountry.GetRankNumber] gdp=[THIS.GetCountry.GetGDP] army=[THIS.GetCountry.GetNumBattalions]"
+		# 各字段（均 wiki GUI 脚本函数表已证存在于 Country 对象；2026-11-20 首次实测收敛见 prd 待实测清单）：
+		#   tag   GetTagName      已实测：输出三字码
+		#   year  TimeKeeper.GetCurrentDate.GetString，已实测输出完整本地化日期（如"6月 13, 1836"，
+		#         含空格逗号），year 定案由 mcp 侧从值尾抽 4 位年份数字；行内含空格，mcp 解析须按字段名取值不按空格切分
+		#   rank  GetCountryScorePosition 世界名次（首次实测 GetRankNumber 输出的是国家分级 5-7 非名次，已换；
+		#         与 global_country_ranking 同值待二次实测）
+		#   gdp   GetGDP          已实测：原始小数无千分位无缩写
+		#   army  GetNumBattalions 开局值合理；是否排除征召兵和平期验不出，留观察
+		debug_log = "vic3-GreatBritain state tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] rank=[THIS.GetCountry.GetCountryScorePosition] gdp=[THIS.GetCountry.GetGDP] army=[THIS.GetCountry.GetNumBattalions]"
 	}
 
 	# 财政行：仅大不列颠追加；不受上面 16 强门槛约束（GBR 跌出名次财政也要记）
@@ -29,10 +30,10 @@ gb_agent_export_state = {
 			# scope 相等比较的原版写法（00_oregon.txt：c:USA = ROOT）
 			c:GBR = ROOT
 		}
-		# gold     GetGoldReserves   金库（wiki Trigger 文档 gold_reserves 同义）
-		# debt     GetPrincipal      债务本金（wiki Trigger 文档 principal 同义）
-		# week_net GetWeeklyBalance  每周净收支；与 trigger net_total_income（收抵支后的余量）的
-		#          对应关系待实测，不符则回退记周收入 GetWeeklyIncome（trigger income 同义）
+		# gold     GetGoldReserves   金库（wiki Trigger 文档 gold_reserves 同义）；已实测输出原始小数
+		# debt     GetPrincipal      债务本金（wiki Trigger 文档 principal 同义）；已实测输出原始小数
+		# week_net GetWeeklyBalance  每周净收支；首次实测输出带符号原始小数（开局 GBR -10.8万/周），
+		#          量级合理，与 trigger net_total_income 的严格同值无从交叉验证，按界面语义采信
 		debug_log = "vic3-GreatBritain fin tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] gold=[THIS.GetCountry.GetGoldReserves] debt=[THIS.GetCountry.GetPrincipal] week_net=[THIS.GetCountry.GetWeeklyBalance]"
 	}
 }
