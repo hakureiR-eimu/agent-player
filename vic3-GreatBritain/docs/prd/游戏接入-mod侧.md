@@ -26,7 +26,7 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
 - 挂年度钩子：在 mod 的 common/on_actions 文件里给基础 on_action `on_yearly_pulse_country` 附加（wiki On action 文档已证：country 作用域，每国每年触发一次；on_actions 的游戏目录是 common/on_actions；给基础 on_action 只能追加 on_actions/events 块，加别的块会报错，官方模板即"基础 on_action 触发时调用 mod 自建的 on_action"，effect 写在自建 on_action 里）
 
-- 判强国：钩子第一层用 `global_country_ranking <= 16` 做门槛（比较国家世界名次的 trigger，wiki Trigger 文档已证，同族示例 `global_country_ranking > 42`）。各国触发顺序不保证按名次，且实测各国在各自周年日触发、同一年的快照散布全年，所以每行记录自带 rank 值，mcp 侧按行内年份分组聚合、排序
+- 判强国：钩子第一层用 `global_country_ranking <= 16` 做门槛（比较国家世界名次的 trigger，wiki Trigger 文档已证，同族示例 `global_country_ranking > 42`）。各国触发顺序不保证按名次，且实测同一年的各行触发日期散布全年（各国不同日；每国是否每年固定同一天未验，见文末待实测清单），所以每行记录自带 rank 值，mcp 侧每国取最新一条、按行内 rank 排序
 
 - 取国别两项（作用域都是 country，均 wiki Trigger 文档已证）：
   - GDP：`gdp`（"yearly predicted GDP"）
@@ -45,10 +45,14 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
   - 每行被游戏加头：`[墙钟时间][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:<脚本行号>: `——墙钟时间不是游戏内时间，脚本行号可区分国家行（14）与财政行（20）；行尾 CRLF；与原版其他 debug_log 输出混在同一文件，按行内 `vic3-GreatBritain ` 前缀过滤
   - year 值是完整本地化日期（`12月 27, 1837`，含空格逗号、随游戏语言走）：解析按字段名取值、不按空格切分，从值尾取 4 位数字为年份
-  - rank 是触发当刻的世界名次：同一年的各行取的是各自周年日当刻值，可能出现并列（实测 1837 年 BRZ 与 BEL 均 rank=11，不同时点）；每年通常 16 行，席位年中变动时理论可 15–17 行，不硬性假设恰好 16
+  - rank 是触发当刻的世界名次：同一年的各行取的是各自触发时点的当刻值，可能出现并列（实测 1837 年 BRZ 与 BEL 均 rank=11，不同时点）；每年通常 16 行，席位年中变动时理论可 15–17 行，不硬性假设恰好 16
   - 数值为原始小数（无千分位无单位缩写），负数带负号
   - 游戏写日志不是逐行立刻写进文件，而是先攒在内存里攒一批才落盘：游戏跑着时去读，文件的最后一行可能只有前半截（实测遇到过财政行只落了开头一段）。mcp 侧解析时最后一行解析不出就跳过，下次读它就完整了
 
+## 待实测清单（下次跑 mod 验证）
+
+- 年度触发的日期机制：每国每年固定同一天，还是每年随机一天——判别法是对比同一 tag 连续两年的触发日期（行内 year 值），同月同日为固定、不同为随机；只影响快照时点的语义解读，不影响 mcp 侧按年分组
+
 ## 前提
 
-- 游戏以 -debug_mode 启动（实测脚本 debug_log 输出成立；不加是否也输出未验，按此前提恒开）。输出落点 `Documents\Paradox Interactive\Victoria 3\logs\debug.log`，随启动轮转（debug.log → debug.1.log，各保留 5 份），mcp 侧跨轮转文件读
+- 游戏以 -debug_mode 启动（实测脚本 debug_log 输出成立；不加是否也输出未验，按此前提恒开）。输出落点 `Documents\Paradox Interactive\Victoria 3\logs\debug.log`，随启动轮转（debug.log → debug.1.log，各保留 5 份）
