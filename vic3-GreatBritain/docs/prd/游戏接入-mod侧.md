@@ -27,20 +27,21 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
   - GDP：`gdp`（"yearly predicted GDP"）
   - 常备军：`army_size`（营队数）
 
-- 大不列颠财政：同一钩子里特判 tag GBR，追加财政行——`gold_reserves`（金库，wiki Trigger 文档已证）、债务本金（debt 一族，值名以 script docs 为准）、每周收支待查。GBR 即使跌出 rank 1–16 也照写财政行——它是 agent 本体所在国，无门槛
+- 大不列颠财政：同一钩子里特判 tag GBR，追加财政行——`gold_reserves`（金库）、`principal`（债务本金）、`net_total_income`（每周净收支，收抵支后的余量）。均 wiki Trigger 文档已证，原版脚本有用例：`principal` 直接当值取（script_values 里 `add = principal`），`net_total_income` 用在条件判断（`net_total_income > 0`）。
 
 - 写日志：一行一国，`debug_log` 的消息支持本地化字符串内插（ROOT/SCOPE/PREV 可用，wiki Effect 文档已证），数值经内插写进字符串。行格式（`<>` 为占位）：
 
   - 国家行（rank 1–16 每国一行）：`vic3-GreatBritain state tag=<tag> year=<年> rank=<名次> gdp=<GDP> army=<营队数>`
     - 示例：`vic3-GreatBritain state tag=FRA year=1836 rank=3 gdp=12345.6 army=20`
-  - 财政行（仅 GBR，每年追加一行）：`vic3-GreatBritain fin tag=<tag> year=<年> gold=<金库> debt=<债务本金> week_net=<每周收支>`
+  - 财政行（仅 GBR，每年追加一行）：`vic3-GreatBritain fin tag=<tag> year=<年> gold=<金库> debt=<债务本金> week_net=<每周净收支>`
     - 示例：`vic3-GreatBritain fin tag=GBR year=1836 gold=54321.0 debt=0.0 week_net=12.3`
 
 待实测清单（首次跑 mod 一起验证）：
 
 - debug.log 落点与 -debug_mode 依赖（即前提节的待验项），含行是否带游戏加的时间戳/来源头（影响 mcp 侧的过滤与解析写法）
 - 内插直接引用取值的写法是否可行；不行则回退：effect 里 set_variable 存数、内插取变量
-- 债务、每周收支的具体值名（游戏安装目录 documentation/ 的 script docs 是全量表，wiki 只列了部分）
+- 周净收支 `net_total_income` 当值取出（内插或存变量）是否可行，随内插那条一起实测——wiki 与原版只证了条件判断用法；不行则回退记周收入 `income`（Script value 文档示例 `value = income`，已证可直接当值），行格式的 week_net 字段随回退改为 income
+- 全量值表的来源修正：不是游戏安装目录的文件（实测无 documentation/ 文件夹），是游戏内 `script_docs` 控制台命令导出的；wiki 的 Trigger/Effect 表即由它生成，需要全量表时游戏内导一次
 
 ## 前提
 
