@@ -38,7 +38,7 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
 待实测清单（首次跑 mod 一起验证）：
 
-- debug.log 落点与 -debug_mode 依赖（即前提节的待验项），含行是否带游戏加的时间戳/来源头（影响 mcp 侧的过滤与解析写法）
+- debug.log 落点与行头格式已有本机旁证（2026-11-20 查普通启动的存留日志）：engine 自写 `Documents\Paradox Interactive\Victoria 3\logs\debug.log`，行头 `[墙钟时间][来源.cpp:行号]: `，不是游戏内日期——行内 year 字段因此是唯一的游戏内时间来源。待实测收敛为：脚本 debug_log 的输出是否进同一文件、是否依赖 -debug_mode（engine 自写不依赖，脚本 effect 惯例可能依赖）
 - 数值 data function 内插的输出格式：小数位、有无千分位/单位缩写（GetGDP 等是 CFixedPoint）；若内插不可行或格式不可控，回退：effect 里 set_variable 存数、内插取变量
 - GetTagName 输出是否为三字码（如 GBR、FRA）
 - GetRankNumber 是否即世界名次（与 trigger `global_country_ranking` 同值）
