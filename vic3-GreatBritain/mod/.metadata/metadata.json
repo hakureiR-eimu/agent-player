@@ -1,0 +1,13 @@
+{
+	"name": "vic3-GreatBritain State Export",
+	"id": "local.vic3-greatbritain.state-export",
+	"version": "0.1.0",
+	"game_id": "victoria3",
+	"supported_game_version": "*",
+	"short_description": "Yearly world snapshot into debug.log for the GB agent read side.",
+	"tags": ["utilities"],
+	"relationships": [],
+	"game_custom_data": {
+		"multiplayer_synchronized": true
+	}
+}

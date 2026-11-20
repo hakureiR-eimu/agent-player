@@ -1,0 +1,19 @@
+# 游戏接入 mod 侧：年度状态导出的挂钩
+# 交接面（debug.log 行格式）见 docs/prd/游戏接入-mod侧.md
+#
+# 挂法（wiki On action 官方模板）：给基础 on_action 只能追加 on_actions/events 块，
+# 别的块会报错；所以基础 on_action 只做转发，逻辑在 gb_agent_yearly_export 的 effect 里。
+
+# 基础 on_action：每国每年触发一次，country 作用域（wiki On action 表已证）
+on_yearly_pulse_country = {
+	on_actions = {
+		gb_agent_yearly_export
+	}
+}
+
+# 本 mod 的 on_action：调 scripted_effect 走导出逻辑
+gb_agent_yearly_export = {
+	effect = {
+		gb_agent_export_state = yes
+	}
+}
