@@ -29,28 +29,21 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
 - 大不列颠财政：同一钩子里特判 tag GBR，追加财政行——`gold_reserves`（金库）、`principal`（债务本金）、`net_total_income`（每周净收支，收抵支后的余量）。均 wiki Trigger 文档已证，原版脚本有用例：`principal` 直接当值取（script_values 里 `add = principal`），`net_total_income` 用在条件判断（`net_total_income > 0`）。
 
-- 写日志：一行一国，`debug_log` 的消息支持本地化字符串内插（ROOT/SCOPE/PREV 可用，wiki Effect 文档已证），数值经内插写进字符串。实现形式是 data function 内插：`[THIS.GetCountry.XXX]` 前缀为原版 debug_log 用例写法，各数值函数（GetGDP、GetRankNumber 等）出自 wiki GUI 脚本函数表，年份取 `[TimeKeeper.GetCurrentDate.GetString]`（原版用例）；tag 不走内插取名，GBR 特判用 scope 比较 `c:GBR = ROOT`（原版 journal 用例写法）。行格式（`<>` 为占位）：
+- 写日志：一行一国，`debug_log` 的消息支持本地化字符串内插（ROOT/SCOPE/PREV 可用，wiki Effect 文档已证），数值经内插写进字符串。实现形式是 data function 内插：`[THIS.GetCountry.XXX]` 前缀为原版 debug_log 用例写法，各数值函数出自 wiki GUI 脚本函数表（GDP 用 GetGDP、名次用 GetCountryScorePosition、营队用 GetNumBattalions、财政用 GetGoldReserves/GetPrincipal/GetWeeklyBalance；该表由游戏内 `script_docs` 控制台命令导出生成，需要全量表时游戏内导一次）；GBR 特判用 scope 比较 `c:GBR = ROOT`（原版 journal 用例写法）。行格式（`<>` 为占位，`<>` 外是字面量）：
 
-  - 国家行（rank 1–16 每国一行）：`vic3-GreatBritain state tag=<tag> year=<年> rank=<名次> gdp=<GDP> army=<营队数>`
-    - 示例：`vic3-GreatBritain state tag=FRA year=1836 rank=3 gdp=12345.6 army=20`
-  - 财政行（仅 GBR，每年追加一行）：`vic3-GreatBritain fin tag=<tag> year=<年> gold=<金库> debt=<债务本金> week_net=<每周净收支>`
-    - 示例：`vic3-GreatBritain fin tag=GBR year=1836 gold=54321.0 debt=0.0 week_net=12.3`
+  - 国家行（rank 1–16 每国一行）：`vic3-GreatBritain state tag=<tag> year=<日期> rank=<名次> gdp=<GDP> army=<营队数>`
+    - 实测行：`[23:17:45][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=FRA year=12月 27, 1837 rank=3 gdp=24109387.47464 army=282`
+  - 财政行（仅 GBR，每年追加一行）：`vic3-GreatBritain fin tag=<tag> year=<日期> gold=<金库> debt=<债务本金> week_net=<每周净收支>`
+    - 实测行：`[23:10:36][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:20: vic3-GreatBritain fin tag=GBR year=12月 31, 1836 gold=0 debt=440232.39442 week_net=-108278.71675`
 
-首次实测（2026-11-20，俄罗斯开局跑过 1836 年度钩子，-debug_mode）已收敛：
+  行的实测形态（mcp 侧解析须知，2026-11-20 两轮实测）：
 
-- 脚本 debug_log 输出成立，进 `Documents\Paradox Interactive\Victoria 3\logs\debug.log`；行头 `[墙钟时间][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:<行号>: `，mcp 侧按行内 `vic3-GreatBritain ` 前缀过滤即可；-debug_mode 下成立，不加是否也出不再验（前提已定要开）
-- 数值 data function 内插成立：原始小数、无千分位无缩写、负数带负号（CFixedPoint 与 int32 均如此）
-- GetTagName 输出三字码；国家行恰好 16 行；GBR 财政行每年恰好一行
-- week_net 用 GetWeeklyBalance 输出带符号原始小数，开局量级合理（GBR 周净 -10.8 万），与 trigger `net_total_income` 严格同值无从交叉验证，按界面语义采信
-- year 输出完整本地化日期（如"6月 13, 1836"，含空格逗号）：定案 year 由 mcp 侧从值尾抽 4 位年份数字，mcp 解析按字段名取值、不按空格切分
-- 年度触发机制：on_yearly_pulse_country 不是统一 1月1日，每国在各自周年日触发（实测从 6月13日 BRZ 到 12月31日 GBR 不等），同一年的快照散布全年，mcp 侧按行内年份分组聚合
-
-待二次实测（rank 换写法后跑一年核对）：
-
-- GetRankNumber 首次实测输出 5/6/7，是国家分级（country tier）不是世界名次；已换 GetCountryScorePosition（int32，对应 `global_country_ranking` 的 Power Ranking position），与门槛同值性待核对——16 行的 rank 值恰为 1–16 且互不重复即成立
-- GetNumBattalions 开局值合理（GBR 135、RUS 200、CHI 578）；是否排除征召兵和平期验不出，遇到战争年顺带观察即可，不单独立项验证
-- 全量值表的来源修正：不是游戏安装目录的文件（实测无 documentation/ 文件夹），是游戏内 `script_docs` 控制台命令导出的；wiki 的 Trigger/Effect 表即由它生成，需要全量表时游戏内导一次
+  - 每行被游戏加头：`[墙钟时间][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:<脚本行号>: `——墙钟时间不是游戏内时间，脚本行号可区分国家行（14）与财政行（20）；行尾 CRLF；与原版其他 debug_log 输出混在同一文件，按行内 `vic3-GreatBritain ` 前缀过滤
+  - year 值是完整本地化日期（`12月 27, 1837`，含空格逗号、随游戏语言走）：解析按字段名取值、不按空格切分，从值尾取 4 位数字为年份
+  - rank 是触发当刻的世界名次：同一年的各行取的是各自周年日当刻值，可能出现并列（实测 1837 年 BRZ 与 BEL 均 rank=11，不同时点）；每年通常 16 行，席位年中变动时理论可 15–17 行，不硬性假设恰好 16
+  - 数值为原始小数（无千分位无单位缩写），负数带负号
+  - 日志缓冲非即时刷盘，文件末行可能半截，跳过不完整行
 
 ## 前提
 
-- 游戏须以 -debug_mode 启动；是否为 debug.log 输出所必需，与落点一起实测确认
+- 游戏以 -debug_mode 启动（实测脚本 debug_log 输出成立；不加是否也输出未验，按此前提恒开）。输出落点 `Documents\Paradox Interactive\Victoria 3\logs\debug.log`，随启动轮转（debug.log → debug.1.log，各保留 5 份），mcp 侧跨轮转文件读

@@ -17,10 +17,10 @@ gb_agent_export_state = {
 		#   tag   GetTagName      已实测：输出三字码
 		#   year  TimeKeeper.GetCurrentDate.GetString，已实测输出完整本地化日期（如"6月 13, 1836"，
 		#         含空格逗号），year 定案由 mcp 侧从值尾抽 4 位年份数字；行内含空格，mcp 解析须按字段名取值不按空格切分
-		#   rank  GetCountryScorePosition 世界名次（首次实测 GetRankNumber 输出的是国家分级 5-7 非名次，已换；
-		#         与 global_country_ranking 同值待二次实测）
+		#   rank  GetCountryScorePosition 世界名次，已实测（1837 年 16 行取值 1-16，GBR=1）；
+		#         首版用过的 GetRankNumber 实测输出的是国家分级（5-7）非名次，勿回退
 		#   gdp   GetGDP          已实测：原始小数无千分位无缩写
-		#   army  GetNumBattalions 开局值合理；是否排除征召兵和平期验不出，留观察
+		#   army  GetNumBattalions 营队数（开局值合理；征召期口径遇战争年顺带看）
 		debug_log = "vic3-GreatBritain state tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] rank=[THIS.GetCountry.GetCountryScorePosition] gdp=[THIS.GetCountry.GetGDP] army=[THIS.GetCountry.GetNumBattalions]"
 	}
 
