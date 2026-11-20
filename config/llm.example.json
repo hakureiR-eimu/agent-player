@@ -1,5 +1,0 @@
-{
-  "baseUrl": "https://open.bigmodel.cn/api/anthropic",
-  "apiKey": "你的GLM APIKey，改成真实的",
-  "model": "glm-5.3"
-}
