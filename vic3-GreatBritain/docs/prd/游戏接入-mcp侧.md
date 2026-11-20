@@ -1,6 +1,6 @@
 # 游戏接入-mcp侧
 
-游戏接入拆成两侧：mod 侧（[游戏接入-mod侧](游戏接入-mod侧.md)）把游戏内状态导出到 debug.log，mcp 侧（本文件）把日志变成 agent 可用的工具。mcp-server 在 vic3-GreatBritain/mcp-server/，TypeScript 写，是游戏侧唯一的外部通道。第一版只做读工具；写工具（操作注入、回执）随写侧后续版本。
+游戏接入拆成两侧：mod 侧（[游戏接入-mod侧](游戏接入-mod侧.md)）把游戏内状态导出到 debug.log，mcp 侧（本文件）把日志变成 agent 可用的工具。mcp-server 在 vic3-GreatBritain/mcp-server/，TypeScript 写，是游戏侧唯一的外部通道。第一版读工具直接实现；写工具只声明一个——发起外交博弈（start_play），实现空置，随写侧版本补。
 
 ## 职责与边界
 
@@ -8,10 +8,10 @@ mcp 侧的边界：从 debug.log 到 MCP 工具为止——解析 mod 侧定义�
 
 ## 声明：做什么
 
-第一版两个读工具：
+第一版两个工具：
 
-- get_yearly_state：取一年的世界格局快照，返回结构化数据；year 参数可省，省则取最新一年
-- list_years：列出有哪些年份的记录
+- get_state：读游戏的最新状态——最新一年的世界格局快照，返回结构化数据
+- start_play：发起外交博弈（写工具），实现空置——工具注册给客户端，调用返回固定的"未实现"应答
 
 ## 实现：怎么做
 
@@ -20,7 +20,7 @@ mcp 侧的边界：从 debug.log 到 MCP 工具为止——解析 mod 侧定义�
 - 合并去重：debug.log 与轮转的 debug.1.log ~ debug.5.log 按旧到新依次读入，同一 (tag, year) 后读的覆盖先读的——跨会话重跑同一年（读档、重开局）时，以最新一次记录为准
 - 日志定位：默认 Documents/Paradox Interactive/Victoria 3/logs/，路径可配置；链路验证不造 mock，配置指向一份真实格式的样例日志即可单测
 - MCP 接入：TypeScript＋官方 SDK（@modelcontextprotocol/sdk），stdio 传输，客户端按常规 MCP 服务挂载
-- get_yearly_state 返回模板（`<>` 为占位）：
+- get_state 返回模板（`<>` 为占位）：
 
   ```json
   {
@@ -45,8 +45,6 @@ mcp 侧的边界：从 debug.log 到 MCP 工具为止——解析 mod 侧定义�
   }
   ```
 
-- list_years 返回年份升序：`{"years": [1836, 1837, 1838]}`
-- year 指定的年份无记录时，报错并附可用年份（即 list_years 的结果）
 - 财政字段 week_net 若 mod 侧实测回退为 income，本侧字段名随之同步
 
 待实测清单（首次跑 mod 一起验证）：
