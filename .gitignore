@@ -27,3 +27,6 @@ state.json
 .venv/
 __pycache__/
 *.egg-info/
+
+# 编辑器本地配置（解释器/测试按钮等 VS Code 设置）
+.vscode/
