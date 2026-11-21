@@ -10,9 +10,9 @@ from events import Event, EventType
 import main as main_module
 
 
-def test_build_modules_骨架阶段明确报待建():
+def test_build_modules_骨架阶段明确报待建(tmp_path):
     try:
-        main_module.build_modules(load_config(env={}))
+        main_module.build_modules(load_config(tmp_path / "config.toml"))
     except NotImplementedError as e:
         assert "src/game/impl/" in str(e)
     else:

@@ -7,5 +7,5 @@ uv sync
 uv run pytest
 
 # 3. 启动 harness 进程（骨架阶段三大模块未建，装配处会明确报待建；Ctrl+C 退出）
-#    可配环境变量（Discord token、error.log 路径、游戏进程名、局文件夹，默认即真实值）见 src/config.py 文件头
+#    配置走开发文件夹下的 config.toml（模板 config.example.toml，复制改名后填 token）
 uv run python -m main

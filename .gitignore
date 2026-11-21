@@ -4,6 +4,9 @@ node_modules/
 config/feishu.json
 config/llm.json
 
+# harness 总配置（内含 Discord token；模板 config.example.toml 进库）
+vic3-GreatBritain/config.toml
+
 # 局内生长的数据不进版本库（profile 和目录结构进）
 agents/*/world/chat/*.md
 !agents/*/world/chat/.gitkeep
