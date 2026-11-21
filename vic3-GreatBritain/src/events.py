@@ -8,8 +8,9 @@
   new_year  年度通知    游戏接入推  agent 订
   reply     会话回复    agent 推    IM 接入订
 
-data 的结构由推事件的一方定义，骨架阶段只定 command：命令名字符串
-（startGame / loadGame / stopGame）；其余随各模块实现落定。
+data 的结构由推事件的一方定义，已定两件：command 是命令名字符串（startGame /
+loadGame / stopGame，IM 接入推），new_year 是年份数字（游戏接入推，指日志里新出现的
+本局记录年份）；message 与 reply 随 agent、IM 接入实现落定。
 """
 
 from __future__ import annotations

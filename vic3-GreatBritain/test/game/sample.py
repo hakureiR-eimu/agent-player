@@ -1,14 +1,15 @@
-import sys
-from pathlib import Path
+"""game 模块测试的公共样例：真实格式样例日志的路径与期望快照。
 
-# 让测试直接 import mcp-server/server.py
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+样例（fixtures/error.log）是 docs/调研/debug-log/error-2026-11-21.log 的原样拷贝
+（普通模式跑两年、1836/1837 各 17 行记录）；期望快照从样例里的记录行手工整理——
+每国最新一条都是 1837 年，按 rank 升序。换新的样例拷贝时，这份期望值要跟着
+样例里的记录行同步改。
+"""
+
+from pathlib import Path
 
 FIXTURE = Path(__file__).parent / "fixtures" / "error.log"
 
-# 期望快照：从 fixtures/error.log（docs/调研/debug-log/error-2026-11-21.log 的原样拷贝）
-# 里的 1837 年记录行手工整理——每国最新一条都是 1837 年，按 rank 升序。
-# 换新的样例拷贝时，这份期望值要跟着样例里的记录行同步改。
 EXPECTED_SNAPSHOT = {
     "powers": [
         {"tag": "GBR", "year": 1837, "rank": 1, "gdp": 31386151.21408, "army": 137},

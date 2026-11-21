@@ -14,8 +14,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["agent", "game", "im"]
+packages = ["agent", "game", "game.impl", "im"]
 py-modules = ["main", "config", "events", "dispatcher"]
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
+markers = ["e2e: game 模块端到端测试，直接对真实游戏验证，需要游戏在跑，默认不跑；跑法 uv run pytest -m e2e -s"]
+addopts = ["-m", "not e2e"]

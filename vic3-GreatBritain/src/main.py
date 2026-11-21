@@ -1,7 +1,7 @@
 """入口与装配（声明见 docs/prd/harness.md 主体实现）。
 
 进程从这起：读总配置 → 建事件总线 → 建三大模块 → 各模块接上总线 → 事件主循环 → 收摊退出。
-三大模块的实现在各自包里：src/game/（现有 mcp-server 迁入）、src/agent/、src/im/，实现进各包 impl/。
+三大模块的实现在各自包里：src/game/（已从独立 mcp-server 迁入）、src/agent/、src/im/，实现进各包 impl/。
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ import asyncio
 import logging
 
 from config import Config, load_config
+from game.impl.module import GameModuleImpl
 from dispatcher import AgentModule, Dispatcher, GameModule, ImModule
 from events import EventBus
 
@@ -17,15 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
-    """装配第一步：按配置把三大模块建出来。骨架阶段三块都没建，迁入/实现一块改一处：
+    """装配第一步：按配置把三大模块建出来。游戏接入已迁入，agent 与 IM 接入待建，建到哪步报哪步：
 
-    - 游戏接入：mcp-server（开发文件夹下的 mcp-server/server.py）迁入 src/game/impl/ 后在此实例化
+    - 游戏接入：GameModuleImpl（src/game/impl/），吃总配置的 error.log 路径与游戏进程名
     - agent：src/agent/impl/ 实现后在此实例化
     - IM 接入：src/im/impl/ 实现后在此实例化
     """
-    raise NotImplementedError(
-        "三大模块待建：游戏接入待迁入 src/game/impl/（现有 mcp-server），agent 与 IM 接入待实现"
-    )
+    game: GameModule = GameModuleImpl(config)
+    raise NotImplementedError("agent 与 IM 接入待建：src/agent/impl/、src/im/impl/")
 
 
 async def run() -> None:

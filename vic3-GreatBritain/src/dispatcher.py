@@ -13,14 +13,14 @@ from events import Event, EventBus, EventType
 
 
 class GameModule(Protocol):
-    """游戏接入（现有 mcp-server 迁入 src/game/，实现进 game/impl/）。"""
+    """游戏接入（实现已迁入 src/game/impl/，GameModuleImpl 照本协议实现）。"""
 
     async def start(self, bus: EventBus) -> None:
         """接上总线、起 error.log 轮询：发现新年份的本局记录推 new_year。"""
         ...
 
     async def attach_session(self) -> None:
-        """会话接上游戏接入：get_state/start_play 注册进会话（迁入时落）。"""
+        """会话接上游戏接入：get_state/start_play 注册进会话（随 agent 模块实现落）。"""
         ...
 
     async def stop(self) -> None: ...

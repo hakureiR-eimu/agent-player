@@ -26,7 +26,7 @@ state.json
 # 游戏原版脚本 junction（链向 Steam 安装目录，只读参考，不进版本库）
 /游戏原版/
 
-# Python 虚拟环境与缓存（mcp-server）
+# Python 虚拟环境与缓存（harness）
 .venv/
 __pycache__/
 *.egg-info/

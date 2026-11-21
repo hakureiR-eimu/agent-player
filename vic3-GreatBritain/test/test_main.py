@@ -10,13 +10,14 @@ from events import Event, EventType
 import main as main_module
 
 
-def test_build_modules_骨架阶段明确报待建(tmp_path):
+def test_build_modules_agent与IM未建时明确报待建(tmp_path):
     try:
         main_module.build_modules(load_config(tmp_path / "config.toml"))
     except NotImplementedError as e:
-        assert "src/game/impl/" in str(e)
+        assert "src/agent/impl/" in str(e)
+        assert "src/im/impl/" in str(e)
     else:
-        raise AssertionError("骨架阶段 build_modules 应报 NotImplementedError")
+        raise AssertionError("agent 与 IM 未建时 build_modules 应报 NotImplementedError")
 
 
 def test_run_从装配经命令到退出的完整顺序(monkeypatch):
