@@ -9,10 +9,13 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from agent.module import AgentModule
 from config import Config, load_config
-from game.impl.module import GameModuleImpl
-from dispatcher import AgentModule, Dispatcher, GameModule, ImModule
+from dispatcher import Dispatcher
 from events import EventBus
+from game.module import GameModule
+from game.impl.module import GameModuleImpl
+from im.module import ImModule
 
 logger = logging.getLogger(__name__)
 

@@ -1,61 +1,15 @@
 """调度（声明见 docs/prd/harness.md 主体实现·局状态与命令执行）。
 
 主体记一个状态——会话在不在跑；命令到了按状态排动作。主体只排顺序，动作本身调三大
-模块干。三大模块的接口形状在本文件以 Protocol 声明：游戏接入迁入 src/game/、
-agent 落 src/agent/、IM 接入落 src/im/ 时照此实现。
+模块干。三大模块的接口形状在各自包的 module.py 声明（game/agent/im），本文件只引用。
 """
 
 from __future__ import annotations
 
-from typing import Protocol
-
+from agent.module import AgentModule
 from events import Event, EventBus, EventType
-
-
-class GameModule(Protocol):
-    """游戏接入（实现已迁入 src/game/impl/，GameModuleImpl 照本协议实现）。"""
-
-    async def start(self, bus: EventBus) -> None:
-        """接上总线、起 error.log 轮询：发现新年份的本局记录推 new_year。"""
-        ...
-
-    async def attach_session(self) -> None:
-        """会话接上游戏接入：get_state/start_play 注册进会话（随 agent 模块实现落）。"""
-        ...
-
-    async def stop(self) -> None: ...
-
-
-class AgentModule(Protocol):
-    """agent（实现在 src/agent/，实现进 agent/impl/，能力声明待补齐后写）。"""
-
-    async def start(self, bus: EventBus) -> None:
-        """接上总线：订 message、new_year（空闲叫醒、忙时攒批），推 reply。"""
-        ...
-
-    async def start_session(self, fresh: bool) -> None:
-        """起一个基于 GBR 的 agent 会话：fresh=True 先建全新的 GBR 文件夹，False 用已有的。"""
-        ...
-
-    async def stop_session(self) -> None:
-        """让会话整理自己的文件夹，然后结束会话。"""
-        ...
-
-    async def stop(self) -> None: ...
-
-
-class ImModule(Protocol):
-    """IM 接入（实现在 src/im/，实现进 im/impl/）。"""
-
-    async def start(self, bus: EventBus) -> None:
-        """接上总线、登录 Discord：大厅频道与私信的命令推 command，局频道消息推 message、订 reply。"""
-        ...
-
-    async def attach_session(self) -> None:
-        """会话接上 IM：局频道通到会话（实现时落）。"""
-        ...
-
-    async def stop(self) -> None: ...
+from game.module import GameModule
+from im.module import ImModule
 
 
 class CommandError(Exception):

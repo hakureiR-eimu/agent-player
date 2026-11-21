@@ -28,7 +28,7 @@ class GameNotRunningError(RuntimeError):
 
 
 class GameModuleImpl:
-    """GameModule 协议（src/dispatcher.py）的实现。"""
+    """GameModule 协议（src/game/module.py）的实现。"""
 
     def __init__(self, config: Config, poll_interval: float = POLL_INTERVAL_SECONDS) -> None:
         self._log_path = config.log_path
