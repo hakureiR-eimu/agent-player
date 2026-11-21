@@ -39,19 +39,19 @@ class Dispatcher:
             await self._im.send_receipt(f"{event.data} 执行完成")
 
     async def execute_command(self, command: str) -> None:
-        if command == "startGame":
+        if command == "开始新游戏":
             if self._session_running:
-                raise CommandError("会话已在跑，先 stopGame 再 startGame")
+                raise CommandError("会话已在跑，先保存游戏再开始新游戏")
             self._require_agent()
             await self._agent.start_session(fresh=True)
             self._session_running = True
-        elif command == "loadGame":
+        elif command == "继续游戏":
             if self._session_running:
-                raise CommandError("会话已在跑，先 stopGame 再 loadGame")
+                raise CommandError("会话已在跑，先保存游戏再继续游戏")
             self._require_agent()
             await self._agent.start_session(fresh=False)
             self._session_running = True
-        elif command == "stopGame":
+        elif command == "保存游戏":
             if self._session_running:
                 await self._agent.stop_session()
                 self._session_running = False
@@ -63,6 +63,6 @@ class Dispatcher:
             raise CommandError("agent 模块未建（src/agent/impl/），起不了会话")
 
     async def shutdown(self) -> None:
-        """进程收摊用：会话还在跑就先按 stopGame 收尾。"""
+        """进程收摊用：会话还在跑就先按保存游戏收尾。"""
         if self._session_running:
-            await self.execute_command("stopGame")
+            await self.execute_command("保存游戏")

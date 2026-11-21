@@ -66,8 +66,8 @@ def test_一个订者抛错后面的订者照投():
 
         bus.subscribe(EventType.COMMAND, bad)
         bus.subscribe(EventType.COMMAND, good)
-        bus.put(Event(EventType.COMMAND, "startGame"))
+        bus.put(Event(EventType.COMMAND, "开始新游戏"))
         assert await bus.dispatch_next() is True
-        assert got == ["startGame"]
+        assert got == ["开始新游戏"]
 
     asyncio.run(main())

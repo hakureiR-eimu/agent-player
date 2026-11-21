@@ -17,9 +17,9 @@ import discord
 logger = logging.getLogger(__name__)
 
 # dm bot 认的三条命令（白名单，命令词精确匹配）
-COMMANDS = ("startGame", "loadGame", "stopGame")
+COMMANDS = ("开始新游戏", "继续游戏", "保存游戏")
 
-UNKNOWN_COMMAND_HINT = "命令没认出来。我认这三条：startGame（开新档）、loadGame（继续存档）、stopGame（收尾）——@ 我加命令词。"
+UNKNOWN_COMMAND_HINT = "命令没认出来。我认这三条：开始新游戏、继续游戏、保存游戏——@ 我加命令词。"
 GUILD_MENTION_HINT = "公屏上我不聊天，有事私信我。"
 
 

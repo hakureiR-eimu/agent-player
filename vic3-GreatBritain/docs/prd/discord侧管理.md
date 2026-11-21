@@ -40,7 +40,7 @@ Discord 平台侧要办的活：建两个 bot、拉进服务器、token 交给 h
 token 填好后（在 vic3-GreatBritain/ 目录执行）：
 
 - `uv run python -m main` 启动——日志出现"dm bot 已登录 Discord""gbr bot 已登录 Discord"即连上
-- 公屏 @ dm bot 发 startGame：命令行打印命令内容，Discord 公屏收到回执（agent 未建的现在，回执如实报"agent 模块未建"）
+- 公屏 @ dm bot 发开始新游戏：命令行打印命令内容，Discord 公屏收到回执（agent 未建的现在，回执如实报"agent 模块未建"）
 - 私信 gbr bot 一句话：命令行打印私信内容
 - e2e 一轮（给人发真私信）：`E2E_DISCORD_PLAYER_ID=<玩家ID> uv run pytest -m e2e test/im/test_im_e2e.py -s`
 

@@ -74,16 +74,16 @@ def direct_message(content: str, *, author_id: int = 7, channel: FakeChannel | N
 
 
 def test_strip_mention_剥掉普通与昵称两种前缀():
-    assert strip_mention(f"<@{SELF_ID}> startGame", SELF_ID) == "startGame"
-    assert strip_mention(f"<@!{SELF_ID}> loadGame ", SELF_ID) == "loadGame"
-    assert strip_mention(f"  <@{SELF_ID}>   stopGame  ", SELF_ID) == "stopGame"
+    assert strip_mention(f"<@{SELF_ID}> 开始新游戏", SELF_ID) == "开始新游戏"
+    assert strip_mention(f"<@!{SELF_ID}> 继续游戏 ", SELF_ID) == "继续游戏"
+    assert strip_mention(f"  <@{SELF_ID}>   保存游戏  ", SELF_ID) == "保存游戏"
     assert strip_mention(f"<@{SELF_ID}>", SELF_ID) == ""
 
 
 def test_strip_mention_没到本bot返回None():
-    assert strip_mention(f"<@999> startGame", SELF_ID) is None  # @ 的是别的 bot
-    assert strip_mention("startGame", SELF_ID) is None  # 根本没 @
-    assert strip_mention("startGame <@100>", SELF_ID) is None  # @ 不在开头不算叫它
+    assert strip_mention(f"<@999> 开始新游戏", SELF_ID) is None  # @ 的是别的 bot
+    assert strip_mention("开始新游戏", SELF_ID) is None  # 根本没 @
+    assert strip_mention("开始新游戏 <@100>", SELF_ID) is None  # @ 不在开头不算叫它
 
 
 # ---- 回调分发：dm bot（公屏命令） ----
@@ -96,9 +96,9 @@ def test_dm_bot_公屏命中白名单调命令回调并记回执去处():
     bot = make_dm_bot(callbacks)
     lobby = FakeChannel()
 
-    asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> startGame", channel=lobby)))
+    asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> 开始新游戏", channel=lobby)))
 
-    assert commands == ["startGame"]
+    assert commands == ["开始新游戏"]
     assert bot.receipt_channel() is lobby
 
 
@@ -109,7 +109,7 @@ def test_dm_bot_白名单三条都认():
     bot = make_dm_bot(callbacks)
     for command in COMMANDS:
         asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> {command}")))
-    assert commands == ["startGame", "loadGame", "stopGame"]
+    assert commands == ["开始新游戏", "继续游戏", "保存游戏"]
 
 
 def test_dm_bot_不认识的词直回固定提示不调回调():
@@ -119,7 +119,7 @@ def test_dm_bot_不认识的词直回固定提示不调回调():
     bot = make_dm_bot(callbacks)
     lobby = FakeChannel()
 
-    asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> restartGame", channel=lobby)))
+    asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> 重开游戏", channel=lobby)))
     asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}>", channel=lobby)))  # 光 @ 没命令词
 
     assert commands == []
@@ -134,12 +134,12 @@ def test_dm_bot_滤bot账号与没到的消息():
 
     asyncio.run(
         bot.on_message(
-            FakeMessage(FakeUser(id=1, bot=True), f"<@{SELF_ID}> startGame", FakeChannel(), object())
+            FakeMessage(FakeUser(id=1, bot=True), f"<@{SELF_ID}> 开始新游戏", FakeChannel(), object())
         )
     )  # bot 账号（回执、别的 bot、自己）：一律不搭理
-    asyncio.run(bot.on_message(dm_message(f"<@999> startGame")))  # @ 的是别的 bot
-    asyncio.run(bot.on_message(dm_message("startGame")))  # 没 @
-    asyncio.run(bot.on_message(direct_message(f"<@{SELF_ID}> startGame")))  # 私信不归主持 bot 管
+    asyncio.run(bot.on_message(dm_message(f"<@999> 开始新游戏")))  # @ 的是别的 bot
+    asyncio.run(bot.on_message(dm_message("开始新游戏")))  # 没 @
+    asyncio.run(bot.on_message(direct_message(f"<@{SELF_ID}> 开始新游戏")))  # 私信不归主持 bot 管
 
     assert commands == []
 
@@ -208,17 +208,17 @@ def test_send_receipt_发到命令来的频道(tmp_path):
     module.on_command(commands.append)
     lobby = FakeChannel()
 
-    asyncio.run(module._dm.on_message(dm_message(f"<@{SELF_ID}> startGame", channel=lobby)))
-    asyncio.run(module.send_receipt("startGame 执行完成"))
+    asyncio.run(module._dm.on_message(dm_message(f"<@{SELF_ID}> 开始新游戏", channel=lobby)))
+    asyncio.run(module.send_receipt("开始新游戏 执行完成"))
 
-    assert commands == ["startGame"]
-    assert lobby.sent == ["startGame 执行完成"]
+    assert commands == ["开始新游戏"]
+    assert lobby.sent == ["开始新游戏 执行完成"]
 
 
 def test_send_receipt_还没命令来过明确报错(tmp_path):
     module = make_module(tmp_path)
     with pytest.raises(RuntimeError):
-        asyncio.run(module.send_receipt("startGame 执行完成"))
+        asyncio.run(module.send_receipt("开始新游戏 执行完成"))
 
 
 def test_start_缺token明确报缺哪项(tmp_path):

@@ -12,4 +12,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **游戏接入**（mod＋harness 的游戏接入子模块）＝ agent 的眼睛。mod 在游戏里每年把世界格局写进 error.log；子模块跑在 harness 进程内，把日志解析成三个方法（读取世界局势、发起博弈、新年判定），主体定时调新年判定，每年查到新年份记录时往事件队列推年度通知。接口声明在 harness 文档，实现在子模块文档（游戏接入-harness侧）。
 - **Discord 接入**＝ agent 的嘴和耳朵。bot 收玩家消息、把 agent 的话发回频道，只是消息通道，不知道游戏。
-- **harness**＝ agent 的身体。一个 Python 进程，装四块——主体管生命周期、调用其余三块（游戏接入、agent、IM 接入）——把 Discord 消息和游戏状态接到 agent 本体（Claude Code 会话）上：Discord 消息或游戏内年度更替 → harness 叫醒 agent 会话 → agent 调游戏接入读局势 → 回复发回 Discord。harness 代码一份（vic3-GreatBritain/src/，测试在 test/），进程不绑局：局文件夹固定一个（Victoria 3 用户目录下的 vic3-GreatBritain），agent 记忆文件在其下的 GBR 文件夹（profile/world/memory 三区，由 agent 管理装载）；agent 会话随局起止——startGame/loadGame 起会话，stopGame 让会话整理文件夹后结束。
+- **harness**＝ agent 的身体。一个 Python 进程，装四块——主体管生命周期、调用其余三块（游戏接入、agent、IM 接入）——把 Discord 消息和游戏状态接到 agent 本体（Claude Code 会话）上：Discord 消息或游戏内年度更替 → harness 叫醒 agent 会话 → agent 调游戏接入读局势 → 回复发回 Discord。harness 代码一份（vic3-GreatBritain/src/，测试在 test/），进程不绑局：局文件夹固定一个（Victoria 3 用户目录下的 vic3-GreatBritain），agent 记忆文件在其下的 GBR 文件夹（profile/world/memory 三区，由 agent 管理装载）；agent 会话随局起止——开始新游戏/继续游戏起会话，保存游戏让会话整理文件夹后结束。

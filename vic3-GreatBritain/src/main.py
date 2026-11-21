@@ -93,7 +93,7 @@ async def run() -> None:
     try:
         await bus.run()
     finally:
-        # 进程收摊：先停年度节拍，会话还在跑再按 stopGame 收尾，最后按装配的反序让模块停
+        # 进程收摊：先停年度节拍，会话还在跑再按保存游戏收尾，最后按装配的反序让模块停
         year_poll.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await year_poll
