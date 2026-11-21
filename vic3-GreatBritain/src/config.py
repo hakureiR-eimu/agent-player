@@ -14,6 +14,7 @@ from __future__ import annotations
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 DEFAULT_LOG_PATH = Path.home() / "Documents" / "Paradox Interactive" / "Victoria 3" / "logs" / "error.log"
 DEFAULT_GAME_PROCESS = "victoria3.exe"
@@ -35,7 +36,7 @@ class Config:
 
 def load_config(path: Path = CONFIG_PATH) -> Config:
     """从配置文件读配置；path 参数供测试传入临时文件。文件没建按全默认，token 空串按没配。"""
-    data: dict = {}
+    data: dict[str, Any] = {}
     if path.exists():
         with path.open("rb") as f:
             data = tomllib.load(f)

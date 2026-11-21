@@ -9,7 +9,33 @@ new_year 事件。本模块零总线、零 agent 知识。
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, TypedDict
+
+
+class Power(TypedDict):
+    """一国的格局：该国最新一条 state 记录的字段。"""
+
+    tag: str
+    year: int
+    rank: int
+    gdp: float
+    army: int
+
+
+class GbrFinance(TypedDict):
+    """大不列颠的财政：最新一年 fin 记录的字段。"""
+
+    year: int
+    gold: float
+    debt: float
+    week_net: float
+
+
+class WorldSnapshot(TypedDict):
+    """世界格局快照：powers 按行内 rank 升序；第一年还没导出过记录时 powers 空、gbr_finance None。"""
+
+    powers: list[Power]
+    gbr_finance: GbrFinance | None
 
 
 class GameModule(Protocol):
@@ -23,7 +49,7 @@ class GameModule(Protocol):
 
     # ---- 三个能力（前两个给 agent 调，新年判定给主体定时调） ----
 
-    def get_state(self) -> dict:
+    def get_state(self) -> WorldSnapshot:
         """读取世界局势：各国最新一条记录拼成的快照（powers 按 rank 升序），结构化数据。"""
         ...
 

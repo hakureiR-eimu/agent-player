@@ -13,6 +13,7 @@ from pathlib import Path
 from config import Config
 from game.impl.parser import build_snapshot, parse_record
 from game.impl.process import game_running
+from game.module import WorldSnapshot
 
 
 class GameNotRunningError(RuntimeError):
@@ -30,7 +31,7 @@ class GameModuleImpl:
 
     # ---- 两个方法（给 agent 调） ----
 
-    def get_state(self) -> dict:
+    def get_state(self) -> WorldSnapshot:
         """读取世界局势：各国最新一条记录拼成的快照（powers 按行内 rank 升序），
         游戏第一年还没导出过记录时返回空。"""
         self._require_game()

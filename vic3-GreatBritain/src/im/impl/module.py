@@ -15,6 +15,7 @@ import logging
 
 from config import Config
 from im.impl.bots import BotCallbacks, DmBot, GbrBot
+from im.module import CommandCallback, MessageCallback
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +36,10 @@ class ImModuleImpl:
 
     # ---- 收（被动）：装配时挂回调，bot 收到即调 ----
 
-    def on_command(self, callback) -> None:
+    def on_command(self, callback: CommandCallback) -> None:
         self._callbacks.command = callback
 
-    def on_message(self, callback) -> None:
+    def on_message(self, callback: MessageCallback) -> None:
         self._callbacks.message = callback
 
     # ---- 发（主动）：主体调 ----
@@ -78,18 +79,20 @@ class ImModuleImpl:
 
     async def start(self) -> None:
         """登录两个 bot（dm、gbr）、起 Gateway 长连接，等两个都在线。"""
-        missing = [
-            name
-            for name, token in (("dm_token", self._dm_token), ("gbr_token", self._gbr_token))
-            if not token
-        ]
-        if missing:
+        dm_token = self._dm_token
+        gbr_token = self._gbr_token
+        if not dm_token or not gbr_token:  # 直接判空：过了这道检查，类型上 token 就不是 None
+            missing = [
+                name
+                for name, token in (("dm_token", dm_token), ("gbr_token", gbr_token))
+                if not token
+            ]
             raise RuntimeError(
                 f"config.toml 缺 {'、'.join(missing)}：复制 config.example.toml 成 config.toml 填上"
             )
         try:
-            await self._dm.login(self._dm_token)
-            await self._gbr.login(self._gbr_token)
+            await self._dm.login(dm_token)
+            await self._gbr.login(gbr_token)
             self._tasks = [
                 asyncio.create_task(self._dm.connect()),
                 asyncio.create_task(self._gbr.connect()),

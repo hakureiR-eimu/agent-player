@@ -9,6 +9,12 @@ from __future__ import annotations
 
 from typing import Callable, Protocol
 
+CommandCallback = Callable[[str], None]
+"""命令回调：带命令词调它（玩家在大厅频道 @ dm bot 下命令，命中白名单后）。"""
+
+MessageCallback = Callable[[str, str], None]
+"""消息回调：带（玩家、正文）调它（玩家私信 gbr bot）。"""
+
 
 class ImModule(Protocol):
     """IM 接入的接口形状：实现在 impl/。
@@ -18,11 +24,11 @@ class ImModule(Protocol):
 
     # ---- 收（被动）：交出去，事件打包在装配处 ----
 
-    def on_command(self, callback: Callable[[str], None]) -> None:
+    def on_command(self, callback: CommandCallback) -> None:
         """注册命令回调：玩家在大厅频道 @ dm bot 下命令，命中白名单后带命令词调它。"""
         ...
 
-    def on_message(self, callback: Callable[[str, str], None]) -> None:
+    def on_message(self, callback: MessageCallback) -> None:
         """注册消息回调：玩家私信 gbr bot，带（玩家、正文）调它。"""
         ...
 

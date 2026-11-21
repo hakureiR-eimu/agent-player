@@ -8,7 +8,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "mypy>=1.14"]
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -24,3 +24,11 @@ where = ["src"]
 testpaths = ["test"]
 markers = ["e2e: game 模块端到端测试，直接对真实游戏验证，需要游戏在跑，默认不跑；跑法 uv run pytest -m e2e -s"]
 addopts = ["-m", "not e2e"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "test"]
+# 平级导入的三个根：src（主体与三大模块）、test（conftest）、test/game（sample）；
+# explicit_package_bases＝模块名按这些根算（全库无 __init__.py 的命名空间包，与运行时 sys.path 一致）
+mypy_path = ["src", "test", "test/game"]
+explicit_package_bases = true

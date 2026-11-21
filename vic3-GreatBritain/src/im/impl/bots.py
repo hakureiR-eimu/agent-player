@@ -12,9 +12,11 @@ MESSAGE_CONTENT 也能读内容（见 Discord 官方 Gateway 文档），Intents
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import cast
 
 import discord
+
+from im.module import CommandCallback, MessageCallback
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +34,8 @@ class BotCallbacks:
     """装配时经模块的 on_command/on_message 挂进来的回调，模块转发给两个 bot 持有。"""
 
     def __init__(self) -> None:
-        self.command: Callable[[str], None] | None = None
-        self.message: Callable[[str, str], None] | None = None
+        self.command: CommandCallback | None = None
+        self.message: MessageCallback | None = None
 
 
 def strip_mention(content: str, self_id: int) -> str | None:
@@ -77,6 +79,7 @@ class DmBot(BotBase):
     def __init__(self, callbacks: BotCallbacks, proxy: str | None = None) -> None:
         super().__init__(callbacks, "dm bot", proxy)
         self._command_channel: discord.abc.Messageable | None = None
+        self._command_guild: discord.Guild | None = None
 
     async def handle(self, message: discord.Message) -> None:
         if message.guild is None:
@@ -89,6 +92,7 @@ class DmBot(BotBase):
         if phrase in COMMANDS:
             logger.info("dm bot 收到命令 %s（来自 %s）", phrase, message.author)
             self._command_channel = message.channel  # 回执发到命令来的频道
+            self._command_guild = message.guild  # 频道建销查在命令来的服务器
             if self._callbacks.command is not None:
                 self._callbacks.command(phrase)
         else:
@@ -101,7 +105,7 @@ class DmBot(BotBase):
 
     # ---- 本局频道（GreatBritain）：建、销、查，主体按命令排着调 ----
 
-    def find_channel(self, guild: discord.Guild):
+    def find_channel(self, guild: discord.Guild) -> discord.TextChannel | None:
         """在服务器里找本局频道（名字不区分大小写），没有返回 None。"""
         for channel in guild.text_channels:
             if channel.name.casefold() == CHANNEL_NAME.casefold():
@@ -130,9 +134,9 @@ class DmBot(BotBase):
 
     def _require_guild(self) -> discord.Guild:
         """频道操作所在的服务器：最近一条命令来的。还没命令来过就明确报错。"""
-        if self._command_channel is None:
+        if self._command_guild is None:
             raise RuntimeError("还没有命令来过，不知道在哪个服务器操作频道")
-        return self._command_channel.guild
+        return self._command_guild
 
 
 class GbrBot(BotBase):
@@ -148,7 +152,9 @@ class GbrBot(BotBase):
                 await message.channel.send(GUILD_MENTION_HINT)
             return
         player = str(message.author.id)
-        self._dm_channels[player] = message.channel  # 记下私信频道，回复发回这里
+        # guild 为 None 的消息必来自私信频道（bot 进不了群聊私信）——类型标注表达不了这层
+        # 关联，cast 落实，字典照记 DMChannel
+        self._dm_channels[player] = cast(discord.DMChannel, message.channel)  # 回复发回这里
         logger.info("gbr bot 收到私信（来自 %s）：%s", message.author, message.content)
         if self._callbacks.message is not None:
             self._callbacks.message(player, message.content)

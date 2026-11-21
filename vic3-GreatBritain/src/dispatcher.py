@@ -47,28 +47,30 @@ class Dispatcher:
         if command == "开始游戏":
             if await self._im.has_channel():
                 raise CommandError("GreatBritain 频道已在，先结束游戏再开新的一局")
-            self._require_agent()
+            agent = self._require_agent()
             await self._im.create_channel()
-            await self._agent.start_session()
+            await agent.start_session()
             self._session_running = True
         elif command == "保存游戏":
             if self._session_running:
-                await self._agent.stop_session()
+                await self._require_agent().stop_session()
                 self._session_running = False
         elif command == "结束游戏":
             if not await self._im.has_channel():
                 raise CommandError("没有 GreatBritain 频道，没有挂着的局")
             if self._session_running:
-                await self._agent.stop_session()
+                await self._require_agent().stop_session()
                 self._session_running = False
             await self._im.destroy_channel()
             shutil.rmtree(self._gbr_dir, ignore_errors=True)  # 没建过 GBR 不算错
         else:
             raise CommandError(f"未知命令：{command}")
 
-    def _require_agent(self) -> None:
+    def _require_agent(self) -> AgentModule:
+        """取 agent 模块；未建时报错（起会话的命令用它落实 agent 必在）。"""
         if self._agent is None:
             raise CommandError("agent 模块未建（src/agent/impl/），起不了会话")
+        return self._agent
 
     async def shutdown(self) -> None:
         """进程收摊用：会话还在跑就先按保存游戏收尾（局还挂着，频道与 GBR 都不动）。"""

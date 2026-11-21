@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from typing import NoReturn
 
 from agent.module import AgentModule
 from config import Config, load_config
@@ -40,7 +41,7 @@ async def poll_new_year(bus: EventBus, game: GameModule) -> None:
             logger.info("游戏进入 %s 年，推 new_year 事件", year)
 
 
-def build_session_tools(game: GameModule):
+def build_session_tools(game: GameModule) -> NoReturn:
     """会话工具（主体是翻译层）：把游戏接入的方法包成 agent 会话的工具——agent 调
     get_state/start_play 工具时，翻译成对 game.get_state()/start_play() 的实际调用。
     经 SDK 的进程内 MCP 实现，随 agent 模块落地。

@@ -8,7 +8,9 @@ bot 的 self.user 登录后才有值，单测直接往 _connection.user 里塞�
 
 import asyncio
 from dataclasses import dataclass, field
+from typing import cast
 
+import discord
 import pytest
 
 from config import load_config
@@ -80,19 +82,22 @@ class FakeGuild:
 
 def make_dm_bot(callbacks: BotCallbacks | None = None) -> DmBot:
     bot = DmBot(callbacks or BotCallbacks())
-    bot._connection.user = FakeUser(id=SELF_ID)  # discord.py 登录后 self.user 才有值，单测直接塞
+    # discord.py 登录后 self.user 才有值，单测直接塞（替身是鸭子型，cast 落到真类型上）
+    bot._connection.user = cast(discord.ClientUser, FakeUser(id=SELF_ID))
     return bot
 
 
 def make_gbr_bot(callbacks: BotCallbacks | None = None) -> GbrBot:
     bot = GbrBot(callbacks or BotCallbacks())
-    bot._connection.user = FakeUser(id=SELF_ID)
+    bot._connection.user = cast(discord.ClientUser, FakeUser(id=SELF_ID))
     return bot
 
 
 def dm_message(content: str, *, author_id: int = 7, channel: FakeChannel | None = None) -> FakeMessage:
-    """公屏消息（guild 非 None），频道不传给个新的。"""
-    return FakeMessage(FakeUser(id=author_id), content, channel or FakeChannel(), guild=object())
+    """公屏消息（guild 非 None），频道不传给个新的。服务器与频道一致（真实 discord 两者相同）。"""
+    channel = channel or FakeChannel()
+    guild = channel.guild if channel.guild is not None else object()
+    return FakeMessage(FakeUser(id=author_id), content, channel, guild=guild)
 
 
 def direct_message(content: str, *, author_id: int = 7, channel: FakeChannel | None = None) -> FakeMessage:
@@ -181,7 +186,8 @@ def make_channel_bot(guild: FakeGuild) -> DmBot:
     """已收到过一条命令的 dm bot：频道操作都在命令来的服务器（假 guild）里。"""
     bot = make_dm_bot()
     lobby = FakeChannel(guild=guild)
-    asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> 开始游戏", channel=lobby)))
+    message = cast(discord.Message, dm_message(f"<@{SELF_ID}> 开始游戏", channel=lobby))
+    asyncio.run(bot.on_message(message))
     return bot
 
 
