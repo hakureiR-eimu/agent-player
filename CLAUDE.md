@@ -10,6 +10,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 三块主线与关系
 
-- **游戏接入**（mod＋mcp-server）＝ agent 的眼睛。mod 在游戏里每年把世界格局写进 debug.log；mcp-server 把日志解析成 MCP 读工具。只知道"游戏→MCP 工具"这一段，不依赖 Discord 和 harness，可直接挂给任何 MCP 客户端。
+- **游戏接入**（mod＋mcp-server）＝ agent 的眼睛。mod 在游戏里每年把世界格局写进 error.log；mcp-server 把日志解析成 MCP 读工具。只知道"游戏→MCP 工具"这一段，不依赖 Discord 和 harness，可直接挂给任何 MCP 客户端。
 - **Discord 接入**＝ agent 的嘴和耳朵。bot 收玩家消息、把 agent 的话发回频道，只是消息通道，不知道游戏。
 - **harness**＝ agent 的身体。把前两者接到 agent 本体（Claude Code 会话）上：Discord 消息进来 → harness 叫醒 agent 会话 → agent 调 mcp-server 读局势 → 回复发回 Discord；profile/world/memory 三区落在局文件夹，由 harness 管生命周期。

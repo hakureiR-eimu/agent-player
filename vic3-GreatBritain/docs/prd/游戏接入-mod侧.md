@@ -4,7 +4,7 @@
 
 ## 职责与边界
 
-mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件不直接碰游戏文件。mod 侧的边界：从游戏进程到 debug.log 为止——把游戏内状态变成 debug.log 里的机器友好记录。日志的解析与对外暴露归 mcp 侧；两侧以 debug.log 的记录格式为交接面，格式与内容由本文件定义。
+mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件不直接碰游戏文件。mod 侧的边界：从游戏进程到 error.log 为止——把游戏内状态变成 error.log 里的机器友好记录。日志的解析与对外暴露归 mcp 侧；两侧以 error.log 的记录格式为交接面，格式与内容由本文件定义。
 
 ## 声明：做什么
 
@@ -34,16 +34,16 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
 - 大不列颠财政：同一钩子里特判 tag GBR，追加财政行——`gold_reserves`（金库）、`principal`（债务本金）、`net_total_income`（每周净收支，收抵支后的余量）。均 wiki Trigger 文档已证，原版脚本有用例：`principal` 直接当值取（script_values 里 `add = principal`），`net_total_income` 用在条件判断（`net_total_income > 0`）。
 
-- 写日志：一行一国，`debug_log` 的消息支持本地化字符串内插（ROOT/SCOPE/PREV 可用，wiki Effect 文档已证），数值经内插写进字符串。实现形式是 data function 内插：`[THIS.GetCountry.XXX]` 前缀为原版 debug_log 用例写法，各数值函数出自 wiki GUI 脚本函数表（GDP 用 GetGDP、名次用 GetCountryScorePosition、营队用 GetNumBattalions、财政用 GetGoldReserves/GetPrincipal/GetWeeklyBalance；该表由游戏内 `script_docs` 控制台命令导出生成，需要全量表时游戏内导一次）；GBR 特判用 scope 比较 `c:GBR = ROOT`（原版 journal 用例写法）。行格式（`<>` 为占位，`<>` 外是字面量）：
+- 写日志：一行一国，`error_log` 的消息支持本地化字符串内插（ROOT/SCOPE/PREV 可用，引擎内联文档已证），数值经内插写进字符串。实现形式是 data function 内插：`[THIS.GetCountry.XXX]` 前缀为原版脚本标准写法，各数值函数出自 wiki GUI 脚本函数表（GDP 用 GetGDP、名次用 GetCountryScorePosition、营队用 GetNumBattalions、财政用 GetGoldReserves/GetPrincipal/GetWeeklyBalance；该表由游戏内 `script_docs` 控制台命令导出生成，需要全量表时游戏内导一次）；GBR 特判用 scope 比较 `c:GBR = ROOT`（原版 journal 用例写法）。落点 `Documents\Paradox Interactive\Victoria 3\logs\error.log`，随游戏启动轮转（error.log → error.1.log，各保留 5 份），会话内不轮转。行格式（`<>` 为占位，`<>` 外是字面量）：
 
   - 国家行（rank 1–16 每国一行）：`vic3-GreatBritain state tag=<tag> year=<日期> rank=<名次> gdp=<GDP> army=<营队数>`
-    - 实测行：`[23:17:45][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=FRA year=12月 27, 1837 rank=3 gdp=24109387.47464 army=282`
+    - 示例行（消息体，值取自 2026-11-20 实测；行首另被游戏加头，见下"行的形态"）：`vic3-GreatBritain state tag=FRA year=12月 27, 1837 rank=3 gdp=24109387.47464 army=282`
   - 财政行（仅 GBR，每年追加一行）：`vic3-GreatBritain fin tag=<tag> year=<日期> gold=<金库> debt=<债务本金> week_net=<每周净收支>`
-    - 实测行：`[23:10:36][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:20: vic3-GreatBritain fin tag=GBR year=12月 31, 1836 gold=0 debt=440232.39442 week_net=-108278.71675`
+    - 示例行（消息体，值取自 2026-11-20 实测）：`vic3-GreatBritain fin tag=GBR year=12月 31, 1836 gold=0 debt=440232.39442 week_net=-108278.71675`
 
-  行的实测形态（mcp 侧解析须知，2026-11-20 两轮实测）：
+  行的形态（mcp 侧解析须知）：
 
-  - 每行被游戏加头：`[墙钟时间][jomini_effect_impl.cpp:459]: common/scripted_effects/gb_agent_effects.txt:<脚本行号>: `——墙钟时间不是游戏内时间，脚本行号可区分国家行（14）与财政行（20）；行尾 CRLF；与原版其他 debug_log 输出混在同一文件，按行内 `vic3-GreatBritain ` 前缀过滤
+  - 每行被游戏加头：`[墙钟时间][来源文件:行号]: `（error.log 实有格式）——墙钟时间不是游戏内时间；行尾 CRLF；与原版的错误输出混在同一文件，按行内 `vic3-GreatBritain ` 前缀过滤
   - year 值是完整本地化日期（`12月 27, 1837`，含空格逗号、随游戏语言走）：解析按字段名取值、不按空格切分，从值尾取 4 位数字为年份
   - rank 是触发当刻的世界名次：同一年的各行取的是各自触发时点的当刻值，可能出现并列（实测 1837 年 BRZ 与 BEL 均 rank=11，不同时点）；每年通常 16 行，席位年中变动时理论可 15–17 行，不硬性假设恰好 16
   - 数值为原始小数（无千分位无单位缩写），负数带负号
@@ -52,7 +52,3 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 ## 待实测清单（下次跑 mod 验证）
 
 - 年度触发的日期机制：每国每年固定同一天，还是每年随机一天——判别法是对比同一 tag 连续两年的触发日期（行内 year 值），同月同日为固定、不同为随机；只影响快照时点的语义解读，不影响 mcp 侧按年分组
-
-## 前提
-
-- 游戏以 -debug_mode 启动（实测脚本 debug_log 输出成立；不加是否也输出未验，按此前提恒开）。输出落点 `Documents\Paradox Interactive\Victoria 3\logs\debug.log`，随启动轮转（debug.log → debug.1.log，各保留 5 份）

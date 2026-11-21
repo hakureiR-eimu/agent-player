@@ -1,10 +1,10 @@
 # 游戏接入 mod 侧：年度状态导出逻辑
-# 每年（游戏内）把世界格局写进 debug.log：rank 1-16 每国一行国家行，GBR 追加一行财政行。
+# 每年（游戏内）把世界格局写进 error.log：rank 1-16 每国一行国家行，GBR 追加一行财政行。
 # 行格式是 mod 侧与 mcp 侧的交接面，见 docs/prd/游戏接入-mod侧.md；字段取值写法的可行性随首次跑 mod 实测，
 # 回退路径写在本文件各字段注释与 prd 待实测清单里。
 #
-# 内插语法说明：debug_log 的消息支持 data function 内插，前缀 [THIS.GetCountry.XXX]
-# 是原版脚本的标准写法（00_code_on_actions.txt 等多处 debug_log 用例）。
+# 内插语法说明：error_log 的消息支持本地化字符串内插（引擎内联文档已证，wiki 效果表未收录该效果），
+# data function 前缀 [THIS.GetCountry.XXX] 沿用原版脚本标准写法（00_code_on_actions.txt 等多处用例）。
 
 gb_agent_export_state = {
 	# 国家行：列强＋次强（rank 1-16），每国一项 GDP、一项常备军
@@ -21,7 +21,7 @@ gb_agent_export_state = {
 		#         首版用过的 GetRankNumber 实测输出的是国家分级（5-7）非名次，勿回退
 		#   gdp   GetGDP          已实测：原始小数无千分位无缩写
 		#   army  GetNumBattalions 营队数（开局值合理；征召期口径遇战争年顺带看）
-		debug_log = "vic3-GreatBritain state tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] rank=[THIS.GetCountry.GetCountryScorePosition] gdp=[THIS.GetCountry.GetGDP] army=[THIS.GetCountry.GetNumBattalions]"
+		error_log = "vic3-GreatBritain state tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] rank=[THIS.GetCountry.GetCountryScorePosition] gdp=[THIS.GetCountry.GetGDP] army=[THIS.GetCountry.GetNumBattalions]"
 	}
 
 	# 财政行：仅大不列颠追加；不受上面 16 强门槛约束（GBR 跌出名次财政也要记）
@@ -34,6 +34,6 @@ gb_agent_export_state = {
 		# debt     GetPrincipal      债务本金（wiki Trigger 文档 principal 同义）；已实测输出原始小数
 		# week_net GetWeeklyBalance  每周净收支；首次实测输出带符号原始小数（开局 GBR -10.8万/周），
 		#          量级合理，与 trigger net_total_income 的严格同值无从交叉验证，按界面语义采信
-		debug_log = "vic3-GreatBritain fin tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] gold=[THIS.GetCountry.GetGoldReserves] debt=[THIS.GetCountry.GetPrincipal] week_net=[THIS.GetCountry.GetWeeklyBalance]"
+		error_log = "vic3-GreatBritain fin tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] gold=[THIS.GetCountry.GetGoldReserves] debt=[THIS.GetCountry.GetPrincipal] week_net=[THIS.GetCountry.GetWeeklyBalance]"
 	}
 }
