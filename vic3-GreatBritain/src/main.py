@@ -83,7 +83,7 @@ async def run() -> None:
     config = load_config()
     bus = EventBus()
     game, agent, im = build_modules(config)
-    dispatcher = Dispatcher(bus, game, agent, im)
+    dispatcher = Dispatcher(bus, game, agent, im, config.gbr_dir)
     wire_im(bus, im)
     # 年度节拍：主体定时调游戏接入的新年判定，模块自己不碰总线
     year_poll = asyncio.create_task(poll_new_year(bus, game))

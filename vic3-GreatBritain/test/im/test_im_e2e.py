@@ -5,7 +5,7 @@ E2E_DISCORD_PLAYER_ID 填人类玩家的 Discord 用户 ID（开发者模式右�
 测试要给他发私信）。两个测试对应 IM 接入的两头：
 
 1. 发（send_reply）：起两个真 bot，给玩家发私信——Discord 上应真的收到 gbr bot 的私信
-2. 收（回调）：在公屏 @ dm bot 下一条命令（开始新游戏 / 继续游戏 / 保存游戏 任一）、给
+2. 收（回调）：在公屏 @ dm bot 下一条命令（开始游戏 / 保存游戏 / 结束游戏 任一）、给
    gbr bot 发一条私信，回调应真的收到；测试再用 send_receipt / send_reply 回话，Discord
    上能看到回执落回公屏原处、回复落回私信
 
@@ -67,7 +67,7 @@ def test_收命令与私信后回话discord上看得到():
         im.on_message(lambda player, text: received["message"].append((player, text)))
         await im.start()
         print(f"\n请在 Discord 做两件事（限时 {WAIT_SECONDS}s）：")
-        print("  1. 公屏 @ dm bot 下一条命令（如：@ dm bot 开始新游戏）")
+        print("  1. 公屏 @ dm bot 下一条命令（如：@ dm bot 开始游戏）")
         print("  2. 给 gbr bot 发一条私信")
         deadline = time.monotonic() + WAIT_SECONDS
         try:
@@ -90,5 +90,5 @@ def test_收命令与私信后回话discord上看得到():
     print(f"\n收到的命令：{received['command']}")
     print(f"收到的私信：{received['message']}")
     assert received["command"], f"{WAIT_SECONDS}s 内没收到命令——在公屏 @ dm bot 下了吗？"
-    assert received["command"][0] in ("开始新游戏", "继续游戏", "保存游戏")
+    assert received["command"][0] in ("开始游戏", "保存游戏", "结束游戏")
     assert received["message"], f"{WAIT_SECONDS}s 内没收到私信——给 gbr bot 发了吗？"

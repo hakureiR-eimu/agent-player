@@ -19,8 +19,8 @@ class AgentModule(Protocol):
         """接上总线：订 message、new_year（空闲叫醒、忙时攒批），推 reply。"""
         ...
 
-    async def start_session(self, fresh: bool) -> None:
-        """起一个基于 GBR 的 agent 会话：fresh=True 先建全新的 GBR 文件夹，False 用已有的。"""
+    async def start_session(self) -> None:
+        """起一个基于全新 GBR 的 agent 会话：先建全新的 GBR 文件夹（装入 profile）再起。"""
         ...
 
     async def stop_session(self) -> None:

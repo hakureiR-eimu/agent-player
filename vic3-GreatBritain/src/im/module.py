@@ -36,6 +36,20 @@ class ImModule(Protocol):
         """把命令回执发到大厅频道原处（主体执行完命令后调，固定文案）。"""
         ...
 
+    # ---- 本局频道（GreatBritain）：主体按命令排着调 ----
+
+    async def has_channel(self) -> bool:
+        """查本局频道在不在——局挂没挂着的外显，主体用它挡开始游戏与结束游戏。"""
+        ...
+
+    async def create_channel(self) -> None:
+        """建本局频道（开始游戏排的第一步，在哪个服务器取最近一条命令来的）。"""
+        ...
+
+    async def destroy_channel(self) -> None:
+        """销毁本局频道（结束游戏排的动作，会话收尾之后调）。"""
+        ...
+
     # ---- 起停 ----
 
     async def start(self) -> None:

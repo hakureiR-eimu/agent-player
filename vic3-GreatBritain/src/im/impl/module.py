@@ -3,8 +3,9 @@
 harness 进程内两个 discord.py client（dm bot、gbr bot）跑在同一个事件循环里——回调与
 事件队列同循环，无跨线程问题。收是被动：bot 在线收着（Gateway 长连接，心跳重连归
 discord.py 管），滤 bot 账号后调主体注册的回调，模块零总线知识；发是主动：主体调
-send_reply（发玩家私信）与 send_receipt（发回执到命令来的频道）。玩家一律用 Discord
-用户 ID 的字符串指代——发回私信要拿它找频道。
+send_reply（发玩家私信）与 send_receipt（发回执到命令来的频道）；本局频道（GreatBritain）
+的建、销与查也归本模块，转发给 dm bot 干。玩家一律用 Discord 用户 ID 的字符串指代
+——发回私信要拿它找频道。
 """
 
 from __future__ import annotations
@@ -61,6 +62,17 @@ class ImModuleImpl:
         if channel is None:
             raise RuntimeError("还没有命令来过，回执不知道发哪（回执发到命令来的频道）")
         await channel.send(text)
+
+    # ---- 本局频道（GreatBritain）：转发给 dm bot ----
+
+    async def has_channel(self) -> bool:
+        return await self._dm.has_channel()
+
+    async def create_channel(self) -> None:
+        await self._dm.create_channel()
+
+    async def destroy_channel(self) -> None:
+        await self._dm.destroy_channel()
 
     # ---- 起停 ----
 

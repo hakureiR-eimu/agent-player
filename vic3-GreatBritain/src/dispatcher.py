@@ -1,10 +1,14 @@
 """调度（声明见 docs/prd/harness.md 主体实现·局状态与命令执行）。
 
-主体记一个状态——会话在不在跑；命令到了按状态排动作。主体只排顺序，动作本身调三大
-模块干。三大模块的接口形状在各自包的 module.py 声明（game/agent/im），本文件只引用。
+主体记一个状态——会话在不在跑；本局频道（GreatBritain）在不在是局挂没挂着的外显，
+问 IM 接入（has_channel）。命令到了按状态排动作，主体只排顺序，动作本身调三大模块干。
+三大模块的接口形状在各自包的 module.py 声明（game/agent/im），本文件只引用。
 """
 
 from __future__ import annotations
+
+import shutil
+from pathlib import Path
 
 from agent.module import AgentModule
 from events import Event, EventBus, EventType
@@ -19,10 +23,11 @@ class CommandError(Exception):
 class Dispatcher:
     """局状态＋三条命令的执行顺序，执行完调 IM 接入发回执（发到命令来的频道）。装配时订 command 事件。"""
 
-    def __init__(self, bus: EventBus, game: GameModule, agent: AgentModule | None, im: ImModule) -> None:
+    def __init__(self, bus: EventBus, game: GameModule, agent: AgentModule | None, im: ImModule, gbr_dir: Path) -> None:
         self._game = game
-        self._agent = agent  # agent 未建时为 None：会话命令的回执会明确报未实现
+        self._agent = agent  # agent 未建时为 None：起会话的命令回执会明确报未实现
         self._im = im
+        self._gbr_dir = gbr_dir  # 结束游戏时清掉（这局彻底完）
         self._session_running = False
         bus.subscribe(EventType.COMMAND, self._handle_command)
 
@@ -39,22 +44,25 @@ class Dispatcher:
             await self._im.send_receipt(f"{event.data} 执行完成")
 
     async def execute_command(self, command: str) -> None:
-        if command == "开始新游戏":
-            if self._session_running:
-                raise CommandError("会话已在跑，先保存游戏再开始新游戏")
+        if command == "开始游戏":
+            if await self._im.has_channel():
+                raise CommandError("GreatBritain 频道已在，先结束游戏再开新的一局")
             self._require_agent()
-            await self._agent.start_session(fresh=True)
-            self._session_running = True
-        elif command == "继续游戏":
-            if self._session_running:
-                raise CommandError("会话已在跑，先保存游戏再继续游戏")
-            self._require_agent()
-            await self._agent.start_session(fresh=False)
+            await self._im.create_channel()
+            await self._agent.start_session()
             self._session_running = True
         elif command == "保存游戏":
             if self._session_running:
                 await self._agent.stop_session()
                 self._session_running = False
+        elif command == "结束游戏":
+            if not await self._im.has_channel():
+                raise CommandError("没有 GreatBritain 频道，没有挂着的局")
+            if self._session_running:
+                await self._agent.stop_session()
+                self._session_running = False
+            await self._im.destroy_channel()
+            shutil.rmtree(self._gbr_dir, ignore_errors=True)  # 没建过 GBR 不算错
         else:
             raise CommandError(f"未知命令：{command}")
 
@@ -63,6 +71,6 @@ class Dispatcher:
             raise CommandError("agent 模块未建（src/agent/impl/），起不了会话")
 
     async def shutdown(self) -> None:
-        """进程收摊用：会话还在跑就先按保存游戏收尾。"""
+        """进程收摊用：会话还在跑就先按保存游戏收尾（局还挂着，频道与 GBR 都不动）。"""
         if self._session_running:
             await self.execute_command("保存游戏")

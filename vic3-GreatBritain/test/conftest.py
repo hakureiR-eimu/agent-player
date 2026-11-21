@@ -24,8 +24,8 @@ class RecordingAgentModule(RecordingModule):
     async def start(self, bus) -> None:
         self.calls.append("agent.start")
 
-    async def start_session(self, fresh: bool) -> None:
-        self.calls.append(("agent.start_session", fresh))
+    async def start_session(self) -> None:
+        self.calls.append("agent.start_session")
 
     async def stop_session(self) -> None:
         self.calls.append("agent.stop_session")
@@ -35,12 +35,14 @@ class RecordingAgentModule(RecordingModule):
 
 
 class RecordingIm(RecordingModule):
-    """IM 替身（回调式）：记录注册的回调与发送调用；测试可直接调 command_callback 模拟玩家下命令。"""
+    """IM 替身（回调式）：记录注册的回调与发送调用；测试可直接调 command_callback 模拟玩家下命令。
+    channel_exists 模拟本局频道在不在（局挂没挂着的外显），测试按场景拨。"""
 
     def __init__(self, calls: list) -> None:
         super().__init__(calls)
         self.command_callback = None
         self.message_callback = None
+        self.channel_exists = False
 
     def on_command(self, callback) -> None:
         self.command_callback = callback
@@ -53,6 +55,17 @@ class RecordingIm(RecordingModule):
 
     async def send_receipt(self, text: str) -> None:
         self.calls.append(("im.send_receipt", text))
+
+    async def has_channel(self) -> bool:
+        return self.channel_exists
+
+    async def create_channel(self) -> None:
+        self.channel_exists = True
+        self.calls.append("im.create_channel")
+
+    async def destroy_channel(self) -> None:
+        self.channel_exists = False
+        self.calls.append("im.destroy_channel")
 
     async def start(self) -> None:
         self.calls.append("im.start")

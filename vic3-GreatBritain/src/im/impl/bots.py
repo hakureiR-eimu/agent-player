@@ -3,8 +3,10 @@
 收消息先滤 bot 账号（防互触发：回执、别的 bot、自己的消息一律不搭理），再按分工处理：
 dm bot 只管服务器频道里 @ 自己的消息，命令词对白名单匹配，不认识的词直回固定提示
 （Discord 侧的应酬话留在此层）；gbr bot 只管私信，在频道被 @ 直回一句固定指引。
-免特权 intent：私信与 @ 到 bot 的消息不开 MESSAGE_CONTENT 也能读内容（见 Discord 官方
-Gateway 文档），Intents.default() 即够。设计见 docs/prd/discord接入.md。
+dm bot 还管本局频道（GreatBritain）的建、销与查——开始游戏建、结束游戏销，在哪个
+服务器操作取最近一条命令来的频道。免特权 intent：私信与 @ 到 bot 的消息不开
+MESSAGE_CONTENT 也能读内容（见 Discord 官方 Gateway 文档），Intents.default() 即够。
+设计见 docs/prd/discord接入.md。
 """
 
 from __future__ import annotations
@@ -17,9 +19,12 @@ import discord
 logger = logging.getLogger(__name__)
 
 # dm bot 认的三条命令（白名单，命令词精确匹配）
-COMMANDS = ("开始新游戏", "继续游戏", "保存游戏")
+COMMANDS = ("开始游戏", "保存游戏", "结束游戏")
 
-UNKNOWN_COMMAND_HINT = "命令没认出来。我认这三条：开始新游戏、继续游戏、保存游戏——@ 我加命令词。"
+# 本局频道名：开始游戏建、结束游戏销，频道在不在就是局挂没挂着的外显
+CHANNEL_NAME = "GreatBritain"
+
+UNKNOWN_COMMAND_HINT = "命令没认出来。我认这三条：开始游戏、保存游戏、结束游戏——@ 我加命令词。"
 GUILD_MENTION_HINT = "公屏上我不聊天，有事私信我。"
 
 
@@ -66,7 +71,8 @@ class BotBase(discord.Client):
 
 
 class DmBot(BotBase):
-    """主持 bot：公屏 @ 自己下命令。命中白名单调命令回调，不认识的词直回固定提示。"""
+    """主持 bot：公屏 @ 自己下命令。命中白名单调命令回调，不认识的词直回固定提示；
+    本局频道（GreatBritain）的建、销与查也归它，操作的服务器取最近一条命令来的。"""
 
     def __init__(self, callbacks: BotCallbacks, proxy: str | None = None) -> None:
         super().__init__(callbacks, "dm bot", proxy)
@@ -92,6 +98,41 @@ class DmBot(BotBase):
     def receipt_channel(self) -> discord.abc.Messageable | None:
         """回执的去处：最近一条命令来的频道。"""
         return self._command_channel
+
+    # ---- 本局频道（GreatBritain）：建、销、查，主体按命令排着调 ----
+
+    def find_channel(self, guild: discord.Guild):
+        """在服务器里找本局频道（名字不区分大小写），没有返回 None。"""
+        for channel in guild.text_channels:
+            if channel.name.casefold() == CHANNEL_NAME.casefold():
+                return channel
+        return None
+
+    async def has_channel(self) -> bool:
+        """查本局频道在不在——局挂没挂着的外显，主体用它挡命令。"""
+        return self.find_channel(self._require_guild()) is not None
+
+    async def create_channel(self) -> None:
+        """建本局频道。已在（上次局没结束）报错——要不要建由主体先查，这里是兜底。"""
+        guild = self._require_guild()
+        if self.find_channel(guild) is not None:
+            raise RuntimeError("GreatBritain 频道已在，先结束游戏再开新的一局")
+        await guild.create_text_channel(CHANNEL_NAME)
+        logger.info("dm bot 建了本局频道 %s（服务器 %s）", CHANNEL_NAME, guild)
+
+    async def destroy_channel(self) -> None:
+        """销毁本局频道。没有可销的报错——主体先查过，这里是兜底。"""
+        channel = self.find_channel(self._require_guild())
+        if channel is None:
+            raise RuntimeError("没有 GreatBritain 频道可销毁")
+        await channel.delete()
+        logger.info("dm bot 销毁了本局频道 %s", CHANNEL_NAME)
+
+    def _require_guild(self) -> discord.Guild:
+        """频道操作所在的服务器：最近一条命令来的。还没命令来过就明确报错。"""
+        if self._command_channel is None:
+            raise RuntimeError("还没有命令来过，不知道在哪个服务器操作频道")
+        return self._command_channel.guild
 
 
 class GbrBot(BotBase):
