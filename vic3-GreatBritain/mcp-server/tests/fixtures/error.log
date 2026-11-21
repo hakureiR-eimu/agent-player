@@ -1,0 +1,84 @@
+[10:02:08][lexer.cpp:285]: File 'common/scripted_effects/gb_agent_effects.txt' should be in utf8-bom encoding (will try to use it anyways)
+[10:02:22][lexer.cpp:285]: File 'common/on_actions/gb_agent_on_actions.txt' should be in utf8-bom encoding (will try to use it anyways)
+[10:02:36][travel_network_definition.cpp:371]: State Region STATE_PANAMA, port hub province xD0EF40 does not contain the port spline anchor, which lies in province x8A8A20
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:41][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:42][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:43][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:02:44][pdx_persistent_reader.cpp:268]: Error: "Failed to read key reference: autonomous_investment_pool: autonomous_investment_pool, near line: 1" in file: "" near line: 1
+[10:04:15][pdx_assert.cpp:641]: Assertion failed: NGameState::GameStateAccess._Value == EGameStateAccess::Interface || NGameState::HiddenGameStateAccess._Value == EHiddenGameStateAccess::Allowed
+[10:04:15][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=BRZ year=6月 13, 1836 rank=10 gdp=5353201.76144 army=33
+[10:04:23][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SIA year=7月 19, 1836 rank=15 gdp=1462024.35132 army=58
+[10:04:25][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=CHI year=7月 28, 1836 rank=13 gdp=95460887.03164 army=556
+[10:04:27][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=PAN year=8月 8, 1836 rank=16 gdp=3139807.85196 army=81
+[10:04:38][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=TUR year=9月 27, 1836 rank=6 gdp=11233499.1236 army=143
+[10:04:41][hq.cpp:435]: Failed to find a travel position for HQ '南印度' (744): no coastal state controlled by '迈索尔' (142) has a port travel position, so a coastal province in the region is missing its required naval connection
+[10:04:45][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SIC year=10月 28, 1836 rank=12 gdp=4480330.4858 army=52
+[10:04:50][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SPA year=11月 24, 1836 rank=10 gdp=6950627.02828 army=71
+[10:04:52][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=NET year=12月 2, 1836 rank=8 gdp=2334029.86024 army=30
+[10:04:54][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SWE year=12月 8, 1836 rank=11 gdp=2185154.77336 army=39
+[10:04:55][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=JAP year=12月 14, 1836 rank=14 gdp=12167267.0314 army=78
+[10:04:57][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=USA year=12月 22, 1836 rank=5 gdp=20619439.9294 army=107
+[10:04:57][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=AUS year=12月 23, 1836 rank=4 gdp=10886783.73692 army=199
+[10:04:58][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=PRU year=12月 26, 1836 rank=7 gdp=10568952.34252 army=129
+[10:04:58][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=FRA year=12月 27, 1836 rank=3 gdp=23460462.61572 army=253
+[10:04:58][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=RUS year=12月 29, 1836 rank=2 gdp=23408969.56424 army=200
+[10:04:59][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=GBR year=12月 31, 1836 rank=1 gdp=30739660.24116 army=137
+[10:04:59][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:20: vic3-GreatBritain fin tag=GBR year=12月 31, 1836 gold=176001.99175 debt=0 week_net=-21660.22135
+[10:08:13][pdx_assert.cpp:641]: Assertion failed: Trying to reposition a dead formation
+[10:08:46][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=BRZ year=6月 13, 1837 rank=11 gdp=6086653.96144 army=41
+[10:08:53][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SIA year=7月 19, 1837 rank=15 gdp=1361335.05248 army=58
+[10:08:55][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=CHI year=7月 28, 1837 rank=13 gdp=91705904.32796 army=555
+[10:08:57][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=PAN year=8月 8, 1837 rank=16 gdp=3465655.45976 army=81
+[10:09:08][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=TUR year=9月 27, 1837 rank=6 gdp=10800674.95312 army=140
+[10:09:15][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SIC year=10月 28, 1837 rank=12 gdp=4433705.72892 army=52
+[10:09:16][pdx_assert.cpp:641]: Assertion failed: Trying to remove Unit '' (5145) that from an invalid formation
+[10:09:21][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SPA year=11月 24, 1837 rank=10 gdp=6987073.40292 army=71
+[10:09:22][hq.cpp:435]: Failed to find a travel position for HQ '印度尼西亚' (297): no coastal state controlled by '文莱' (154) has a port travel position, so a coastal province in the region is missing its required naval connection
+[10:09:22][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=NET year=12月 2, 1837 rank=8 gdp=2683345.81944 army=30
+[10:09:24][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=SWE year=12月 8, 1837 rank=9 gdp=2399761.637 army=39
+[10:09:25][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=JAP year=12月 14, 1837 rank=14 gdp=12089963.92552 army=78
+[10:09:27][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=USA year=12月 22, 1837 rank=5 gdp=19927420.9914 army=122
+[10:09:27][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=AUS year=12月 23, 1837 rank=4 gdp=11111469.40332 army=199
+[10:09:28][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=PRU year=12月 26, 1837 rank=7 gdp=9996669.6804 army=129
+[10:09:28][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=FRA year=12月 27, 1837 rank=3 gdp=23031776.88604 army=249
+[10:09:28][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=RUS year=12月 29, 1837 rank=2 gdp=23581644.84988 army=200
+[10:09:29][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:14: vic3-GreatBritain state tag=GBR year=12月 31, 1837 rank=1 gdp=31386151.21408 army=137
+[10:09:29][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:20: vic3-GreatBritain fin tag=GBR year=12月 31, 1837 gold=209685.76327 debt=0 week_net=36978.43184
