@@ -7,7 +7,7 @@
 2. 发动外交博弈（start_play）：写侧占位，返回固定的"未实现"应答
 3. 收到年度通知推送（new_year）：订阅事件总线，收到游戏年份前进的推送
 
-第三个要等游戏内过一年：error.log 里已有本局记录时，模块起轮询后数秒内即推（首轮
+第三个要等游戏内过一年：error.log 里已有本局记录时，主体的年度节拍数秒内即推（首轮
 把已察觉的当前年份推出来）；还没有本局记录时（新开局第一年），等游戏跑完当年才推。
 默认等 5 分钟，可用环境变量 E2E_NEW_YEAR_WAIT_SECONDS 调整。
 """
@@ -23,6 +23,7 @@ from config import load_config
 from events import Event, EventBus, EventType
 from game.impl.module import GameModuleImpl, GameNotRunningError
 from game.impl.process import game_running
+from main import poll_new_year
 
 pytestmark = pytest.mark.e2e
 
@@ -73,7 +74,7 @@ def test_start_play_returns_fixed_not_implemented_response():
 
 
 def test_new_year_event_arrives_when_game_year_advances():
-    """能力三 收到年度通知推送：起模块轮询＋事件总线主循环，收到 new_year 事件。"""
+    """能力三 收到年度通知推送：起主体的年度节拍＋事件总线主循环，收到 new_year 事件。"""
     require_game_running()
 
     async def scenario() -> list[Event]:
@@ -85,7 +86,7 @@ def test_new_year_event_arrives_when_game_year_advances():
 
         bus.subscribe(EventType.NEW_YEAR, record)
         module = GameModuleImpl(load_config())
-        await module.start(bus)
+        poll_task = asyncio.create_task(poll_new_year(bus, module))
         loop_task = asyncio.create_task(bus.run())
         deadline = time.monotonic() + WAIT_SECONDS
         try:
@@ -95,7 +96,9 @@ def test_new_year_event_arrives_when_game_year_advances():
             loop_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await loop_task
-            await module.stop()
+            poll_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await poll_task
         return received
 
     received = asyncio.run(scenario())

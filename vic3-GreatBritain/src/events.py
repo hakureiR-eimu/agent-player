@@ -1,16 +1,18 @@
 """事件总线（声明见 docs/prd/harness.md 主体·事件队列）。
 
-主体维护一条事件队列，模块之间互不引用，来往全走它——每个模块都可以推事件、订事件，
-主体自己也订。四种事件：
+主体维护一条事件队列，模块之间互不引用，来往全走它——进队列的动作全在装配处：IM 接入
+收到命令与消息调主体注册的回调，装配处挂回调时在闭包里包事件推进队列；游戏接入的新年
+判定由主体定时调、查到新年份主体自己推。订事件也在装配时办，主体自己也订。四种事件：
 
-  command   玩家命令    IM 接入推   主体（调度）订
-  message   玩家消息    IM 接入推   agent 订
-  new_year  年度通知    游戏接入推  agent 订
-  reply     会话回复    agent 推    IM 接入订
+  command   玩家命令    IM 接入的命令回调   主体（调度）订
+  message   玩家消息    IM 接入的消息回调   agent 订
+  new_year  年度通知    主体推（新年判定）  agent 订
+  reply     会话回复    agent 推            IM 接入订
 
-data 的结构由推事件的一方定义，已定两件：command 是命令名字符串（startGame /
-loadGame / stopGame，IM 接入推），new_year 是年份数字（游戏接入推，指日志里新出现的
-本局记录年份）；message 与 reply 随 agent、IM 接入实现落定。
+data 的结构由包事件的一方定义，已定两件：command 是命令名字符串（startGame /
+loadGame / stopGame，装配处的命令回调包的），new_year 是年份数字（主体推——定时调
+游戏接入的新年判定方法，指日志里新出现的本局记录年份）；message 与 reply 随 agent、
+IM 接入实现落定。
 """
 
 from __future__ import annotations
@@ -47,7 +49,8 @@ class EventBus:
         self._queue: asyncio.Queue[Event] = asyncio.Queue()
         self._subscribers: dict[EventType, list[Handler]] = {}
 
-    async def put(self, event: Event) -> None:
+    def put(self, event: Event) -> None:
+        """把事件包进队列（同步入队——装配处的回调闭包直接调它）。"""
         self._queue.put_nowait(event)
 
     def subscribe(self, event_type: EventType, handler: Handler) -> None:

@@ -14,7 +14,7 @@ def test_事件投给订了的模块():
             got.append(event.data)
 
         bus.subscribe(EventType.NEW_YEAR, on_new_year)
-        await bus.put(Event(EventType.NEW_YEAR, 1838))
+        bus.put(Event(EventType.NEW_YEAR, 1838))
         assert await bus.dispatch_next() is True
         assert got == [1838]
         assert await bus.dispatch_next() is False
@@ -25,7 +25,7 @@ def test_事件投给订了的模块():
 def test_没订的类型丢了不炸():
     async def main():
         bus = EventBus()
-        await bus.put(Event(EventType.MESSAGE, "玩家消息"))
+        bus.put(Event(EventType.MESSAGE, "玩家消息"))
         assert await bus.dispatch_next() is True
 
     asyncio.run(main())
@@ -46,7 +46,7 @@ def test_同一事件多个订者按订阅顺序串行():
 
         bus.subscribe(EventType.REPLY, first)
         bus.subscribe(EventType.REPLY, second)
-        await bus.put(Event(EventType.REPLY, "回复"))
+        bus.put(Event(EventType.REPLY, "回复"))
         await bus.dispatch_next()
         assert order == ["first 进", "first 出", "second 进"]
 
@@ -66,7 +66,7 @@ def test_一个订者抛错后面的订者照投():
 
         bus.subscribe(EventType.COMMAND, bad)
         bus.subscribe(EventType.COMMAND, good)
-        await bus.put(Event(EventType.COMMAND, "startGame"))
+        bus.put(Event(EventType.COMMAND, "startGame"))
         assert await bus.dispatch_next() is True
         assert got == ["startGame"]
 

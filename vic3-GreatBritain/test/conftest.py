@@ -15,14 +15,9 @@ class RecordingModule:
 
 
 class RecordingGame(RecordingModule):
-    async def start(self, bus) -> None:
-        self.calls.append("game.start")
-
-    async def attach_session(self) -> None:
-        self.calls.append("game.attach_session")
-
-    async def stop(self) -> None:
-        self.calls.append("game.stop")
+    def check_new_year(self) -> int | None:
+        self.calls.append("game.check_new_year")
+        return None
 
 
 class RecordingAgentModule(RecordingModule):
@@ -40,11 +35,27 @@ class RecordingAgentModule(RecordingModule):
 
 
 class RecordingIm(RecordingModule):
-    async def start(self, bus) -> None:
-        self.calls.append("im.start")
+    """IM 替身（回调式）：记录注册的回调与发送调用；测试可直接调 command_callback 模拟玩家下命令。"""
 
-    async def attach_session(self) -> None:
-        self.calls.append("im.attach_session")
+    def __init__(self, calls: list) -> None:
+        super().__init__(calls)
+        self.command_callback = None
+        self.message_callback = None
+
+    def on_command(self, callback) -> None:
+        self.command_callback = callback
+
+    def on_message(self, callback) -> None:
+        self.message_callback = callback
+
+    async def send_reply(self, player: str, text: str) -> None:
+        self.calls.append(("im.send_reply", player, text))
+
+    async def send_receipt(self, text: str) -> None:
+        self.calls.append(("im.send_receipt", text))
+
+    async def start(self) -> None:
+        self.calls.append("im.start")
 
     async def stop(self) -> None:
         self.calls.append("im.stop")

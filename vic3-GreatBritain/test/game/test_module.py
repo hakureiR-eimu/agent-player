@@ -1,18 +1,17 @@
-"""game 模块本体的单测：两个方法（游戏在跑门槛、样例日志）与年度通知（轮询推事件）。
+"""game 模块本体的单测：三个方法（游戏在跑门槛、样例日志、新年判定）。
 
 链路走真路径不造 mock：日志用真实格式的样例或临时文件，游戏在跑检测把进程名配成
 当前解释器过真路径（单测配置）；"游戏没跑"用查不到的进程名触发。配置一律写临时
-config.toml 再加载，不碰真机 config.toml。
+config.toml 再加载，不碰真机 config.toml。新年判定直接调方法（节拍归主体，主体的
+节拍在 test_main 的完整顺序里过）。
 """
 
-import asyncio
 import sys
 from pathlib import Path
 
 from sample import EXPECTED_SNAPSHOT, FIXTURE
 
 from config import Config, load_config
-from events import EventBus, EventType
 from game.impl.module import GameModuleImpl, GameNotRunningError
 
 # 真实格式的本局记录行（两年各一条，供年度通知测试模拟游戏内过一年）
@@ -62,64 +61,28 @@ def test_start_play_returns_fixed_not_implemented_response(tmp_path):
     assert "未实现" in response
 
 
-def test_attach_session_raises_until_agent_module_lands(tmp_path):
-    config = make_config(tmp_path, FIXTURE, Path(sys.executable).name)
+def test_check_new_year_returns_current_year_then_new_year(tmp_path):
+    # 构造：日志先有 1836 记录，进程名配成当前解释器（过游戏在跑检测）
+    log = tmp_path / "error.log"
+    log.write_text(LINE_1836 + "\n", encoding="utf-8")
+    config = make_config(tmp_path, log, Path(sys.executable).name)
     module = GameModuleImpl(config)
-    try:
-        asyncio.run(module.attach_session())
-    except NotImplementedError as e:
-        assert "agent" in str(e)
-    else:
-        raise AssertionError("agent 模块未实现时 attach_session 应报 NotImplementedError")
+    # 首查：日志里已有 1836 记录，察觉即返回 1836（主体拿到会推事件）
+    assert module.check_new_year() == 1836
+    # 游戏内过一年：日志追加 1837 记录，再查返回 1837
+    log.write_text(LINE_1836 + "\n" + LINE_1837 + "\n", encoding="utf-8")
+    assert module.check_new_year() == 1837
+    # 没有再新的年份：返回 None
+    assert module.check_new_year() is None
 
 
-def test_new_year_poll_pushes_current_year_then_new_year(tmp_path):
-    async def scenario() -> list[int]:
-        # 构造：日志先有 1836 记录；订 new_year 收事件；轮询间隔调小
-        log = tmp_path / "error.log"
-        log.write_text(LINE_1836 + "\n", encoding="utf-8")
-        config = make_config(tmp_path, log, Path(sys.executable).name)
-        bus = EventBus()
-        received: list[int] = []
-
-        async def record(event) -> None:
-            received.append(event.data)
-
-        bus.subscribe(EventType.NEW_YEAR, record)
-        module = GameModuleImpl(config, poll_interval=0.05)
-        await module.start(bus)
-        try:
-            # 首轮轮询：日志里已有 1836 记录，察觉即推 1836
-            await asyncio.sleep(0.5)
-            # 游戏内过一年：日志追加 1837 记录，再推 1837
-            log.write_text(LINE_1836 + "\n" + LINE_1837 + "\n", encoding="utf-8")
-            await asyncio.sleep(0.5)
-        finally:
-            await module.stop()
-        while await bus.dispatch_next():
-            pass
-        return received
-
-    # 调用
-    received = asyncio.run(scenario())
-    # 校验
-    assert received == [1836, 1837]
-
-
-def test_new_year_poll_pushes_nothing_when_game_not_running(tmp_path):
-    async def scenario() -> bool:
-        # 构造：日志有 1836 记录，但进程名查不到（游戏没跑）
-        log = tmp_path / "error.log"
-        log.write_text(LINE_1836 + "\n", encoding="utf-8")
-        config = make_config(tmp_path, log, "no-such-game.exe")
-        bus = EventBus()
-        module = GameModuleImpl(config, poll_interval=0.05)
-        await module.start(bus)
-        try:
-            await asyncio.sleep(0.3)
-        finally:
-            await module.stop()
-        # 队列空 → dispatch_next 返回 False
-        return await bus.dispatch_next()
-
-    assert asyncio.run(scenario()) is False
+def test_check_new_year_returns_none_when_game_not_running(tmp_path):
+    # 构造：日志有 1836 记录，但进程名查不到（游戏没跑）
+    log = tmp_path / "error.log"
+    log.write_text(LINE_1836 + "\n", encoding="utf-8")
+    config = make_config(tmp_path, log, "no-such-game.exe")
+    module = GameModuleImpl(config)
+    # 游戏没跑：读到的是上次留下的旧日志，不当作新年，返回 None（年份已记下，
+    # 游戏启动后也不会把 1836 当新年推）
+    assert module.check_new_year() is None
+    assert module.check_new_year() is None

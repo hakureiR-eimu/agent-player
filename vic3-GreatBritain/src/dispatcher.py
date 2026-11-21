@@ -38,15 +38,11 @@ class Dispatcher:
             if self._session_running:
                 raise CommandError("会话已在跑，先 stopGame 再 startGame")
             await self._agent.start_session(fresh=True)
-            await self._game.attach_session()
-            await self._im.attach_session()
             self._session_running = True
         elif command == "loadGame":
             if self._session_running:
                 raise CommandError("会话已在跑，先 stopGame 再 loadGame")
             await self._agent.start_session(fresh=False)
-            await self._game.attach_session()
-            await self._im.attach_session()
             self._session_running = True
         elif command == "stopGame":
             if self._session_running:

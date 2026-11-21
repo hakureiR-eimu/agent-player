@@ -1,50 +1,50 @@
 # harness
 
-harness 是整个程序的主体，一个 Python 进程，装四块：主体负责整个程序的生命周期、调用其余三块实现功能；三个子模块各管一摊——游戏接入（game）、agent、IM 接入。三个子模块在本文档只写声明（能力是什么），实现各在自己的文档：游戏接入已实现，见[游戏接入-harness侧](游戏接入-harness侧.md)；agent 与 IM 接入的实现文档随后另起。
+harness 是整个程序的主体，一个 Python 进程，装四块：主体负责整个程序的生命周期、调用其余三块实现功能；三个子模块各管一摊——游戏接入（game）、agent、IM 接入。三个子模块在本文档只写声明（能力是什么），实现各在自己的文档：游戏接入已实现，见[游戏接入-harness侧](游戏接入-harness侧.md)；IM 接入见[Discord 接入](discord接入.md)；agent 的实现文档随后另起。
 
 ## 主体
 
 主体是 harness 的骨架，管整个程序的生命周期，三个子模块由它装载、调用。
 
 - 进程与会话：harness 进程不绑局文件夹；agent 会话随局起止——开始或继续一局时起会话、把会话接上 IM 和游戏接入，保存时让会话整理自己的文件夹、结束会话
-- 事件队列：主体维护一条事件队列，模块之间互不引用，来往全走它——每个模块都可以推事件，也都可以订事件，主体自己也订。四种事件：command（玩家命令，IM 接入推、主体订）、message（玩家消息，IM 接入推、agent 订）、new_year（年度通知，游戏接入推、agent 订）、reply（会话回复，agent 推、IM 接入订）
+- 事件队列：主体维护一条事件队列，模块之间互不引用，来往全走它——进队列的动作全在装配处：IM 接入收到命令与消息调主体注册的回调，装配处挂回调时在闭包里包事件推进队列；游戏接入的新年判定由主体定时调、查到新年份主体自己推；订事件也在装配时办，主体自己也订。四种事件：command（玩家命令，IM 接入的命令回调、主体订）、message（玩家消息，IM 接入的消息回调、agent 订）、new_year（年度通知，主体推、agent 订）、reply（会话回复，agent 推、IM 接入订）
 
 ## 主体实现
 
 主体是装配加调度的一层，自身没有业务逻辑，实现写在本节、不另起文档。代码在 vic3-GreatBritain/src/（测试在 test/，按模块分目录）：main 管入口与装配，调度模块管分流、局状态与命令执行，三大模块各成一个包（agent、game、im，实现进各包 impl/）。
 
 - 入口与配置：进程从 main 起，读开发文件夹下的 config.toml（模板 config.example.toml）——Discord token、error.log 路径、游戏进程名、局文件夹与 GBR 路径
-- 装配：按配置把三大模块建出来、接上——游戏接入是进程内模块，直接实例化；IM 接入登录 Discord；agent 持会话。模块之间互不引用，谁接谁只有主体知道
+- 装配：按配置把三大模块建出来、接上——游戏接入是进程内模块，直接实例化；IM 接入挂上命令与消息的回调（闭包里包事件推进队列）再登录 Discord；agent 持会话。模块之间互不引用，谁接谁只有主体知道。主体还干两件接线：会话工具由主体构造——把游戏接入的方法包成 agent 会话的工具（agent 调工具由主体翻译成实际函数），装配时递给 agent 模块挂进会话；年度节拍由主体起——定时调游戏接入的新年判定，查到新年份推 new_year 事件
 - 事件循环：一个主循环（asyncio），进程活着就在等事件——模块包成事件推进队列，主循环逐个取、按事件类型投给订了它的模块，一次投一个，投递串行
-- 局状态与命令执行：主体记一个状态——会话在不在跑。命令到了按状态排动作：startGame 建全新的 GBR 文件夹，loadGame 用已有的，两者接着都起一个基于 GBR 的 agent 会话、把会话接上 IM 和游戏接入；stopGame 让会话整理自己的文件夹，然后结束会话。主体只排顺序，动作本身调三大模块干
+- 局状态与命令执行：主体记一个状态——会话在不在跑。命令到了按状态排动作：startGame 建全新的 GBR 文件夹，loadGame 用已有的，两者接着都起一个基于 GBR 的 agent 会话（接线已在装配完成：工具装配时递进 agent 模块，IM 装配时订好 reply）；stopGame 让会话整理自己的文件夹，然后结束会话。主体只排顺序，动作本身调三大模块干
 - 退出：进程收摊，会话还在跑就先按 stopGame 收尾再退
 
 ## 游戏接入（game）
 
-agent 的眼睛，跑在 harness 进程内：mod 在游戏里每年把世界格局写进 error.log，游戏接入把日志变成两个方法给 agent 调，每年察觉新年份记录时往事件队列推 new_year 事件。声明三个能力：
+agent 的眼睛，跑在 harness 进程内：mod 在游戏里每年把世界格局写进 error.log，游戏接入把日志变成三个方法——两个给 agent 调，一个新年判定给主体定时调，主体查到新年份往事件队列推 new_year 事件。声明三个能力：
 
 - get_state——读取世界局势：各国最新一条记录拼成的世界格局快照
 - start_play——发起博弈：发起一局外交博弈
-- new_year——年度通知（推送）：游戏内每过一年（error.log 出现新年份的本局记录），往事件队列推一个 new_year 事件
+- check_new_year——新年判定：查 error.log 是否出现新的本局记录年份，有返回该年份、没有返回 None；主体定时调它，查到新年份往事件队列推一个 new_year 事件（data 为年份数字）
 
-三个能力都以游戏在跑为前提。行格式与实现细节见[游戏接入-harness侧](游戏接入-harness侧.md)。
+get_state/start_play 以游戏在跑为前提（没跑直接报错）；新年判定在游戏没跑时返回 None。行格式与实现细节见[游戏接入-harness侧](游戏接入-harness侧.md)。
 
 ## agent
 
-agent 本体是 Claude Code 会话。局文件夹固定一个：C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\vic3-GreatBritain；agent 的记忆文件放在它下面的 GBR 文件夹，profile/world/memory 三区由 agent 管理装载。事件侧的能力已定：
+agent 本体是 Claude Code 会话。局文件夹固定一个：C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\vic3-GreatBritain；agent 的记忆文件放在它下面的 GBR 文件夹，profile/world/memory 三区由 agent 管理装载。会话的工具由主体装配时递入（主体把游戏接入的方法包成会话工具），agent 模块只管挂进会话，不知道工具背后是什么。事件侧的能力已定：
 
 - wake——叫醒（订阅 message、new_year）：事件到了，会话空闲就叫醒它处理
 - 串行：会话一次只做一批——会话在忙时，新到的事件不打断，攒着；会话空闲了，把攒下的一起送进会话，做完这批才轮到下一批
-- reply——回复（推送 reply）：会话产出的回复包成 reply 事件推回队列，IM 接入订到后发回局频道
+- reply——回复（推送 reply）：会话产出的回复包成 reply 事件推回队列，IM 接入订到后发回玩家私信
 
 其余能力声明待想清楚后补齐。
 
 ## IM 接入
 
-agent 的嘴和耳朵，通 Discord。声明两块能力：
+agent 的嘴和耳朵，通 Discord，两个 bot 分工——dm bot 主持命令、gbr bot 是大不列颠玩家的门面（细化与实现见[Discord 接入](discord接入.md)）。收是被动的：bot 在线收着，收到的命令与消息调主体注册的回调交出去（装配处包成事件推进队列，模块零总线知识）；发是主动的：主体调模块的发送方法。两块能力：
 
-- 命令通道（推送 command）：玩家在大厅频道和私信（DM）里对 bot 下命令，bot 非 LLM 驱动，命令包成 command 事件推进队列，主体订到后执行。三条命令：
+- 命令通道（收命令交回调）：玩家在大厅频道 @ dm bot 下命令，dm bot 非 LLM 驱动，命令词匹配白名单，命中调命令回调（装配处包成 command 事件推进队列，主体订到后执行）。三条命令：
   - startGame（开始新档）：初始化 GBR 文件夹，起一个基于它的 agent 会话，接上 IM 和游戏接入
   - loadGame（继续存档）：基于已有的 GBR 文件夹起 agent 会话，接上 IM 和游戏接入
   - stopGame（保存存档）：让会话整理自己的文件夹，然后结束会话
-- 局频道（推送 message＋订阅 reply）：名叫 vic3-GreatBritain 的子频道，agent 的对话场所——玩家在频道发的消息包成 message 事件推进队列（agent 订到叫醒会话）；订 reply 事件，把回复发进频道
+- 对话通道（收消息交回调＋发回复）：玩家私信 gbr bot——玩家的话调消息回调（带玩家；装配处包成 message 事件推进队列，agent 订到叫醒会话）；agent 的回复由主体订到 reply 事件（带目标玩家）后调发送方法，gbr bot 发回该玩家的私信

@@ -31,14 +31,14 @@ def drain(bus: EventBus) -> None:
 def test_startGame_建全新GBR起会话接上两块():
     _, dispatcher, calls = make_sut()
     asyncio.run(dispatcher.execute_command("startGame"))
-    assert calls == [("agent.start_session", True), "game.attach_session", "im.attach_session"]
+    assert calls == [("agent.start_session", True)]
     assert dispatcher.session_running is True
 
 
 def test_loadGame_用已有GBR起会话接上两块():
     _, dispatcher, calls = make_sut()
     asyncio.run(dispatcher.execute_command("loadGame"))
-    assert calls == [("agent.start_session", False), "game.attach_session", "im.attach_session"]
+    assert calls == [("agent.start_session", False)]
     assert dispatcher.session_running is True
 
 
@@ -87,7 +87,7 @@ def test_command事件走总线到命令执行():
     bus, dispatcher, _ = make_sut()
 
     async def main():
-        await bus.put(Event(EventType.COMMAND, "startGame"))
+        bus.put(Event(EventType.COMMAND, "startGame"))
         await bus.dispatch_next()
 
     asyncio.run(main())
