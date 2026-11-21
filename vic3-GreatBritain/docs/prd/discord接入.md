@@ -1,6 +1,6 @@
 # Discord 接入
 
-Discord 接入就是 harness 的 IM 接入子模块（接口声明见 [harness](harness.md) 的 IM 接入节），通 Discord、收发两头：收玩家的命令与消息，发 agent 的回复与研判。本文件细化声明、写实现设计，代码落在 src/im/impl/。
+Discord 接入就是 harness 的 IM 接入子模块（接口声明见 [harness](harness.md) 的 IM 接入节），通 Discord、收发两头：收玩家的命令与消息，发 agent 的回复与研判。本文件细化声明、写实现设计，代码落在 src/im/impl/。平台侧的建号、邀请与 token 管理见 [discord侧管理](discord侧管理.md)。
 
 ## 先例：CivAgent 的 Discord 结构
 
