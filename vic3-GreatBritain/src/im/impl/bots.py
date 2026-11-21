@@ -46,8 +46,10 @@ def strip_mention(content: str, self_id: int) -> str | None:
 class BotBase(discord.Client):
     """公共底子：构造时存回调，on_message 里滤 bot 账号再交子类处理。"""
 
-    def __init__(self, callbacks: BotCallbacks, name: str) -> None:
-        super().__init__(intents=discord.Intents.default())
+    def __init__(self, callbacks: BotCallbacks, name: str, proxy: str | None = None) -> None:
+        # proxy：网络直连不到 discord.com 时走本地代理（REST 登录与 Gateway 长连接都走它）；
+        # 代理软件开 TUN 接管时整个进程的路由都被接管，填 None 直连即可
+        super().__init__(intents=discord.Intents.default(), proxy=proxy)
         self._callbacks = callbacks
         self._name = name
 
@@ -66,8 +68,8 @@ class BotBase(discord.Client):
 class DmBot(BotBase):
     """主持 bot：公屏 @ 自己下命令。命中白名单调命令回调，不认识的词直回固定提示。"""
 
-    def __init__(self, callbacks: BotCallbacks) -> None:
-        super().__init__(callbacks, "dm bot")
+    def __init__(self, callbacks: BotCallbacks, proxy: str | None = None) -> None:
+        super().__init__(callbacks, "dm bot", proxy)
         self._command_channel: discord.abc.Messageable | None = None
 
     async def handle(self, message: discord.Message) -> None:
@@ -95,8 +97,8 @@ class DmBot(BotBase):
 class GbrBot(BotBase):
     """大不列颠玩家的门面：私信交消息回调，公屏被 @ 直回固定指引（请私信我）。"""
 
-    def __init__(self, callbacks: BotCallbacks) -> None:
-        super().__init__(callbacks, "gbr bot")
+    def __init__(self, callbacks: BotCallbacks, proxy: str | None = None) -> None:
+        super().__init__(callbacks, "gbr bot", proxy)
         self._dm_channels: dict[str, discord.DMChannel] = {}
 
     async def handle(self, message: discord.Message) -> None:

@@ -28,6 +28,13 @@ Discord 平台侧要办的活：建两个 bot、拉进服务器、token 交给 h
 - 允许服务器成员私信：右键服务器图标 → 隐私设置 → 打开"允许来自服务器成员的私信"——玩家隐私设置允许 bot 私信是一等前提（一等，Channels 文档），关着的话 bot 私信发出去被拒（403）
 - 开发者模式（用户设置 → 高级 → 开发者模式）：右键头像能复制用户 ID——e2e 测试的 E2E_DISCORD_PLAYER_ID 用它
 
+## 网络
+
+国内网络直连不到 discord.com（连接被拒或超时），两个 bot 的登录与收发都在 Discord 的服务器上，程序得有一条能到 Discord 的路，两种做法挑一：
+
+- 代理软件开 TUN／接管模式：整个进程的路由都被接管，harness 不用配任何东西
+- config.toml 填 discord_proxy 指到本地代理端口（Clash 系是 `http://127.0.0.1:7890`，v2rayN 是 `http://127.0.0.1:10809`，以你的代理软件设置页为准）——REST 登录与 Gateway 长连接都走它（discord.py 的 Client proxy 参数）
+
 ## 验收
 
 token 填好后（在 vic3-GreatBritain/ 目录执行）：

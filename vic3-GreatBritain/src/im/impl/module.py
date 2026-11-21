@@ -28,8 +28,8 @@ class ImModuleImpl:
         self._dm_token = config.dm_token
         self._gbr_token = config.gbr_token
         self._callbacks = BotCallbacks()
-        self._dm = DmBot(self._callbacks)
-        self._gbr = GbrBot(self._callbacks)
+        self._dm = DmBot(self._callbacks, proxy=config.discord_proxy)
+        self._gbr = GbrBot(self._callbacks, proxy=config.discord_proxy)
         self._tasks: list[asyncio.Task] = []
 
     # ---- 收（被动）：装配时挂回调，bot 收到即调 ----

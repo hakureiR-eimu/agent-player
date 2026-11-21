@@ -227,3 +227,11 @@ def test_start_缺token明确报缺哪项(tmp_path):
         asyncio.run(module.start())
     assert "dm_token" in str(info.value)
     assert "gbr_token" in str(info.value)
+
+
+def test_代理配置传进两个bot(tmp_path):
+    toml = tmp_path / "config.toml"
+    toml.write_text('discord_proxy = "http://127.0.0.1:7890"\n', encoding="utf-8")
+    module = ImModuleImpl(load_config(toml))
+    assert module._dm.http.proxy == "http://127.0.0.1:7890"
+    assert module._gbr.http.proxy == "http://127.0.0.1:7890"

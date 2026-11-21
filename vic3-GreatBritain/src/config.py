@@ -1,8 +1,9 @@
 """总配置（声明见 docs/prd/harness.md 主体实现·入口与配置）。
 
-进程从 main 起，读这一份配置，装配时发给三大模块。六项：两个 Discord bot 的 token
-（dm_token、gbr_token）、error.log 路径、游戏进程名、局文件夹、GBR 路径（记忆三区所在，
-固定在局文件夹下一层 GBR，随局文件夹派生）。
+进程从 main 起，读这一份配置，装配时发给三大模块。七项：两个 Discord bot 的 token
+（dm_token、gbr_token）、Discord 出口代理（discord_proxy，网络直连不通时填本地代理）、
+error.log 路径、游戏进程名、局文件夹、GBR 路径（记忆三区所在，固定在局文件夹下一层
+GBR，随局文件夹派生）。
 
 来源：开发文件夹下的 config.toml（模板见同目录 config.example.toml，复制改名后填两个
 token）。四项可省，省略即用默认，默认值即真实值；文件没建按全默认。
@@ -25,6 +26,7 @@ CONFIG_PATH = Path(__file__).resolve().parents[1] / "config.toml"
 class Config:
     dm_token: str | None
     gbr_token: str | None
+    discord_proxy: str | None
     log_path: Path
     game_process: str
     game_dir: Path
@@ -41,6 +43,7 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     return Config(
         dm_token=data.get("dm_token") or None,
         gbr_token=data.get("gbr_token") or None,
+        discord_proxy=data.get("discord_proxy") or None,
         log_path=Path(data.get("log_path", DEFAULT_LOG_PATH)),
         game_process=data.get("game_process", DEFAULT_GAME_PROCESS),
         game_dir=game_dir,

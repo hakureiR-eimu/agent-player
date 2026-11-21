@@ -5,6 +5,9 @@
 dm_token = ""
 gbr_token = ""
 
+# Discord 出口代理（直连不到 discord.com 的网络环境填本地代理；代理软件开 TUN 接管时不用填）
+# discord_proxy = "http://127.0.0.1:7890"
+
 # error.log 路径（默认 Victoria 3 用户目录下的 logs/error.log）
 # log_path = 'C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\logs\error.log'
 

@@ -15,6 +15,7 @@ def test_默认配置即真实值(tmp_path):
     config = load_config(tmp_path / "config.toml")
     assert config.dm_token is None
     assert config.gbr_token is None
+    assert config.discord_proxy is None
     assert config.game_process == "victoria3.exe"
     assert config.log_path.name == "error.log"
     assert "Victoria 3" in str(config.log_path)
@@ -27,6 +28,7 @@ def test_配置文件覆盖(tmp_path):
         r"""
 dm_token = "token-dm"
 gbr_token = "token-gbr"
+discord_proxy = "http://127.0.0.1:7890"
 log_path = 'D:\somewhere\error.log'
 game_process = "vic3-test.exe"
 game_dir = 'D:\somewhere\game'
@@ -35,6 +37,7 @@ game_dir = 'D:\somewhere\game'
     config = load_config(path)
     assert config.dm_token == "token-dm"
     assert config.gbr_token == "token-gbr"
+    assert config.discord_proxy == "http://127.0.0.1:7890"
     assert str(config.log_path) == r"D:\somewhere\error.log"
     assert config.game_process == "vic3-test.exe"
     assert str(config.game_dir) == r"D:\somewhere\game"
