@@ -13,7 +13,8 @@ def write_config(tmp_path: Path, content: str) -> Path:
 
 def test_默认配置即真实值(tmp_path):
     config = load_config(tmp_path / "config.toml")
-    assert config.discord_token is None
+    assert config.dm_token is None
+    assert config.gbr_token is None
     assert config.game_process == "victoria3.exe"
     assert config.log_path.name == "error.log"
     assert "Victoria 3" in str(config.log_path)
@@ -24,14 +25,16 @@ def test_配置文件覆盖(tmp_path):
     path = write_config(
         tmp_path,
         r"""
-discord_token = "token-x"
+dm_token = "token-dm"
+gbr_token = "token-gbr"
 log_path = 'D:\somewhere\error.log'
 game_process = "vic3-test.exe"
 game_dir = 'D:\somewhere\game'
 """,
     )
     config = load_config(path)
-    assert config.discord_token == "token-x"
+    assert config.dm_token == "token-dm"
+    assert config.gbr_token == "token-gbr"
     assert str(config.log_path) == r"D:\somewhere\error.log"
     assert config.game_process == "vic3-test.exe"
     assert str(config.game_dir) == r"D:\somewhere\game"
@@ -45,6 +48,7 @@ def test_GBR路径随局文件夹派生(tmp_path):
 
 
 def test_空token等于没配(tmp_path):
-    path = write_config(tmp_path, 'discord_token = ""\n')
+    path = write_config(tmp_path, 'dm_token = ""\ngbr_token = ""\n')
     config = load_config(path)
-    assert config.discord_token is None
+    assert config.dm_token is None
+    assert config.gbr_token is None

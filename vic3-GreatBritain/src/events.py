@@ -9,10 +9,11 @@
   new_year  年度通知    主体推（新年判定）  agent 订
   reply     会话回复    agent 推            IM 接入订
 
-data 的结构由包事件的一方定义，已定两件：command 是命令名字符串（startGame /
+data 的结构由包事件的一方定义，已定四件：command 是命令名字符串（startGame /
 loadGame / stopGame，装配处的命令回调包的），new_year 是年份数字（主体推——定时调
-游戏接入的新年判定方法，指日志里新出现的本局记录年份）；message 与 reply 随 agent、
-IM 接入实现落定。
+游戏接入的新年判定方法，指日志里新出现的本局记录年份）；message 与 reply 随 IM 接入
+落定为 {"player": 玩家, "text": 正文}——玩家是 Discord 用户 ID 的字符串（发回私信要
+拿它找频道）。
 """
 
 from __future__ import annotations

@@ -83,8 +83,8 @@ def test_未知命令拒绝():
     assert calls == []
 
 
-def test_command事件走总线到命令执行():
-    bus, dispatcher, _ = make_sut()
+def test_command事件走总线到命令执行并回执():
+    bus, dispatcher, calls = make_sut()
 
     async def main():
         bus.put(Event(EventType.COMMAND, "startGame"))
@@ -92,6 +92,31 @@ def test_command事件走总线到命令执行():
 
     asyncio.run(main())
     assert dispatcher.session_running is True
+    assert calls == [("agent.start_session", True), ("im.send_receipt", "startGame 执行完成")]
+
+
+def test_command事件没执行成回执带原因():
+    bus, _, calls = make_sut()
+
+    async def main():
+        bus.put(Event(EventType.COMMAND, "restartGame"))
+        await bus.dispatch_next()
+
+    asyncio.run(main())
+    assert calls == [("im.send_receipt", "命令没执行成：未知命令：restartGame")]
+
+
+def test_agent未建时起会话命令明确报未实现():
+    calls: list = []
+    bus = EventBus()
+    game = RecordingGame(calls)
+    im = RecordingIm(calls)
+    dispatcher = Dispatcher(bus, game, None, im)
+    with pytest.raises(CommandError) as info:
+        asyncio.run(dispatcher.execute_command("startGame"))
+    assert "agent 模块未建" in str(info.value)
+    assert calls == []
+    assert dispatcher.session_running is False
 
 
 def test_shutdown_会话在跑先按stopGame收尾():

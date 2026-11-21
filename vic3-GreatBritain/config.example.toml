@@ -1,8 +1,9 @@
-# harness 总配置模板：复制成本文件夹下的 config.toml 再填 discord_token（token 是凭证，config.toml 不进库）
+# harness 总配置模板：复制成本文件夹下的 config.toml 再填两个 bot 的 token（token 是凭证，config.toml 不进库）
 # 四项都可省，省略即用默认，默认值即真实值；Windows 路径用单引号字面串，反斜杠不用转义
 
-# Discord bot token（IM 接入用，未实现前可省）
-discord_token = ""
+# Discord 两个 bot 的 token（IM 接入用：dm bot 主持命令、gbr bot 是 agent 的门面）
+dm_token = ""
+gbr_token = ""
 
 # error.log 路径（默认 Victoria 3 用户目录下的 logs/error.log）
 # log_path = 'C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\logs\error.log'

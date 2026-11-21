@@ -16,6 +16,7 @@ from dispatcher import Dispatcher
 from events import Event, EventBus, EventType
 from game.impl.module import GameModuleImpl
 from game.module import GameModule
+from im.impl.module import ImModuleImpl
 from im.module import ImModule
 
 logger = logging.getLogger(__name__)
@@ -47,23 +48,35 @@ def build_session_tools(game: GameModule):
     raise NotImplementedError("会话工具随 agent 模块落地：主体把 game 的方法包成会话工具")
 
 
-def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
-    """装配第一步：按配置把三大模块建出来。游戏接入已迁入，agent 与 IM 接入待建，建到哪步报哪步：
+def build_modules(config: Config) -> tuple[GameModule, AgentModule | None, ImModule]:
+    """装配第一步：按配置把三大模块建出来。游戏接入与 IM 接入已落地，agent 待建（返回
+    None，进程照跑：起会话的命令执行时回执会明确报未实现）：
 
     - 游戏接入：GameModuleImpl（src/game/impl/），吃总配置的 error.log 路径与游戏进程名
     - agent：src/agent/impl/ 实现后在此实例化（构造时吃主体建的会话工具，起会话挂上）
-    - IM 接入：src/im/impl/ 实现后在此实例化
+    - IM 接入：ImModuleImpl（src/im/impl/），吃总配置的两个 Discord bot token
     """
     game: GameModule = GameModuleImpl(config)
-    raise NotImplementedError("agent 与 IM 接入待建：src/agent/impl/、src/im/impl/")
+    agent: AgentModule | None = None  # 待建：src/agent/impl/
+    im: ImModule = ImModuleImpl(config)
+    return game, agent, im
 
 
 def wire_im(bus: EventBus, im: ImModule) -> None:
-    """装配处的 IM 接线：收经回调交进来，闭包在装配处把事件包进队列——模块零总线知识。
-
-    message 与 reply 的接线随 agent、IM 接入实现落定（事件 data 结构未定，见 events.py）。
+    """装配处的 IM 接线：收经回调交进来（闭包在装配处把事件包进队列——模块零总线知识），
+    reply 事件接到发送方法上。message 带玩家（Discord 用户 ID 字符串）与正文，reply 同。
     """
     im.on_command(lambda command: bus.put(Event(EventType.COMMAND, command)))
+
+    def put_message(player: str, text: str) -> None:
+        bus.put(Event(EventType.MESSAGE, {"player": player, "text": text}))
+
+    im.on_message(put_message)
+
+    async def send_reply(event: Event) -> None:
+        await im.send_reply(event.data["player"], event.data["text"])
+
+    bus.subscribe(EventType.REPLY, send_reply)
 
 
 async def run() -> None:
@@ -74,7 +87,8 @@ async def run() -> None:
     wire_im(bus, im)
     # 年度节拍：主体定时调游戏接入的新年判定，模块自己不碰总线
     year_poll = asyncio.create_task(poll_new_year(bus, game))
-    await agent.start(bus)
+    if agent is not None:
+        await agent.start(bus)
     await im.start()
     try:
         await bus.run()
@@ -85,7 +99,8 @@ async def run() -> None:
             await year_poll
         await dispatcher.shutdown()
         await im.stop()
-        await agent.stop()
+        if agent is not None:
+            await agent.stop()
 
 
 def main() -> None:

@@ -17,11 +17,11 @@ class CommandError(Exception):
 
 
 class Dispatcher:
-    """局状态＋三条命令的执行顺序。装配时订 command 事件。"""
+    """局状态＋三条命令的执行顺序，执行完调 IM 接入发回执（发到命令来的频道）。装配时订 command 事件。"""
 
-    def __init__(self, bus: EventBus, game: GameModule, agent: AgentModule, im: ImModule) -> None:
+    def __init__(self, bus: EventBus, game: GameModule, agent: AgentModule | None, im: ImModule) -> None:
         self._game = game
-        self._agent = agent
+        self._agent = agent  # agent 未建时为 None：会话命令的回执会明确报未实现
         self._im = im
         self._session_running = False
         bus.subscribe(EventType.COMMAND, self._handle_command)
@@ -31,17 +31,24 @@ class Dispatcher:
         return self._session_running
 
     async def _handle_command(self, event: Event) -> None:
-        await self.execute_command(event.data)
+        try:
+            await self.execute_command(event.data)
+        except CommandError as e:
+            await self._im.send_receipt(f"命令没执行成：{e}")
+        else:
+            await self._im.send_receipt(f"{event.data} 执行完成")
 
     async def execute_command(self, command: str) -> None:
         if command == "startGame":
             if self._session_running:
                 raise CommandError("会话已在跑，先 stopGame 再 startGame")
+            self._require_agent()
             await self._agent.start_session(fresh=True)
             self._session_running = True
         elif command == "loadGame":
             if self._session_running:
                 raise CommandError("会话已在跑，先 stopGame 再 loadGame")
+            self._require_agent()
             await self._agent.start_session(fresh=False)
             self._session_running = True
         elif command == "stopGame":
@@ -50,6 +57,10 @@ class Dispatcher:
                 self._session_running = False
         else:
             raise CommandError(f"未知命令：{command}")
+
+    def _require_agent(self) -> None:
+        if self._agent is None:
+            raise CommandError("agent 模块未建（src/agent/impl/），起不了会话")
 
     async def shutdown(self) -> None:
         """进程收摊用：会话还在跑就先按 stopGame 收尾。"""

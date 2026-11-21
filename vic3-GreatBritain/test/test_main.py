@@ -1,4 +1,4 @@
-"""入口与装配单测：骨架阶段装配明确报待建、进程从装配到退出的完整顺序。替身模块见 conftest。"""
+"""入口与装配单测：装配现状（game 与 im 落地、agent 待建）、进程从装配到退出的完整顺序。替身模块见 conftest。"""
 
 import asyncio
 import contextlib
@@ -6,17 +6,16 @@ import contextlib
 from conftest import RecordingAgentModule, RecordingGame, RecordingIm
 
 from config import load_config
+from game.impl.module import GameModuleImpl
+from im.impl.module import ImModuleImpl
 import main as main_module
 
 
-def test_build_modules_agent与IM未建时明确报待建(tmp_path):
-    try:
-        main_module.build_modules(load_config(tmp_path / "config.toml"))
-    except NotImplementedError as e:
-        assert "src/agent/impl/" in str(e)
-        assert "src/im/impl/" in str(e)
-    else:
-        raise AssertionError("agent 与 IM 未建时 build_modules 应报 NotImplementedError")
+def test_build_modules_game与im落地agent待建(tmp_path):
+    game, agent, im = main_module.build_modules(load_config(tmp_path / "config.toml"))
+    assert isinstance(game, GameModuleImpl)
+    assert isinstance(im, ImModuleImpl)
+    assert agent is None
 
 
 def test_run_从装配经命令到退出的完整顺序(monkeypatch):
@@ -48,8 +47,9 @@ def test_run_从装配经命令到退出的完整顺序(monkeypatch):
         # 装配：agent 接上总线；im 的命令回调在装配处挂上闭包（命令闭包把 startGame 包进队列）
         "agent.start",
         "im.start",
-        # startGame 命令经总线到调度：起会话（工具装配时已递进 agent 模块）
+        # startGame 命令经总线到调度：起会话（工具装配时已递进 agent 模块），执行完发回执
         ("agent.start_session", True),
+        ("im.send_receipt", "startGame 执行完成"),
         # 取消主循环后收摊：先按 stopGame 收尾，再按装配反序停模块
         "agent.stop_session",
         "im.stop",
