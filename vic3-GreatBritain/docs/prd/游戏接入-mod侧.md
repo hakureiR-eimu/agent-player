@@ -1,6 +1,6 @@
 # 游戏接入-mod侧
 
-一局单机维多利亚3，真人玩家玩其他国家，大不列颠由 agent 玩家玩：第一版只做读——agent 观察局势，大不列颠的操作全部留给游戏原生 AI；接管操作与禁用原生 AI 的写侧（操作宏库、AI 禁用）第一版不实现。游戏接入拆成两侧：mod 侧（本文件）与 harness 侧（[游戏接入-harness侧](游戏接入-harness侧.md)）。vic3-GreatBritain 整体还有 harness、agent 本体两块，另有说明文件。
+一局单机维多利亚3，真人玩家玩其他国家，大不列颠由 agent 玩家玩：读侧闭环——agent 观察局势，大不列颠的操作全部留给游戏原生 AI；写侧迈出第一步——发起博弈的操作载体已做进游戏（见下"发起博弈"节），harness 发请求、游戏执行操作的触发通道未实现。游戏接入拆成两侧：mod 侧（本文件）与 harness 侧（[游戏接入-harness侧](游戏接入-harness侧.md)）。vic3-GreatBritain 整体还有 harness、agent 本体两块，另有说明文件。
 
 ## 职责与边界
 
@@ -8,15 +8,20 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
 ## 声明：做什么
 
-当前只有一个功能：状态导出。每年（游戏内年度）把世界格局写成 error.log 里的年度快照，内容是封闭清单，清单外不导出：
+两个功能：
 
-- 8 个列强＋8 个次强（rank 1–16），每国两项：
-  - GDP：年度预测 GDP（游戏对本国这一年 GDP 的预估值）
-  - 常备军数量：营队数（battalion 数）
-- 大不列颠的财政状态，三项：
-  - 金库：国库现存的钱
-  - 债务本金：欠债的本金总额（未偿部分，不含利息）
-  - 每周净收支：一周内全部收入抵掉全部支出后的余量，负数即入不敷出
+- 状态导出（读侧）。每年（游戏内年度）把世界格局写成 error.log 里的年度快照，内容是封闭清单，清单外不导出：
+  - 8 个列强＋8 个次强（rank 1–16），每国两项：
+    - GDP：年度预测 GDP（游戏对本国这一年 GDP 的预估值）
+    - 常备军数量：营队数（battalion 数）
+  - 大不列颠的财政状态，三项：
+    - 金库：国库现存的钱
+    - 债务本金：欠债的本金总额（未偿部分，不含利息）
+    - 每周净收支：一周内全部收入抵掉全部支出后的余量，负数即入不敷出
+
+- 发起博弈（写侧第一步）。每个国家挂一条 GreatBritainStartPlay 日志，日志上带一个按钮，按钮效果：大不列颠对人类玩家的国家发起一场外交博弈（类型固定为开放市场）。需求与边界条件见下"发起博弈"节。
+
+
 
 ## 实现：怎么做
 
@@ -48,3 +53,36 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
   - rank 是触发当刻的世界名次：同一年的各行取的是各自触发时点的当刻值，可能出现并列（实测 1836 年 BRZ 与 SPA 均 rank=10、1837 年 BRZ 与 BEL 均 rank=11，不同时点）；每年通常 16 行，席位年中变动时理论可 15–17 行，不硬性假设恰好 16
   - 数值为原始小数（无千分位无单位缩写），负数带负号
   - 游戏写日志不是逐行立刻写进文件，而是先攒在内存里攒一批才落盘：游戏跑着时去读，文件的最后一行可能只有前半截（实测遇到过财政行只落了开头一段）。harness 侧解析时最后一行解析不出就跳过，下次读它就完整了
+
+### 发起博弈
+
+写侧第一步：把"发起外交博弈"这个操作做进游戏。需求与边界条件先行，实现拆解跟后。
+
+需求：
+
+- 每个国家挂一条 GreatBritainStartPlay 日志（脚本 key `je_great_britain_start_play`，显示名即 GreatBritainStartPlay）
+- 日志上有一个按钮：对玩家发起外交博弈——效果是大不列颠对人类玩家的国家发起一场外交博弈，类型固定为开放市场（`dp_open_market`，选它是因为 type 的 possible 条件最宽：双方非 decentralized、非彼此附庸即成立，其余索求类都有恶名、州域等额外要求）
+- 执行后写一行回执行进 error.log，与年度导出行同族，harness 侧解析复用同一管道
+
+边界条件：
+
+- 每个国家的这条日志上按钮都显示；可点的只有 GBR 那份——按钮的 possible 里 `c:GBR = ROOT` 只放行挂在 GBR 上的日志，其他国家的按钮是灰的
+- GBR 必须不是玩家：GBR 由人类玩家控制时按钮不可用（`is_player = no`，wiki Trigger 表已证）
+- GBR 已是一场博弈的发起者时按钮不可用（`is_diplomatic_play_initiator = no`，防止叠开多场）
+- 找不到人类玩家的国家时按钮不可用（单机前提：局内恰一个真人玩家；观察者模式下没有玩家国）
+- 玩家国与 GBR 互为附庸、有一方是 decentralized 部落等 type 层面的可行条件，由 `dp_open_market` 的 possible 约束，按钮不重复判
+
+没法点是常态：人类玩家打开自己国家的这条日志，看到的按钮永远是灰的——可点条件只认 GBR 的日志；而能点亮的那份在 GBR 的日志里，日志面板只能打开玩家自己国家的，GBR 非玩家时任何人都打不开它那份。这个按钮的价值不在被点，而在把操作本身完整做进游戏：找玩家国 → 发起博弈 → 写回执行，整条效果链路在游戏内存好，触发通道（harness 发请求、游戏执行操作）是后续版本的题目。
+
+实现拆解（数据流：挂载 → 按钮 → 效果）：
+
+- 挂载：JE 定义里 `is_shown_when_inactive` 与 `possible` 都写 `always = yes`（wiki Journal 文档已证：两个 trigger 块都为真即激活），开局每个国家自动激活这条日志；GBR 灭国时 `invalid` 触发清场。日志不带 modifier、不带 pulse、不带 goal，对游戏进程零影响
+- 按钮：`common/scripted_buttons/` 的 scripted_button（wiki Journal 文档"Scripted buttons"节已证：日志条目用 `scripted_button =` 挂按钮，结构与 decision 同族——visible 管、possible 管、effect 干）；visible 无门槛（每国日志上都显示），possible 收口可点条件（ROOT 为 GBR、GBR 非玩家等），effect 只会在 possible 全真时执行，所以效果恒在 GBR 作用域
+- 效果：`common/scripted_effects/` 的 `gb_agent_start_play`——`every_country` 限 `is_player = yes` 存 scope 找到玩家国，`create_diplomatic_play`（wiki Effect 表已证：以 scope 国家为发起者，target_country/type 为必要参数）以 GBR 为发起者对玩家国发起，最后在玩家国 scope 里写回执行
+- 回执行格式（`<>` 为占位）：`vic3-GreatBritain cmd start_play status=ok target=<tag> type=dp_open_market`——与 state/fin 行同样落 error.log、同样被游戏加头，harness 侧将来按 `cmd` 前缀识别
+
+待实测：
+
+- 进游戏看：每个国家的日志面板出现 GreatBritainStartPlay；人类玩家自己国家的这条日志按钮显示但灰着（不可点）；error.log 无本 mod 的脚本报错
+- create_diplomatic_play 效果链路（博弈真被发起、回执行真落盘）常态验不了——按钮点不到，等触发通道接入时闭环；调试需要时临时把 visible 放宽到玩家国即可走一遍
+- scripted_button 的 effect 是否尊重 `dp_open_market` 自身 possible（引擎可能直接强制执行），实测看无 type 条件时的行为

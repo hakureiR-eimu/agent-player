@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目是什么
 
-维多利亚3 agent 玩家：agent 是玩维多利亚3的玩家，与人机同局的人类玩家对等（当前局执掌大不列颠，开发文件夹 `vic3-GreatBritain/`），通过 MCP 工具读游戏局势，人在 Discord 上与它对话。2026-10-20 推倒重来，旧的 TS 运行时（控制台、飞书接入、假 agent）已全部清除，当前处于第一版实现起步：**只读**游戏接入——agent 观察局势、出研判，游戏操作全部留给游戏原生 AI；写侧（操作注入）与多 agent 后续版本再做。
+维多利亚3 agent 玩家：agent 是玩维多利亚3的玩家，与人机同局的人类玩家对等（当前局执掌大不列颠，开发文件夹 `vic3-GreatBritain/`），通过 MCP 工具读游戏局势，人在 Discord 上与它对话。2026-10-20 推倒重来，旧的 TS 运行时（控制台、飞书接入、假 agent）已全部清除。现状：读侧游戏接入闭环（agent 观察局势、出研判）；写侧迈出第一步——发起外交博弈的操作载体已做进 mod（GreatBritainStartPlay 日志＋按钮，见 mod 侧文档"发起博弈"节），harness 发请求、游戏执行的触发通道未实现，游戏操作仍全部留给游戏原生 AI。
 
 推倒重来前的旧运行时（控制台、飞书接入、旧 README）已全部清除，现状以本文件和 `vic3-GreatBritain/docs/` 为准。
 
