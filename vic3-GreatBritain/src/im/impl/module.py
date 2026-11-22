@@ -21,8 +21,10 @@ from im.module import CommandCallback, MessageCallback
 
 logger = logging.getLogger(__name__)
 
-# 登录后等 bot 在线的时限：超时按没连上处理（token 错或网络不通）
-READY_TIMEOUT_SECONDS = 30.0
+# 登录后等 bot 在线的时限：超时按没连上处理（token 错或网络不通）。得长过 discord.py
+# 首次 Gateway 连接的 60 秒内部超时——代理把连接挂住时 client 到点会自己重试，外层
+# 要等得到那次重试，30 秒会在第一次连接还挂着时就判死
+READY_TIMEOUT_SECONDS = 90.0
 
 # 读私信历史的条数上限：只翻最近的，不读太多
 DM_HISTORY_LIMIT = 100
