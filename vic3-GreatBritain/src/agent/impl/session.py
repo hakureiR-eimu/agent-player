@@ -59,7 +59,12 @@ class _NoInput(TypedDict):
     pass
 
 
+class _PlayerInput(TypedDict):
+    player_id: str
+
+
 class _SendMessageInput(TypedDict):
+    player_id: str
     text: str
 
 
@@ -80,20 +85,20 @@ def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
 
     @tool(
         name="send_message",
-        description="给玩家发 Discord 私信——把话说出去，你的话只在你主动发出去时才算数",
+        description="给玩家发 Discord 私信——player_id 填玩家的 Discord 用户 ID（玩家私信进来时带着的那串数字），把话说出去，你的话只在你主动发出去时才算数",
         input_schema=_SendMessageInput,
     )
     async def send_message(args: _SendMessageInput) -> dict:
-        await tools.send_message(args["text"])
+        await tools.send_message(args["player_id"], args["text"])
         return {"ok": True}
 
     @tool(
         name="read_message",
-        description="读与玩家的 Discord 私信记录（最近 100 条，从新到旧排）",
-        input_schema=_NoInput,
+        description="读与玩家的 Discord 私信记录（最近 100 条，从新到旧排）——player_id 填玩家的 Discord 用户 ID",
+        input_schema=_PlayerInput,
     )
-    async def read_message(args: _NoInput) -> dict:
-        return {"messages": await tools.read_message()}
+    async def read_message(args: _PlayerInput) -> dict:
+        return {"messages": await tools.read_message(args["player_id"])}
 
     return create_sdk_mcp_server(
         MCP_SERVER_NAME, tools=[get_state, start_play, send_message, read_message]

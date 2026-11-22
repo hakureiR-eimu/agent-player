@@ -16,13 +16,14 @@ from game.module import WorldSnapshot
 class SessionTools:
     """会话工具集（四件）：游戏两件、Discord 收发两件。
 
-    send_message/read_message 定向当前局的人类玩家（主体装配时闭包定向，agent 只给正文）。
+    send_message/read_message 带玩家参数（player_id 由 agent 填，值从收到的私信里
+    带的玩家 Discord 用户 ID 学来）。
     """
 
     get_state: Callable[[], WorldSnapshot]
     start_play: Callable[[], str]
-    send_message: Callable[[str], Awaitable[None]]
-    read_message: Callable[[], Awaitable[list[dict[str, str]]]]
+    send_message: Callable[[str, str], Awaitable[None]]
+    read_message: Callable[[str], Awaitable[list[dict[str, str]]]]
 
 
 @dataclass(frozen=True)

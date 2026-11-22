@@ -36,10 +36,10 @@ class FakeSession:
 
 
 def make_tools() -> SessionTools:
-    async def send_message(text: str) -> None:
+    async def send_message(player_id: str, text: str) -> None:
         pass
 
-    async def read_message() -> list[dict[str, str]]:
+    async def read_message(player_id: str) -> list[dict[str, str]]:
         return []
 
     return SessionTools(

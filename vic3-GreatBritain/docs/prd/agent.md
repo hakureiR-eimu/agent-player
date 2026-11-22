@@ -18,7 +18,7 @@ agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Co
 
 - 文件读写——SDK 内置工具，围着 gbr 文件夹转，写权限配在 memory/
 - 游戏动作——get_state（读取世界局势）、start_play（发起外交博弈）
-- Discord 收发——读消息（翻与玩家的私信历史）、发消息（把话发给玩家）
+- Discord 收发——读消息（翻与玩家的私信历史）、发消息（把话发给玩家）；两件都带玩家 ID 参数，agent 从收到的私信里学玩家的 Discord 用户 ID
 
 后两类都是主体装配时经 SDK 的进程内 MCP 递入，agent 模块只管挂进会话，不知道工具背后是什么。
 
@@ -28,7 +28,7 @@ agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Co
 
 - 空闲即送：会话空闲时消息一到，就送进会话、唤醒它
 - 忙时攒批：会话在忙，新到的攒着不打断；等它空闲了，把攒下的 Discord 消息与新年合并成一段上下文送进会话、唤醒它
-- 发消息工具定向当前局的人类玩家——config 的 player_id（人类玩家的 Discord 用户 ID），装配时闭包定向，agent 只给正文
+- 发消息与读消息带玩家 ID 参数，agent 调用时自己填——值从收到的私信学来（送进会话的私信带玩家的 Discord 用户 ID）；开局不主动发话，玩家第一条私信来了才亮相
 
 送进会话的消息样式：私信一条是「玩家 〈用户 ID〉 发来私信：〈正文〉」，新年是「游戏进入了 〈年份〉 年。」。忙时攒下的一批合并成一段，最前面带一行标注告诉 agent 这些是它忙期间积下的——
 
@@ -64,7 +64,7 @@ agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Co
 
 一局跑起来后的样子：
 
-- 开局：玩家在大厅频道 @ dm bot 下开始游戏，harness 建本局频道（GreatBritain）、建全新的 gbr、起会话；agent 读 profile 进入角色，私信玩家亮相——他是谁、这局想干什么
+- 开局：玩家在大厅频道 @ dm bot 下开始游戏，harness 建本局频道（GreatBritain）、建全新的 gbr、起会话；agent 读 profile 进入角色、把开局事办了，话等玩家先说——玩家第一条私信进来（带着他的 Discord 用户 ID），他才亮相回话：他是谁、这局想干什么
 - 年度：游戏每进一个新年，new_year 把 agent 叫醒；他调 get_state 看世界格局，把研判写进 memory，并私信玩家一份年度研判
 - 对话：玩家私信 gbr bot 谈外交——交易、结盟、威胁、试探；agent 结合三区记忆回话，两位玩家就各自执掌的国家讨价还价
 - 博弈：谈拢或谈崩，agent 调 start_play 在游戏里发起外交博弈，博弈之后的游戏操作由游戏原生 AI 消化（写侧的其余注入后续版本再做）

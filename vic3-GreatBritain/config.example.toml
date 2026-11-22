@@ -1,12 +1,9 @@
 # harness 总配置模板：复制成本文件夹下的 config.toml 再填两个 bot 的 token（token 是凭证，config.toml 不进库）
-# 八项都可省，省略即用默认，默认值即真实值；Windows 路径用单引号字面串，反斜杠不用转义
+# 七项都可省，省略即用默认，默认值即真实值；Windows 路径用单引号字面串，反斜杠不用转义
 
 # Discord 两个 bot 的 token（IM 接入用：dm bot 主持命令、gbr bot 是 agent 的门面）
 dm_token = ""
 gbr_token = ""
-
-# 人类玩家的 Discord 用户 ID（agent 的发消息工具定向发他的私信；开发者模式右键头像复制用户 ID）
-# player_id = "123456789012345678"
 
 # Discord 出口代理（直连不到 discord.com 的网络环境填本地代理；代理软件开 TUN 接管时不用填）
 # discord_proxy = "http://127.0.0.1:7890"

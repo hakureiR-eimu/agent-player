@@ -47,25 +47,16 @@ async def poll_new_year(bus: EventBus, game: GameModule) -> None:
             logger.info("游戏进入 %s 年，推 new_year 事件", year)
 
 
-def build_session_tools(game: GameModule, im: ImModule, player_id: str) -> SessionTools:
-    """会话工具（主体是翻译层）：把游戏接入的方法（get_state/start_play）与 IM 接入的
-    收发对接成 SessionTools——Discord 收发定向当前局的人类玩家（player_id），agent 调
-    工具时翻译成对模块方法的实际调用。挂进会话的 SDK 细节在 agent/impl/session.py。
+def build_session_tools(game: GameModule, im: ImModule) -> SessionTools:
+    """会话工具（主体是组合层）：把游戏接入的方法（get_state/start_play）与 IM 接入的
+    收发（send_message/read_message，带玩家参数、agent 调用时自己填——值从收到的私信里
+    学）组合成 SessionTools 递给 agent 模块。挂进会话的 SDK 细节在 agent/impl/session.py。
     """
-    if not player_id:
-        logger.warning("config 没填 player_id：agent 的发消息/读消息工具定向不了人类玩家")
-
-    async def send_message(text: str) -> None:
-        await im.send_message(player_id, text)
-
-    async def read_message() -> list[dict[str, str]]:
-        return await im.read_message(player_id)
-
     return SessionTools(
         get_state=game.get_state,
         start_play=game.start_play,
-        send_message=send_message,
-        read_message=read_message,
+        send_message=im.send_message,
+        read_message=im.read_message,
     )
 
 
@@ -83,7 +74,7 @@ def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
     agent: AgentModule = AgentModuleImpl(
         config.gbr_dir,
         config.agent_log_dir,
-        build_session_tools(game, im, config.player_id),
+        build_session_tools(game, im),
         PROFILE_SRC,
         SessionAuth(
             base_url=config.anthropic_base_url,
