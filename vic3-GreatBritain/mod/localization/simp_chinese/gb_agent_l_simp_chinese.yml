@@ -1,0 +1,5 @@
+﻿l_simp_chinese:
+ je_great_britain_start_play:0 "GreatBritainStartPlay"
+ je_great_britain_start_play_reason:0 "agent 大不列颠的操作入口：承载发起外交博弈的操作。"
+ gb_agent_start_play_button_name:0 "对玩家发起外交博弈"
+ gb_agent_start_play_button_desc:0 "大不列颠对人类玩家的国家发起一场外交博弈（开放市场）。"

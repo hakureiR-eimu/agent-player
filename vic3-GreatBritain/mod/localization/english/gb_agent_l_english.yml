@@ -1,0 +1,5 @@
+﻿l_english:
+ je_great_britain_start_play:0 "GreatBritainStartPlay"
+ je_great_britain_start_play_reason:0 "Agent Britain's operation entry: carries the start-diplomatic-play operation."
+ gb_agent_start_play_button_name:0 "Start Diplomatic Play vs Player"
+ gb_agent_start_play_button_desc:0 "Great Britain starts a diplomatic play (open market) against the player's country."

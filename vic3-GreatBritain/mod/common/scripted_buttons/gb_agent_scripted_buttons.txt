@@ -1,0 +1,32 @@
+# 游戏接入 mod 侧：发起博弈的按钮（挂在 je_great_britain_start_play 日志上）
+# 需求与边界条件见 docs/prd/游戏接入-mod侧.md"发起博弈"节。
+#
+# 结构与 decision 同族（wiki Journal 文档"Scripted buttons"节已证）：visible 管显示、possible 管可用、effect 干活。
+# 按钮 root 是日志所在国。每个国家的日志上按钮都显示，可点条件由 possible 收口：只有 GBR 且 GBR 非玩家。
+
+gb_agent_start_play_button = {
+	name = gb_agent_start_play_button_name
+	desc = gb_agent_start_play_button_desc
+
+	# 每个国家的这条日志上按钮都显示
+	visible = {
+		always = yes
+	}
+
+	possible = {
+		exists = c:GBR
+		# 只有 GBR 可以点：这条日志挂在 GBR 上时按钮才可用
+		# （scope 相等比较的原版写法，同 gb_agent_effects.txt 财政行特判）
+		c:GBR = ROOT
+		# GBR 必须不是玩家（is_player 是 wiki Trigger 表已证的 country trigger）
+		c:GBR = { is_player = no }
+		# GBR 已是一场博弈的发起者时不可用，防叠开多场（is_diplomatic_play_initiator，wiki Trigger 表已证）
+		c:GBR = { is_diplomatic_play_initiator = no }
+		# 局内存在人类玩家的国家（单机前提恰一个；观察者模式下没有，按钮就该不可用）
+		any_country = { is_player = yes }
+	}
+
+	effect = {
+		gb_agent_start_play = yes
+	}
+}

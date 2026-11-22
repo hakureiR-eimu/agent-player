@@ -1,5 +1,5 @@
-# 游戏接入 mod 侧：年度状态导出逻辑
-# 每年（游戏内）把世界格局写进 error.log：rank 1-16 每国一行国家行，GBR 追加一行财政行。
+# 游戏接入 mod 侧：scripted_effect 库——年度状态导出（gb_agent_export_state）＋发起博弈（gb_agent_start_play）
+# 年度导出：每年（游戏内）把世界格局写进 error.log：rank 1-16 每国一行国家行，GBR 追加一行财政行。
 # 行格式是 mod 侧与 mcp 侧的交接面，见 docs/prd/游戏接入-mod侧.md；字段取值写法的可行性随首次跑 mod 实测，
 # 回退路径写在本文件各字段注释里。
 #
@@ -35,5 +35,27 @@ gb_agent_export_state = {
 		# week_net GetWeeklyBalance  每周净收支；首次实测输出带符号原始小数（开局 GBR -10.8万/周），
 		#          量级合理，与 trigger net_total_income 的严格同值无从交叉验证，按界面语义采信
 		error_log = "vic3-GreatBritain fin tag=[THIS.GetCountry.GetTagName] year=[TimeKeeper.GetCurrentDate.GetString] gold=[THIS.GetCountry.GetGoldReserves] debt=[THIS.GetCountry.GetPrincipal] week_net=[THIS.GetCountry.GetWeeklyBalance]"
+	}
+}
+
+# 写侧第一步：发起外交博弈（调用方是 je_great_britain_start_play 日志上的按钮，root 恒为 GBR）
+# 需求与边界条件见 docs/prd/游戏接入-mod侧.md"发起博弈"节；按钮点不到是常态，本效果是操作本身的载体
+gb_agent_start_play = {
+	# 找人类玩家的国家（单机局恰一个真人玩家；is_player 是 wiki Trigger 表已证的 trigger）
+	every_country = {
+		limit = { is_player = yes }
+		save_scope_as = gb_agent_player_country
+	}
+
+	# 以 GBR 为发起者对玩家国发起博弈（wiki Effect 表已证：create_diplomatic_play 以 scope 国家为发起者，
+	# target_country/type 为必要参数；type 选 dp_open_market，其 possible 条件最宽，理由见 mod 文档）
+	create_diplomatic_play = {
+		target_country = scope:gb_agent_player_country
+		type = dp_open_market
+	}
+
+	# 回执行：与年度导出行同族（同样被游戏加头、同样攒批落盘），在玩家国 scope 里写便于沿用 [THIS.GetCountry.XXX] 内插
+	scope:gb_agent_player_country = {
+		error_log = "vic3-GreatBritain cmd start_play status=ok target=[THIS.GetCountry.GetTagName] type=dp_open_market"
 	}
 }

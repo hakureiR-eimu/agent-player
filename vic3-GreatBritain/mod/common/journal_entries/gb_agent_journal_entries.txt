@@ -1,0 +1,21 @@
+# 游戏接入 mod 侧：发起博弈的日志载体（写侧第一步）
+# 每个国家一条 GreatBritainStartPlay 日志，按钮与效果见 scripted_buttons / scripted_effects。
+# 需求与边界条件见 docs/prd/游戏接入-mod侧.md"发起博弈"节。
+#
+# 挂法（wiki Journal 文档已证）：is_shown_when_inactive 与 possible 两个 trigger 块都为真即激活，
+# 都写 always = yes → 开局每个国家（含 AI 国）自动挂上这条日志。
+
+je_great_britain_start_play = {
+	# 每国激活：默认 is_shown_when_inactive = no，写 always = yes 打开
+	is_shown_when_inactive = { always = yes }
+	# 默认 possible = yes，显式写明留档
+	possible = { always = yes }
+
+	# 按钮挂载（wiki Journal 文档"Scripted buttons"节：日志条目用 scripted_button = 挂任意多个按钮）
+	scripted_button = gb_agent_start_play_button
+
+	# GBR 灭国时日志清场（不然每个国家都背着一条悬空日志）
+	invalid = { NOT = { exists = c:GBR } }
+
+	# 不带 modifier、pulse、goal、complete/fail：纯操作载体，对游戏进程零影响，永不结束
+}
