@@ -4,7 +4,8 @@
 忙时攒着、空闲了把攒下的合并成一段上下文送进会话；私信到达即落盘 world/chat/。
 会话本体在 session.py（Claude Agent SDK 的封装），本模块经注入的 factory 起会话
 （单测用假 factory）；gbr 随会话起止——起会话建全新的（三区＋装 profile），收尾让
-会话整理 memory 后结束。
+会话整理 memory 后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见
+docs/prd/日志功能.md）建本局运行记录文件，路径递进会话、由会话逐条追加。
 """
 
 from __future__ import annotations
@@ -25,8 +26,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# 会话类型标注的字符串引用（运行时不 import session，单测不需要装 SDK）
-SessionFactory = Callable[[Path, SessionTools, SessionAuth], "AgentSession"]
+# 会话类型标注的字符串引用（运行时不 import session，单测不需要装 SDK）；第四参是
+# 本局运行记录文件（起会话时建好，路径递进会话逐条追加）
+SessionFactory = Callable[[Path, SessionTools, SessionAuth, Path], "AgentSession"]
 
 # 开局送进会话的第一批：固定引导（你是谁、记忆三区在哪）＋亮相指令
 OPENING_PROMPT = """你是玩维多利亚3的玩家，与同局的人类玩家对等，执掌大不列颠。
@@ -43,11 +45,13 @@ CLOSING_PROMPT = "这局要存档了。把 memory/ 整理收尾——补全大�
 CHAT_FILE = Path("world") / "chat" / "dialogue.jsonl"
 
 
-def default_session_factory(cwd: Path, tools: SessionTools, auth: SessionAuth) -> AgentSession:
+def default_session_factory(
+    cwd: Path, tools: SessionTools, auth: SessionAuth, record_path: Path
+) -> AgentSession:
     """真会话工厂：Claude Agent SDK 的封装在 session.py（延迟 import，SDK 只在真起会话时碰）。"""
     from agent.impl.session import SdkSession
 
-    return SdkSession(cwd, tools, auth)
+    return SdkSession(cwd, tools, auth, record_path)
 
 
 class AgentModuleImpl:
@@ -56,12 +60,14 @@ class AgentModuleImpl:
     def __init__(
         self,
         gbr_dir: Path,
+        agent_log_dir: Path,
         tools: SessionTools,
         profile_src: Path,
         auth: SessionAuth = SessionAuth(),
         session_factory: SessionFactory = default_session_factory,
     ) -> None:
         self._gbr_dir = gbr_dir
+        self._agent_log_dir = agent_log_dir
         self._tools = tools
         self._profile_src = profile_src
         self._auth = auth
@@ -127,7 +133,8 @@ class AgentModuleImpl:
         if self._session is not None:
             raise RuntimeError("会话已在跑，先保存游戏再开新的一局")
         self._build_gbr()
-        self._session = self._session_factory(self._gbr_dir, self._tools, self._auth)
+        record_path = self._new_record_path()
+        self._session = self._session_factory(self._gbr_dir, self._tools, self._auth, record_path)
         self._closing = False
         self._pending.append(OPENING_PROMPT)
         self._try_send_batch()
@@ -156,3 +163,11 @@ class AgentModuleImpl:
         (self._gbr_dir / "memory").mkdir()
         shutil.copytree(self._profile_src, self._gbr_dir / "profile")
         logger.info("建了全新的 gbr（三区＋装入 profile）：%s", self._gbr_dir)
+
+    def _new_record_path(self) -> Path:
+        """建本局运行记录文件：agent 日志目录下按开局时刻命名（一次会话一个，整局追加）。"""
+        self._agent_log_dir.mkdir(parents=True, exist_ok=True)
+        record_path = self._agent_log_dir / f"agent-{datetime.now():%Y-%m-%d_%H-%M-%S}.jsonl"
+        record_path.touch()
+        logger.info("建了本局运行记录：%s", record_path)
+        return record_path

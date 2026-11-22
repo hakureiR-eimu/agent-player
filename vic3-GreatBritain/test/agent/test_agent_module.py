@@ -1,4 +1,5 @@
-"""agent 模块单测：消息队列（空闲即送、忙时攒批合并送）、私信落盘、gbr 随会话起止。
+"""agent 模块单测：消息队列（空闲即送、忙时攒批合并送）、私信落盘、gbr 随会话起止、
+本局运行记录文件的建立。
 
 会话用假替身（FakeSession 记收到的批与开关，经 factory 注入）——SDK 的真会话走
 test/agent/test_agent_integration.py（起真会话跑一局，样式照 test/im/）。
@@ -6,6 +7,7 @@ test/agent/test_agent_integration.py（起真会话跑一局，样式照 test/im
 
 import asyncio
 import json
+import re
 import time
 
 from agent.impl.module import CLOSING_PROMPT, OPENING_PROMPT, AgentModuleImpl
@@ -14,12 +16,14 @@ from events import Event, EventBus, EventType
 
 
 class FakeSession:
-    """假会话：记收到的批与开关；gate 不为 None 时 send 卡住等放行（测攒批用）。"""
+    """假会话：记收到的批与开关、递进的记录文件路径；gate 不为 None 时 send 卡住等放行
+    （测攒批用）。"""
 
     def __init__(self) -> None:
         self.prompts: list[str] = []
         self.closed = False
         self.gate: asyncio.Event | None = None
+        self.record_path = None
 
     async def send(self, prompt: str) -> str:
         self.prompts.append(prompt)
@@ -47,17 +51,25 @@ def make_tools() -> SessionTools:
 
 
 def make_agent(tmp_path, sessions: list[FakeSession]) -> tuple[AgentModuleImpl, EventBus]:
-    """建模块＋总线（已订）：gbr、工具、profile 源都在临时目录，factory 记录造出的假会话。"""
+    """建模块＋总线（已订）：gbr、日志目录、工具、profile 源都在临时目录，factory 记录
+    造出的假会话（也记递进的记录文件路径）。"""
     profile_src = tmp_path / "profile"
     profile_src.mkdir()
     (profile_src / "PROFILE.md").write_text("大不列颠玩家的设定", encoding="utf-8")
 
-    def factory(cwd, tools, auth):
+    def factory(cwd, tools, auth, record_path):
         session = FakeSession()
+        session.record_path = record_path
         sessions.append(session)
         return session
 
-    agent = AgentModuleImpl(tmp_path / "gbr", make_tools(), profile_src, session_factory=factory)
+    agent = AgentModuleImpl(
+        tmp_path / "gbr",
+        tmp_path / "logs" / "agent",
+        make_tools(),
+        profile_src,
+        session_factory=factory,
+    )
     bus = EventBus()
     asyncio.run(agent.start(bus))
     return agent, bus
@@ -120,6 +132,21 @@ def test_会话已在跑再起明确报错(tmp_path):
             pass
 
     asyncio.run(main())
+
+
+def test_起会话建本局运行记录文件带时刻(tmp_path):
+    sessions: list[FakeSession] = []
+    agent, _ = make_agent(tmp_path, sessions)
+
+    async def main():
+        await agent.start_session()
+        await settle()
+
+    asyncio.run(main())
+    record_path = sessions[0].record_path
+    assert record_path.parent == tmp_path / "logs" / "agent"  # 在 agent 日志目录下
+    assert record_path.exists()  # 起会话即建
+    assert re.fullmatch(r"agent-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.jsonl", record_path.name)
 
 
 # ---- 消息队列：空闲即送、忙时攒批 ----

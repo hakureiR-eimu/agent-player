@@ -19,7 +19,7 @@ def test_build_modules_三大模块全落地(tmp_path):
     assert isinstance(im, ImModuleImpl)
 
 
-def test_run_从装配经命令到退出的完整顺序(monkeypatch):
+def test_run_从装配经命令到退出的完整顺序(monkeypatch, tmp_path):
     calls: list = []
 
     class CommandOnStartIm(RecordingIm):
@@ -36,7 +36,7 @@ def test_run_从装配经命令到退出的完整顺序(monkeypatch):
     monkeypatch.setattr(main_module, "build_modules", lambda config: (game, agent, im))
 
     async def main():
-        task = asyncio.create_task(main_module.run())
+        task = asyncio.create_task(main_module.run(load_config(tmp_path / "config.toml")))
         # 让装配、命令事件、会话起接都跑完
         await asyncio.sleep(0.1)
         task.cancel()

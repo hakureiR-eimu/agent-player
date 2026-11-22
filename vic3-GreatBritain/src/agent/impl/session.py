@@ -5,14 +5,20 @@
 MCP 挂进——主体递入的 SessionTools 在这包成 SdkMcpTool。上下文压缩归 SDK 的上下文
 管理。写权限先走引导软约束（OPENING_PROMPT 里写明只有 memory/ 可写），路径级的硬
 限制随后实测再配。
+
+送批期间流过的消息按四类逐条追加进本局运行记录（jsonl，agent 模块起会话时建好递进
+来，格式见 docs/prd/日志功能.md）：agent 说的话（assistant）、工具调用（tool_use）、
+工具结果（tool_result）、批收尾（result）。
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from abc import ABC, abstractmethod
+from datetime import datetime
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from agent.tools import SessionAuth, SessionTools
 from claude_agent_sdk import (
@@ -21,6 +27,9 @@ from claude_agent_sdk import (
     McpSdkServerConfig,
     ResultMessage,
     TextBlock,
+    ToolResultBlock,
+    ToolUseBlock,
+    UserMessage,
     create_sdk_mcp_server,
     query,
     tool,
@@ -91,16 +100,38 @@ def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
     )
 
 
+def _now() -> str:
+    return datetime.now().isoformat(timespec="seconds")
+
+
+def _tool_result_text(content: str | list[dict[str, Any]] | None) -> str:
+    """工具结果的回执取文本：str 原样，块列表序列化保留原文，None 记空串。"""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    return json.dumps(content, ensure_ascii=False)
+
+
 class SdkSession(AgentSession):
     """真会话：Claude Agent SDK 的 query，批间靠 session_id 续。模型与凭证吃 SessionAuth
     （config 配了走 config——模型名进 options、入口与 token 化成子进程环境变量；全空
-    走本机 Claude Code 的默认）。"""
+    走本机 Claude Code 的默认）。本局运行记录文件（record_path）由 agent 模块建好递入，
+    送批流过的消息按四类逐条追加进它。"""
 
-    def __init__(self, cwd: Path, tools: SessionTools, auth: SessionAuth = SessionAuth()) -> None:
+    def __init__(
+        self, cwd: Path, tools: SessionTools, auth: SessionAuth, record_path: Path
+    ) -> None:
         self._cwd = cwd
         self._auth = auth
+        self._record_path = record_path
         self._session_id: str | None = None
         self._server = build_mcp_server(tools)
+
+    def _record(self, record: dict[str, Any]) -> None:
+        """运行记录逐条追加：一行一条 json。"""
+        with self._record_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
     def _env(self) -> dict[str, str]:
         """凭证进子进程环境变量：只在配了的时候设，没配的留给本机默认。"""
@@ -126,11 +157,41 @@ class SdkSession(AgentSession):
         texts: list[str] = []
         async for message in query(prompt=prompt, options=options):
             if isinstance(message, AssistantMessage):
-                texts.extend(
-                    block.text for block in message.content if isinstance(block, TextBlock)
-                )
+                for block in message.content:
+                    if isinstance(block, TextBlock):
+                        texts.append(block.text)
+                        self._record({"time": _now(), "kind": "assistant", "text": block.text})
+                    elif isinstance(block, ToolUseBlock):
+                        self._record(
+                            {
+                                "time": _now(),
+                                "kind": "tool_use",
+                                "tool": block.name,
+                                "input": block.input,
+                            }
+                        )
+            elif isinstance(message, UserMessage) and isinstance(message.content, list):
+                for block in message.content:
+                    if isinstance(block, ToolResultBlock):
+                        self._record(
+                            {
+                                "time": _now(),
+                                "kind": "tool_result",
+                                "text": _tool_result_text(block.content),
+                            }
+                        )
             elif isinstance(message, ResultMessage):
                 self._session_id = message.session_id
+                self._record(
+                    {
+                        "time": _now(),
+                        "kind": "result",
+                        "session_id": message.session_id,
+                        "duration_ms": message.duration_ms,
+                        "num_turns": message.num_turns,
+                        "total_cost_usd": message.total_cost_usd,
+                    }
+                )
         return "\n".join(texts)
 
     async def close(self) -> None:

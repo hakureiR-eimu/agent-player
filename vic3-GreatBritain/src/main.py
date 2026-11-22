@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from agent.impl.module import AgentModuleImpl
@@ -72,15 +73,16 @@ def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
     """装配第一步：按配置把三大模块建出来。
 
     - 游戏接入：GameModuleImpl（src/game/impl/），吃总配置的 error.log 路径与游戏进程名
-    - agent：AgentModuleImpl（src/agent/impl/），吃 gbr 路径、会话工具、profile 模板源与
-      会话的模型凭证（SessionAuth，总配置三项——配了 agent 会话走它，与玩家自己的
-      Claude Code 分开）
+    - agent：AgentModuleImpl（src/agent/impl/），吃 gbr 路径、agent 日志目录（本局运行
+      记录所在）、会话工具、profile 模板源与会话的模型凭证（SessionAuth，总配置三项——
+      配了 agent 会话走它，与玩家自己的 Claude Code 分开）
     - IM 接入：ImModuleImpl（src/im/impl/），吃总配置的两个 Discord bot token
     """
     game: GameModule = GameModuleImpl(config)
     im: ImModule = ImModuleImpl(config)
     agent: AgentModule = AgentModuleImpl(
         config.gbr_dir,
+        config.agent_log_dir,
         build_session_tools(game, im, config.player_id),
         PROFILE_SRC,
         SessionAuth(
@@ -105,8 +107,22 @@ def wire_im(bus: EventBus, im: ImModule) -> None:
     im.on_message(put_message)
 
 
-async def run() -> None:
-    config = load_config()
+def setup_logging(system_log_dir: Path) -> Path:
+    """系统日志双写：本次进程启动在 system 目录建一个新文件（名字带启动时刻），控制台
+    同步输出。全库各模块的 logger 都汇到这（格式沿用既往）。返回日志文件路径。
+    """
+    system_log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = system_log_dir / f"harness-{datetime.now():%Y-%m-%d_%H-%M-%S}.log"
+    fmt = logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setFormatter(fmt)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(fmt)
+    logging.basicConfig(level=logging.INFO, handlers=[file_handler, console_handler])
+    return log_path
+
+
+async def run(config: Config) -> None:
     bus = EventBus()
     game, agent, im = build_modules(config)
     dispatcher = Dispatcher(bus, game, agent, im, config.gbr_dir)
@@ -115,22 +131,27 @@ async def run() -> None:
     year_poll = asyncio.create_task(poll_new_year(bus, game))
     await agent.start(bus)
     await im.start()
+    logger.info("模块起齐：agent 接上总线，IM 接入上线（两个 bot 登录完成）")
     try:
         await bus.run()
     finally:
         # 进程收摊：先停年度节拍，会话还在跑再按保存游戏收尾，最后按装配的反序让模块停
+        logger.info("进程收摊：停年度节拍，会话按保存游戏收尾，模块按装配反序停")
         year_poll.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await year_poll
         await dispatcher.shutdown()
         await im.stop()
         await agent.stop()
+        logger.info("模块全停，进程退出")
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    config = load_config()
+    log_path = setup_logging(config.system_log_dir)
+    logger.info("harness 启动，本次运行日志：%s", log_path)
     try:
-        asyncio.run(run())
+        asyncio.run(run(config))
     except KeyboardInterrupt:
         logger.info("收到 Ctrl+C，进程退出")
 

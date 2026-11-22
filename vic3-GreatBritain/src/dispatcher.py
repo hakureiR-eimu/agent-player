@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import logging
 import shutil
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from agent.module import AgentModule
 from events import Event, EventBus, EventType
 from game.module import GameModule
 from im.module import ImModule
+
+logger = logging.getLogger(__name__)
 
 
 class CommandError(Exception):
@@ -36,11 +39,14 @@ class Dispatcher:
         return self._session_running
 
     async def _handle_command(self, event: Event) -> None:
+        logger.info("收到命令：%s", event.data)
         try:
             await self.execute_command(event.data)
         except CommandError as e:
+            logger.warning("命令没执行成：%s", e)
             await self._im.send_receipt(f"命令没执行成：{e}")
         else:
+            logger.info("命令执行完成：%s", event.data)
             await self._im.send_receipt(f"{event.data} 执行完成")
 
     async def execute_command(self, command: str) -> None:

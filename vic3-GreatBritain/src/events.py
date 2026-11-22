@@ -69,6 +69,7 @@ class EventBus:
             event = self._queue.get_nowait()
         except asyncio.QueueEmpty:
             return False
+        logger.info("投 %s 事件", event.type.value)
         await self._deliver(event)
         return True
 
@@ -76,4 +77,5 @@ class EventBus:
         """事件主循环：进程活着就在等事件，逐个取、逐个投。取消即退出。"""
         while True:
             event = await self._queue.get()
+            logger.info("投 %s 事件", event.type.value)
             await self._deliver(event)

@@ -20,6 +20,8 @@ def test_默认配置即真实值(tmp_path):
     assert config.log_path.name == "error.log"
     assert "Victoria 3" in str(config.log_path)
     assert config.game_dir == DEFAULT_GAME_DIR
+    assert config.system_log_dir == DEFAULT_GAME_DIR / "logs" / "system"
+    assert config.agent_log_dir == DEFAULT_GAME_DIR / "logs" / "agent"
     assert config.player_id == ""
     assert config.anthropic_base_url is None
     assert config.anthropic_auth_token is None
@@ -60,6 +62,15 @@ def test_gbr路径随局文件夹派生(tmp_path):
     config = load_config(path)
     assert config.gbr_dir == config.game_dir / "gbr"
     assert str(config.gbr_dir) == r"D:\somewhere\game\gbr"
+
+
+def test_两处日志目录随局文件夹派生(tmp_path):
+    path = write_config(tmp_path, r"game_dir = 'D:\somewhere\game'")
+    config = load_config(path)
+    assert config.system_log_dir == config.game_dir / "logs" / "system"
+    assert config.agent_log_dir == config.game_dir / "logs" / "agent"
+    assert str(config.system_log_dir) == r"D:\somewhere\game\logs\system"
+    assert str(config.agent_log_dir) == r"D:\somewhere\game\logs\agent"
 
 
 def test_空token等于没配(tmp_path):

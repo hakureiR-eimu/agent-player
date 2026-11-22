@@ -9,6 +9,7 @@
 """
 
 import asyncio
+import json
 
 import pytest
 
@@ -44,6 +45,7 @@ def test_真会话送批收回复并续上下文(tmp_path):
     config = load_config()
     agent = AgentModuleImpl(
         tmp_path / "gbr",
+        tmp_path / "logs" / "agent",
         tools,
         profile_src,
         SessionAuth(
@@ -65,3 +67,9 @@ def test_真会话送批收回复并续上下文(tmp_path):
         print(f"  {text}")
     assert sent, "开局亮相没发出来——会话没跑或工具没调"
     assert (tmp_path / "gbr" / "profile" / "PROFILE.md").exists()
+    # 本局运行记录：四类逐条追加（jsonl 一行一条）
+    record_files = list((tmp_path / "logs" / "agent").glob("agent-*.jsonl"))
+    assert len(record_files) == 1, "起会话应建一个本局运行记录文件"
+    kinds = [json.loads(line)["kind"] for line in record_files[0].read_text(encoding="utf-8").splitlines()]
+    assert "tool_use" in kinds and "tool_result" in kinds, f"工具调用与结果该逐条记，实记：{kinds}"
+    assert kinds.count("result") == 2, f"开局与收尾两批各一条批收尾，实记：{kinds}"
