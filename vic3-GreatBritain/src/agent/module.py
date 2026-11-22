@@ -22,7 +22,7 @@ class AgentModule(Protocol):
         ...
 
     async def start_session(self) -> None:
-        """起一个基于全新 gbr 的 agent 会话：先建全新的 gbr 文件夹（装入 profile）再起。"""
+        """起一个基于全新 gbr 的 agent 会话：先把 gbr-template 复制成全新的 gbr 文件夹再起。"""
         ...
 
     async def stop_session(self) -> None:

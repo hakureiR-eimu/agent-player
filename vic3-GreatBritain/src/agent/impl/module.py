@@ -3,10 +3,11 @@
 消息队列＋会话起止：订 message、new_year 收进消息队列——会话空闲即送进会话唤醒，
 忙时攒着、空闲了把攒下的合并成一段上下文（最前面带一行忙期间标注）送进会话；私信到达
 即落盘 world/chat/。
-会话本体在 session.py（Claude Agent SDK 的封装），本模块经注入的 factory 起会话
-（单测用假 factory）；gbr 随会话起止——起会话建全新的（三区＋装 profile），收尾让
-会话整理 memory 后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见
-docs/prd/日志功能.md）建本局运行记录文件，路径递进会话、由会话逐条追加。
+会话本体在 session.py（Claude Agent SDK 的封装，system prompt 吃项目里的
+agent-system-prompt.md），本模块经注入的 factory 起会话（单测用假 factory）；gbr 随
+会话起止——起会话把开发文件夹的 gbr-template/ 整个复制成全新的 gbr，收尾让会话整理
+memory 后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见 docs/prd/日志功能.md）
+建本局运行记录文件，路径递进会话、由会话逐条追加。
 """
 
 from __future__ import annotations
@@ -31,16 +32,11 @@ logger = logging.getLogger(__name__)
 # 本局运行记录文件（起会话时建好，路径递进会话逐条追加）
 SessionFactory = Callable[[Path, SessionTools, SessionAuth, Path], "AgentSession"]
 
-# 开局送进会话的第一批：固定引导（你是谁、记忆三区在哪）＋开局指令（玩家没先说话，
-# agent 不主动发话——玩家第一条私信进来才亮相，玩家的 Discord 用户 ID 随私信带进来）
-OPENING_PROMPT = """你是玩维多利亚3的玩家，与同局的人类玩家对等，执掌大不列颠。
-你的文件夹就是你的世界：profile/ 是你的设定与开局指令（整局只读）；world/ 是事实记录，
-world/chat/dialogue.jsonl 是与玩家的对话（只读）；memory/ 是你自己的账本（只有这里可写）。
-你被叫醒时会收到一段消息（玩家的私信，或新年到了）；读文件、调工具想清楚，然后用发
-消息工具说话——你的话只在你主动发出去时才算数。
-现在新的一局开始了：读 profile/ 进入角色，把该办的开局事办了；玩家还没跟你说话，先
-别主动发他私信——等他第一条私信来了（里面带着他的 Discord 用户 ID），你再自我介绍、
-开谈。"""
+# 开局送进会话的第一批：一次性的开局事件（你是谁、怎么工作在 system prompt，开局年度
+# 流程在 gbr 的 CLAUDE.md，都不在这里）；玩家没先说话 agent 不主动发话——玩家第一条
+# 私信进来才亮相
+OPENING_PROMPT = """新的一局开始了：把开局的事办了（怎么办见你文件夹里的 CLAUDE.md）。
+玩家还没跟你说话，先别主动发他私信——等他第一条私信来了，再自我介绍、开谈。"""
 
 # 收尾批：保存游戏时让会话整理自己的文件夹（memory 收尾）
 CLOSING_PROMPT = "这局要存档了。把 memory/ 整理收尾——补全大事记、把该记的账记全；不用给玩家发消息。"
@@ -69,14 +65,14 @@ class AgentModuleImpl:
         gbr_dir: Path,
         agent_log_dir: Path,
         tools: SessionTools,
-        profile_src: Path,
+        gbr_template_src: Path,
         auth: SessionAuth = SessionAuth(),
         session_factory: SessionFactory = default_session_factory,
     ) -> None:
         self._gbr_dir = gbr_dir
         self._agent_log_dir = agent_log_dir
         self._tools = tools
-        self._profile_src = profile_src
+        self._gbr_template_src = gbr_template_src
         self._auth = auth
         self._session_factory = session_factory
         self._session: AgentSession | None = None
@@ -173,12 +169,10 @@ class AgentModuleImpl:
         await self.stop_session()
 
     def _build_gbr(self) -> None:
-        """建全新的 gbr：残留清掉，三区建齐，profile 整个装进来。"""
+        """建全新的 gbr：残留清掉，模板整个复制过来（手册 CLAUDE.md、world/chat、memory）。"""
         shutil.rmtree(self._gbr_dir, ignore_errors=True)
-        (self._gbr_dir / "world" / "chat").mkdir(parents=True)
-        (self._gbr_dir / "memory").mkdir()
-        shutil.copytree(self._profile_src, self._gbr_dir / "profile")
-        logger.info("建了全新的 gbr（三区＋装入 profile）：%s", self._gbr_dir)
+        shutil.copytree(self._gbr_template_src, self._gbr_dir)
+        logger.info("建了全新的 gbr（从模板复制）：%s", self._gbr_dir)
 
     def _new_record_path(self) -> Path:
         """建本局运行记录文件：agent 日志目录下按开局时刻命名（一次会话一个，整局追加）。"""

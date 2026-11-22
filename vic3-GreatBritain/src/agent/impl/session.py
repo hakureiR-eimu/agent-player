@@ -2,9 +2,11 @@
 
 一次随局的会话：每批一次 query（prompt 进、最终回复出），批与批之间靠 session_id 续
 上下文（SDK 把会话记在盘上，resume 即续，没有要维护的长连接）；工具经 SDK 的进程内
-MCP 挂进——主体递入的 SessionTools 在这包成 SdkMcpTool。上下文压缩归 SDK 的上下文
-管理。写权限先走引导软约束（OPENING_PROMPT 里写明只有 memory/ 可写），路径级的硬
-限制随后实测再配。
+MCP 挂进——主体递入的 SessionTools 在这包成 SdkMcpTool。system prompt 吃开发文件夹
+下的 agent-system-prompt.md（固定内容，完全替换 SDK 默认的 system prompt——agent 是
+玩家，不吃助手默认人设），gbr 里复制的 CLAUDE.md 手册由 SDK 作为项目指令自动装载。
+上下文压缩归 SDK 的上下文管理。写权限先走软约束（system prompt 写明只有 memory/
+可写），路径级的硬限制随后实测再配。
 
 送批期间流过的消息按四类逐条追加进本局运行记录（jsonl，agent 模块起会话时建好递进
 来，格式见 docs/prd/日志功能.md）：agent 说的话（assistant）、工具调用（tool_use）、
@@ -39,6 +41,10 @@ logger = logging.getLogger(__name__)
 
 # 挂进会话的进程内 MCP 服务器名（工具在会话里以 mcp__<服务器名>__<工具名> 出现）
 MCP_SERVER_NAME = "agent-tools"
+
+# agent 的 system prompt 源：开发文件夹下的 agent-system-prompt.md（起会话时读进来，
+# 每批 query 都带上——完全替换 SDK 默认的 system prompt）
+SYSTEM_PROMPT_PATH = Path(__file__).resolve().parents[3] / "agent-system-prompt.md"
 
 
 class AgentSession(ABC):
@@ -132,6 +138,7 @@ class SdkSession(AgentSession):
         self._record_path = record_path
         self._session_id: str | None = None
         self._server = build_mcp_server(tools)
+        self._system_prompt = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
 
     def _record(self, record: dict[str, Any]) -> None:
         """运行记录逐条追加：一行一条 json。"""
@@ -155,6 +162,7 @@ class SdkSession(AgentSession):
             resume=self._session_id,  # None 即新会话，有 id 即续上批
             model=self._auth.model,
             env=self._env(),
+            system_prompt=self._system_prompt,
             # 不读本机 Claude Code 的 settings（~/.claude/settings.json 的 env 段会把
             # 传入的凭证覆盖回去——2026-11-22 实测），配置只来自显式传入的这些项
             setting_sources=[],

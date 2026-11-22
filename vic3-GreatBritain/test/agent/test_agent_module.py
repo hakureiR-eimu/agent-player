@@ -51,11 +51,12 @@ def make_tools() -> SessionTools:
 
 
 def make_agent(tmp_path, sessions: list[FakeSession]) -> tuple[AgentModuleImpl, EventBus]:
-    """建模块＋总线（已订）：gbr、日志目录、工具、profile 源都在临时目录，factory 记录
+    """建模块＋总线（已订）：gbr、日志目录、工具、gbr 模板源都在临时目录，factory 记录
     造出的假会话（也记递进的记录文件路径）。"""
-    profile_src = tmp_path / "profile"
-    profile_src.mkdir()
-    (profile_src / "PROFILE.md").write_text("大不列颠玩家的设定", encoding="utf-8")
+    template_src = tmp_path / "gbr-template"
+    (template_src / "world" / "chat").mkdir(parents=True)
+    (template_src / "memory").mkdir()
+    (template_src / "CLAUDE.md").write_text("大不列颠玩家手册", encoding="utf-8")
 
     def factory(cwd, tools, auth, record_path):
         session = FakeSession()
@@ -67,7 +68,7 @@ def make_agent(tmp_path, sessions: list[FakeSession]) -> tuple[AgentModuleImpl, 
         tmp_path / "gbr",
         tmp_path / "logs" / "agent",
         make_tools(),
-        profile_src,
+        template_src,
         session_factory=factory,
     )
     bus = EventBus()
@@ -86,10 +87,10 @@ async def settle(seconds: float = 1.0) -> None:
         await asyncio.sleep(0.01)
 
 
-# ---- 起会话：建全新 gbr（三区＋装 profile）并送开局批 ----
+# ---- 起会话：模板复制成全新 gbr 并送开局批 ----
 
 
-def test_起会话建全新gbr并送开局批(tmp_path):
+def test_起会话从模板复制全新gbr并送开局批(tmp_path):
     sessions: list[FakeSession] = []
     agent, _ = make_agent(tmp_path, sessions)
 
@@ -98,7 +99,7 @@ def test_起会话建全新gbr并送开局批(tmp_path):
         await settle()
 
     asyncio.run(main())
-    assert (tmp_path / "gbr" / "profile" / "PROFILE.md").read_text(encoding="utf-8") == "大不列颠玩家的设定"
+    assert (tmp_path / "gbr" / "CLAUDE.md").read_text(encoding="utf-8") == "大不列颠玩家手册"
     assert (tmp_path / "gbr" / "world" / "chat").is_dir()
     assert (tmp_path / "gbr" / "memory").is_dir()
     assert sessions[0].prompts[0] == OPENING_PROMPT
@@ -116,7 +117,7 @@ def test_起会话清掉残留永远全新(tmp_path):
 
     asyncio.run(main())
     assert not (tmp_path / "gbr" / "old.json").exists()  # 残留清掉
-    assert (tmp_path / "gbr" / "profile" / "PROFILE.md").exists()  # 新局装齐
+    assert (tmp_path / "gbr" / "CLAUDE.md").exists()  # 新局从模板装齐
 
 
 def test_会话已在跑再起明确报错(tmp_path):

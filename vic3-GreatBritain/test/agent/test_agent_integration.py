@@ -3,8 +3,9 @@
 
 前提：本机装好 Claude Code CLI（SDK 起会话靠它跑）；config.toml 配了模型凭证三项
 （anthropic_base_url/anthropic_auth_token/agent_model）就走它（比如 GLM），全空走
-本机 Claude Code 的登录态。两个测试都起真 SDK 会话：测试指令写进临时 profile，开局
-批读 profile 时指令随设定进会话；会话写进 gbr 根下的回执文件是验收口——等会话空闲
+本机 Claude Code 的登录态。两个测试都起真 SDK 会话：system prompt 吃项目里的
+agent-system-prompt.md（会话自己读），测试指令附进临时 gbr 模板的 CLAUDE.md（SDK
+装载项目指令时随手册进会话）；会话写进 gbr 根下的回执文件是验收口——等会话空闲
 后读出内容打印、删掉文件，结束时打印各自测了什么：
 
 1. 读世界局势写 test_state.md：get_state 是真工具（直打真 error.log），游戏得在跑；
@@ -38,25 +39,26 @@ pytestmark = pytest.mark.integration
 WAIT_SECONDS = int(os.environ.get("INTEGRATION_AGENT_WAIT_SECONDS", "300"))
 
 
-def make_profile(tmp_path: Path, instruction: str) -> Path:
-    """临时 profile：最小设定＋测试指令（开局批读 profile，指令随设定进会话）。"""
-    profile_src = tmp_path / "profile"
-    profile_src.mkdir()
-    (profile_src / "PROFILE.md").write_text(
-        f"# 大不列颠玩家\n\n你是玩维多利亚3的玩家，执掌大不列颠。\n\n{instruction}\n",
-        encoding="utf-8",
+def make_gbr_template(tmp_path: Path, instruction: str) -> Path:
+    """临时 gbr 模板：最小手册＋测试指令（都写进 CLAUDE.md，SDK 装载项目指令时进会话）。"""
+    template_src = tmp_path / "gbr-template"
+    template_src.mkdir()
+    (template_src / "CLAUDE.md").write_text(
+        f"# 大不列颠玩家手册\n\n{instruction}\n", encoding="utf-8"
     )
-    return profile_src
+    (template_src / "world" / "chat").mkdir(parents=True)
+    (template_src / "memory").mkdir()
+    return template_src
 
 
-def make_agent(tmp_path: Path, tools: SessionTools, profile_src: Path) -> AgentModuleImpl:
+def make_agent(tmp_path: Path, tools: SessionTools, template_src: Path) -> AgentModuleImpl:
     """真会话工厂的 agent 模块：gbr 与日志目录在临时目录，凭证吃总配置三项。"""
     config = load_config()
     return AgentModuleImpl(
         tmp_path / "gbr",
         tmp_path / "logs" / "agent",
         tools,
-        profile_src,
+        template_src,
         SessionAuth(
             base_url=config.anthropic_base_url,
             auth_token=config.anthropic_auth_token,
@@ -96,13 +98,13 @@ def test_agent_reads_state_into_test_state_file(tmp_path):
         send_message=no_send,  # 假的：这项不碰 Discord
         read_message=no_read,
     )
-    profile_src = make_profile(
+    template_src = make_gbr_template(
         tmp_path,
         "【测试指令】调用 get_state 工具读取当前世界局势，把工具返回的结果写进你文件夹"
-        "根下的 test_state.md 文件（就在 profile/、world/、memory/ 旁边——本条指令优先于"
+        "根下的 test_state.md 文件（就在 world/、memory/ 旁边——本条指令优先于"
         "「只有 memory/ 可写」的常规约束）。写完就待着，不用给任何玩家发消息。",
     )
-    agent = make_agent(tmp_path, tools, profile_src)
+    agent = make_agent(tmp_path, tools, template_src)
     state_path = tmp_path / "gbr" / "test_state.md"
 
     async def scenario() -> str:
@@ -133,15 +135,15 @@ def test_agent_replies_dm_and_records_test_message(tmp_path):
 
     game = GameModuleImpl(config)
     im = ImModuleImpl(config)
-    profile_src = make_profile(
+    template_src = make_gbr_template(
         tmp_path,
         "【测试指令】接下来会有玩家给你发 Discord 私信。收到后做两件事：一、把私信原文"
-        "写进你文件夹根下的 test_message 文件（就在 profile/、world/、memory/ 旁边——本条"
+        "写进你文件夹根下的 test_message 文件（就在 world/、memory/ 旁边——本条"
         "指令优先于「只有 memory/ 可写」的常规约束）；二、用 send_message 工具回复该玩家，"
         "就说两个字「收到」，player_id 填私信里带的 Discord 用户 ID。在玩家开口之前，先别"
         "主动发信。",
     )
-    agent = make_agent(tmp_path, build_session_tools(game, im), profile_src)
+    agent = make_agent(tmp_path, build_session_tools(game, im), template_src)
     message_path = tmp_path / "gbr" / "test_message"
 
     async def scenario() -> str:

@@ -14,7 +14,7 @@ harness 是整个程序的主体，一个 Python 进程，装四块：主体负�
 主体是装配加调度的一层，自身没有业务逻辑，实现写在本节、不另起文档。代码在 vic3-GreatBritain/src/（测试在 test/，按模块分目录）：main 管入口与装配，调度模块管分流、局状态与命令执行，三大模块各成一个包（agent、game、im，实现进各包 impl/）。
 
 - 入口与配置：进程从 main 起，读开发文件夹下的 config.toml（模板 config.example.toml）——两个 bot 的 Discord token（dm_token、gbr_token）、error.log 路径、游戏进程名、局文件夹与 gbr 路径、两处运行日志目录（system_log_dir、agent_log_dir——局文件夹下 logs/system 与 logs/agent，随局文件夹派生，config.toml 不填；进程启动时配好系统日志双写，记录内容见[日志功能](日志功能.md)）、agent 会话的模型与凭证三项（anthropic_base_url、anthropic_auth_token、agent_model——配了 agent 会话走它，与玩家自己的 Claude Code 分开）
-- 装配：按配置把三大模块建出来、接上——游戏接入是进程内模块，直接实例化；IM 接入挂上命令与消息的回调（闭包里包事件推进队列），再登录 Discord；agent 持会话。模块之间互不引用，谁接谁只有主体知道。主体还干两件接线：会话工具由主体组合——把游戏接入的方法与 IM 接入的收发（读私信历史、发私信，带玩家 ID 参数、agent 调用时自己填，值从收到的私信里学）组合成 agent 会话的工具，装配时递给 agent 模块挂进会话；年度节拍由主体起——定时调游戏接入的新年判定，查到新年份推 new_year 事件。profile 模板源在开发文件夹 profile/，起会话建全新 gbr 时装入
+- 装配：按配置把三大模块建出来、接上——游戏接入是进程内模块，直接实例化；IM 接入挂上命令与消息的回调（闭包里包事件推进队列），再登录 Discord；agent 持会话。模块之间互不引用，谁接谁只有主体知道。主体还干两件接线：会话工具由主体组合——把游戏接入的方法与 IM 接入的收发（读私信历史、发私信，带玩家 ID 参数、agent 调用时自己填，值从收到的私信里学）组合成 agent 会话的工具，装配时递给 agent 模块挂进会话；年度节拍由主体起——定时调游戏接入的新年判定，查到新年份推 new_year 事件。gbr 模板源在开发文件夹 gbr-template/，起会话时整个复制成全新的 gbr
 - 事件循环：一个主循环（asyncio），进程活着就在等事件——模块包成事件推进队列，主循环逐个取、按事件类型投给订了它的模块，一次投一个，投递串行
 - 局状态与命令执行：主体记一个状态——会话在不在跑；本局频道（GreatBritain）在不在是局挂没挂着的外显（问 IM 接入）。命令到了按状态排动作：开始游戏先看频道——已在就拒绝，没有就建频道、建全新的 gbr 文件夹起 agent 会话（接线已在装配完成：工具装配时递进 agent 模块），永远开新局；保存游戏让会话整理自己的文件夹，然后结束会话，频道留着；结束游戏先看频道——没有就拒绝，有则会话在跑先按保存游戏收尾，然后销频道、清 gbr。主体只排顺序，动作本身调三大模块干。执行完调 IM 接入发回执（固定文案，发到命令来的频道），没执行成（拒绝重复起这类）回执带原因
 - 退出：进程收摊，会话还在跑就先按保存游戏收尾再退
@@ -31,7 +31,7 @@ get_state/start_play 以游戏在跑为前提（没跑直接报错）；新年�
 
 ## agent
 
-agent 本体是 Claude Code 会话。局文件夹固定一个：C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\vic3-GreatBritain；agent 的记忆文件放在它下面的 gbr 文件夹，profile/world/memory 三区由 agent 管理装载。会话的工具由主体装配时递入（主体把游戏接入的方法与 IM 接入的收发包成会话工具），agent 模块只管挂进会话，不知道工具背后是什么。消息侧的能力已定：
+agent 本体是 Claude Code 会话。局文件夹固定一个：C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\vic3-GreatBritain；agent 的工作空间在它下面的 gbr 文件夹——开始游戏时把开发文件夹的 gbr-template/ 整个复制成全新的 gbr，人格与玩法的分层装载见[agent-记忆和人格](agent-记忆和人格.md)。会话的工具由主体装配时递入（主体把游戏接入的方法与 IM 接入的收发包成会话工具），agent 模块只管挂进会话，不知道工具背后是什么。消息侧的能力已定：
 
 - 消息队列——收（订 message、new_year）：两类到达收进队列，会话空闲即送进会话、唤醒它；会话在忙则攒着，空闲了把攒下的合并成一段上下文送进会话、唤醒它
 - 发消息——说：会话里挂的发消息工具，agent 填玩家的 Discord 用户 ID（从收到的私信里学）把话发到他的私信（工具背后是 IM 接入的发送方法）

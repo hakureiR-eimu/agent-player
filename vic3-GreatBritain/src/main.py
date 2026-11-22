@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 # 没有意义，解析确认才是准的——间隔几秒就够
 NEW_YEAR_POLL_INTERVAL_SECONDS = 3.0
 
-# profile 模板源：开发文件夹下的 profile/（开始游戏时装进全新的 gbr）
-PROFILE_SRC = Path(__file__).resolve().parents[1] / "profile"
+# gbr 模板源：开发文件夹下的 gbr-template/（开始游戏时整个复制成全新的 gbr）
+GBR_TEMPLATE_SRC = Path(__file__).resolve().parents[1] / "gbr-template"
 
 
 async def poll_new_year(bus: EventBus, game: GameModule) -> None:
@@ -65,7 +65,7 @@ def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
 
     - 游戏接入：GameModuleImpl（src/game/impl/），吃总配置的 error.log 路径与游戏进程名
     - agent：AgentModuleImpl（src/agent/impl/），吃 gbr 路径、agent 日志目录（本局运行
-      记录所在）、会话工具、profile 模板源与会话的模型凭证（SessionAuth，总配置三项——
+      记录所在）、会话工具、gbr 模板源与会话的模型凭证（SessionAuth，总配置三项——
       配了 agent 会话走它，与玩家自己的 Claude Code 分开）
     - IM 接入：ImModuleImpl（src/im/impl/），吃总配置的两个 Discord bot token
     """
@@ -75,7 +75,7 @@ def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
         config.gbr_dir,
         config.agent_log_dir,
         build_session_tools(game, im),
-        PROFILE_SRC,
+        GBR_TEMPLATE_SRC,
         SessionAuth(
             base_url=config.anthropic_base_url,
             auth_token=config.anthropic_auth_token,
