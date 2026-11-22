@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # 没有意义，解析确认才是准的——间隔几秒就够
 NEW_YEAR_POLL_INTERVAL_SECONDS = 3.0
 
-# profile 模板源：开发文件夹下的 profile/（开始游戏时装进全新的 GBR）
+# profile 模板源：开发文件夹下的 profile/（开始游戏时装进全新的 gbr）
 PROFILE_SRC = Path(__file__).resolve().parents[1] / "profile"
 
 
@@ -72,7 +72,7 @@ def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
     """装配第一步：按配置把三大模块建出来。
 
     - 游戏接入：GameModuleImpl（src/game/impl/），吃总配置的 error.log 路径与游戏进程名
-    - agent：AgentModuleImpl（src/agent/impl/），吃 GBR 路径、会话工具、profile 模板源与
+    - agent：AgentModuleImpl（src/agent/impl/），吃 gbr 路径、会话工具、profile 模板源与
       会话的模型凭证（SessionAuth，总配置三项——配了 agent 会话走它，与玩家自己的
       Claude Code 分开）
     - IM 接入：ImModuleImpl（src/im/impl/），吃总配置的两个 Discord bot token

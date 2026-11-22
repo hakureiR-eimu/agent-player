@@ -43,7 +43,7 @@ def test_真会话送批收回复并续上下文(tmp_path):
     )
     config = load_config()
     agent = AgentModuleImpl(
-        tmp_path / "GBR",
+        tmp_path / "gbr",
         tools,
         profile_src,
         SessionAuth(
@@ -64,4 +64,4 @@ def test_真会话送批收回复并续上下文(tmp_path):
     for text in sent:
         print(f"  {text}")
     assert sent, "开局亮相没发出来——会话没跑或工具没调"
-    assert (tmp_path / "GBR" / "profile" / "PROFILE.md").exists()
+    assert (tmp_path / "gbr" / "profile" / "PROFILE.md").exists()

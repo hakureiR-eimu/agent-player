@@ -11,13 +11,13 @@ from events import Event, EventBus, EventType
 
 
 def make_sut(tmp_path):
-    """构造一条带替身模块的调度：bus ＋ Dispatcher ＋ 三个替身，共写一份 calls；GBR 落临时目录。"""
+    """构造一条带替身模块的调度：bus ＋ Dispatcher ＋ 三个替身，共写一份 calls；gbr 落临时目录。"""
     calls: list = []
     bus = EventBus()
     game = RecordingGame(calls)
     agent = RecordingAgentModule(calls)
     im = RecordingIm(calls)
-    dispatcher = Dispatcher(bus, game, agent, im, gbr_dir=tmp_path / "GBR")
+    dispatcher = Dispatcher(bus, game, agent, im, gbr_dir=tmp_path / "gbr")
     return bus, dispatcher, im, calls
 
 
@@ -50,7 +50,7 @@ def test_开始游戏_agent未建不建频道(tmp_path):
     bus = EventBus()
     game = RecordingGame(calls)
     im = RecordingIm(calls)
-    dispatcher = Dispatcher(bus, game, None, im, gbr_dir=tmp_path / "GBR")
+    dispatcher = Dispatcher(bus, game, None, im, gbr_dir=tmp_path / "gbr")
     with pytest.raises(CommandError) as info:
         asyncio.run(dispatcher.execute_command("开始游戏"))
     assert "agent 模块未建" in str(info.value)
@@ -84,9 +84,9 @@ def test_保存游戏_没在跑不动(tmp_path):
     assert dispatcher.session_running is False
 
 
-def test_结束游戏_会话在跑先收尾再销频道清GBR(tmp_path):
+def test_结束游戏_会话在跑先收尾再销频道清gbr(tmp_path):
     _, dispatcher, im, calls = make_sut(tmp_path)
-    gbr = tmp_path / "GBR"
+    gbr = tmp_path / "gbr"
     gbr.mkdir()
     (gbr / "memory.md").write_text("这一局的记忆", encoding="utf-8")
     asyncio.run(dispatcher.execute_command("开始游戏"))
@@ -97,12 +97,12 @@ def test_结束游戏_会话在跑先收尾再销频道清GBR(tmp_path):
     assert calls == ["agent.stop_session", "im.destroy_channel"]
     assert dispatcher.session_running is False
     assert im.channel_exists is False
-    assert not gbr.exists()  # 这局彻底完，GBR 清掉
+    assert not gbr.exists()  # 这局彻底完，gbr 清掉
 
 
-def test_结束游戏_保存过的局只销频道清GBR(tmp_path):
+def test_结束游戏_保存过的局只销频道清gbr(tmp_path):
     _, dispatcher, _, calls = make_sut(tmp_path)
-    gbr = tmp_path / "GBR"
+    gbr = tmp_path / "gbr"
     gbr.mkdir()
     asyncio.run(dispatcher.execute_command("开始游戏"))
     asyncio.run(dispatcher.execute_command("保存游戏"))
@@ -110,18 +110,18 @@ def test_结束游戏_保存过的局只销频道清GBR(tmp_path):
 
     asyncio.run(dispatcher.execute_command("结束游戏"))
 
-    assert calls == ["im.destroy_channel"]  # 会话早收尾了，只销频道清 GBR
+    assert calls == ["im.destroy_channel"]  # 会话早收尾了，只销频道清 gbr
     assert not gbr.exists()
 
 
 def test_结束游戏_没频道拒绝(tmp_path):
     _, dispatcher, _, calls = make_sut(tmp_path)
-    gbr = tmp_path / "GBR"
+    gbr = tmp_path / "gbr"
     gbr.mkdir()
     with pytest.raises(CommandError):
         asyncio.run(dispatcher.execute_command("结束游戏"))
     assert calls == []
-    assert gbr.exists()  # GBR 也没动
+    assert gbr.exists()  # gbr 也没动
 
 
 def test_未知命令拒绝(tmp_path):
@@ -156,13 +156,13 @@ def test_command事件没执行成回执带原因(tmp_path):
 
 def test_shutdown_会话在跑先按保存游戏收尾(tmp_path):
     _, dispatcher, im, calls = make_sut(tmp_path)
-    gbr = tmp_path / "GBR"
+    gbr = tmp_path / "gbr"
     gbr.mkdir()
     asyncio.run(dispatcher.execute_command("开始游戏"))
     calls.clear()
     asyncio.run(dispatcher.shutdown())
     assert calls == ["agent.stop_session"]
-    assert im.channel_exists is True  # 进程退出不是局结束，频道与 GBR 都不动
+    assert im.channel_exists is True  # 进程退出不是局结束，频道与 gbr 都不动
     assert gbr.exists()
 
 

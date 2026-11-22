@@ -1,4 +1,4 @@
-"""总配置单测：默认值即真实值、配置文件覆盖、GBR 路径随局文件夹派生。"""
+"""总配置单测：默认值即真实值、配置文件覆盖、gbr 路径随局文件夹派生。"""
 
 from pathlib import Path
 
@@ -55,11 +55,11 @@ agent_model = "glm-4.7"
     assert config.agent_model == "glm-4.7"
 
 
-def test_GBR路径随局文件夹派生(tmp_path):
+def test_gbr路径随局文件夹派生(tmp_path):
     path = write_config(tmp_path, r"game_dir = 'D:\somewhere\game'")
     config = load_config(path)
-    assert config.gbr_dir == config.game_dir / "GBR"
-    assert str(config.gbr_dir) == r"D:\somewhere\game\GBR"
+    assert config.gbr_dir == config.game_dir / "gbr"
+    assert str(config.gbr_dir) == r"D:\somewhere\game\gbr"
 
 
 def test_空token等于没配(tmp_path):

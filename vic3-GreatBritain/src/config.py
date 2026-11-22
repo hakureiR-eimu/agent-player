@@ -2,8 +2,8 @@
 
 进程从 main 起，读这一份配置，装配时发给三大模块。十一项：两个 Discord bot 的 token
 （dm_token、gbr_token）、Discord 出口代理（discord_proxy，网络直连不通时填本地代理）、
-error.log 路径、游戏进程名、局文件夹、GBR 路径（记忆三区所在，固定在局文件夹下一层
-GBR，随局文件夹派生）、人类玩家的 Discord 用户 ID（player_id，agent 的发消息
+error.log 路径、游戏进程名、局文件夹、gbr 路径（记忆三区所在，固定在局文件夹下一层
+gbr，随局文件夹派生）、人类玩家的 Discord 用户 ID（player_id，agent 的发消息
 工具定向发他的私信）、agent 会话的模型与凭证三项（anthropic_base_url、
 anthropic_auth_token、agent_model——配了 agent 会话走它，与玩家自己的 Claude Code
 分开；全空走本机 Claude Code 的登录态）。
@@ -55,7 +55,7 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
         log_path=Path(data.get("log_path", DEFAULT_LOG_PATH)),
         game_process=data.get("game_process", DEFAULT_GAME_PROCESS),
         game_dir=game_dir,
-        gbr_dir=game_dir / "GBR",
+        gbr_dir=game_dir / "gbr",
         player_id=str(data.get("player_id", "")),
         anthropic_base_url=data.get("anthropic_base_url") or None,
         anthropic_auth_token=data.get("anthropic_auth_token") or None,

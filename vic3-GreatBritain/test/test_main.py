@@ -52,7 +52,7 @@ def test_run_从装配经命令到退出的完整顺序(monkeypatch):
         "im.create_channel",
         "agent.start_session",
         ("im.send_receipt", "开始游戏 执行完成"),
-        # 取消主循环后收摊：先按保存游戏收尾（局还挂着，频道与 GBR 不动），再按装配反序停模块
+        # 取消主循环后收摊：先按保存游戏收尾（局还挂着，频道与 gbr 不动），再按装配反序停模块
         "agent.stop_session",
         "im.stop",
         "agent.stop",

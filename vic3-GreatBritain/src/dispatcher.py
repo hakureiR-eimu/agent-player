@@ -62,7 +62,7 @@ class Dispatcher:
                 await self._require_agent().stop_session()
                 self._session_running = False
             await self._im.destroy_channel()
-            shutil.rmtree(self._gbr_dir, ignore_errors=True)  # 没建过 GBR 不算错
+            shutil.rmtree(self._gbr_dir, ignore_errors=True)  # 没建过 gbr 不算错
         else:
             raise CommandError(f"未知命令：{command}")
 
@@ -73,6 +73,6 @@ class Dispatcher:
         return self._agent
 
     async def shutdown(self) -> None:
-        """进程收摊用：会话还在跑就先按保存游戏收尾（局还挂着，频道与 GBR 都不动）。"""
+        """进程收摊用：会话还在跑就先按保存游戏收尾（局还挂着，频道与 gbr 都不动）。"""
         if self._session_running:
             await self.execute_command("保存游戏")

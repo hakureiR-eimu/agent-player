@@ -1,4 +1,4 @@
-"""agent 模块单测：消息队列（空闲即送、忙时攒批合并送）、私信落盘、GBR 随会话起止。
+"""agent 模块单测：消息队列（空闲即送、忙时攒批合并送）、私信落盘、gbr 随会话起止。
 
 会话用假替身（FakeSession 记收到的批与开关，经 factory 注入）——SDK 的真会话走
 test/agent/test_agent_integration.py（起真会话跑一局，样式照 test/im/）。
@@ -47,7 +47,7 @@ def make_tools() -> SessionTools:
 
 
 def make_agent(tmp_path, sessions: list[FakeSession]) -> tuple[AgentModuleImpl, EventBus]:
-    """建模块＋总线（已订）：GBR、工具、profile 源都在临时目录，factory 记录造出的假会话。"""
+    """建模块＋总线（已订）：gbr、工具、profile 源都在临时目录，factory 记录造出的假会话。"""
     profile_src = tmp_path / "profile"
     profile_src.mkdir()
     (profile_src / "PROFILE.md").write_text("大不列颠玩家的设定", encoding="utf-8")
@@ -57,7 +57,7 @@ def make_agent(tmp_path, sessions: list[FakeSession]) -> tuple[AgentModuleImpl, 
         sessions.append(session)
         return session
 
-    agent = AgentModuleImpl(tmp_path / "GBR", make_tools(), profile_src, session_factory=factory)
+    agent = AgentModuleImpl(tmp_path / "gbr", make_tools(), profile_src, session_factory=factory)
     bus = EventBus()
     asyncio.run(agent.start(bus))
     return agent, bus
@@ -74,10 +74,10 @@ async def settle(seconds: float = 1.0) -> None:
         await asyncio.sleep(0.01)
 
 
-# ---- 起会话：建全新 GBR（三区＋装 profile）并送开局批 ----
+# ---- 起会话：建全新 gbr（三区＋装 profile）并送开局批 ----
 
 
-def test_起会话建全新GBR并送开局批(tmp_path):
+def test_起会话建全新gbr并送开局批(tmp_path):
     sessions: list[FakeSession] = []
     agent, _ = make_agent(tmp_path, sessions)
 
@@ -86,25 +86,25 @@ def test_起会话建全新GBR并送开局批(tmp_path):
         await settle()
 
     asyncio.run(main())
-    assert (tmp_path / "GBR" / "profile" / "PROFILE.md").read_text(encoding="utf-8") == "大不列颠玩家的设定"
-    assert (tmp_path / "GBR" / "world" / "chat").is_dir()
-    assert (tmp_path / "GBR" / "memory").is_dir()
+    assert (tmp_path / "gbr" / "profile" / "PROFILE.md").read_text(encoding="utf-8") == "大不列颠玩家的设定"
+    assert (tmp_path / "gbr" / "world" / "chat").is_dir()
+    assert (tmp_path / "gbr" / "memory").is_dir()
     assert sessions[0].prompts[0] == OPENING_PROMPT
 
 
 def test_起会话清掉残留永远全新(tmp_path):
     sessions: list[FakeSession] = []
     agent, _ = make_agent(tmp_path, sessions)
-    (tmp_path / "GBR").mkdir()
-    (tmp_path / "GBR" / "old.json").write_text("上局残留", encoding="utf-8")
+    (tmp_path / "gbr").mkdir()
+    (tmp_path / "gbr" / "old.json").write_text("上局残留", encoding="utf-8")
 
     async def main():
         await agent.start_session()
         await settle()
 
     asyncio.run(main())
-    assert not (tmp_path / "GBR" / "old.json").exists()  # 残留清掉
-    assert (tmp_path / "GBR" / "profile" / "PROFILE.md").exists()  # 新局装齐
+    assert not (tmp_path / "gbr" / "old.json").exists()  # 残留清掉
+    assert (tmp_path / "gbr" / "profile" / "PROFILE.md").exists()  # 新局装齐
 
 
 def test_会话已在跑再起明确报错(tmp_path):
@@ -140,7 +140,7 @@ def test_私信到达落盘并送进会话(tmp_path):
     assert len(sessions[0].prompts) == 2  # 开局批＋私信批
     assert "在吗，谈谈关税" in sessions[0].prompts[1]
     assert "7" in sessions[0].prompts[1]
-    lines = (tmp_path / "GBR" / "world" / "chat" / "dialogue.jsonl").read_text(encoding="utf-8").splitlines()
+    lines = (tmp_path / "gbr" / "world" / "chat" / "dialogue.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     record = json.loads(lines[0])
     assert record["player"] == "7" and record["text"] == "在吗，谈谈关税" and record["time"]
@@ -195,7 +195,7 @@ def test_局外的私信与新年不炸不落盘(tmp_path):
 
     asyncio.run(main())
     assert sessions == []  # 没起过会话
-    assert not (tmp_path / "GBR" / "world").exists()  # 没落盘
+    assert not (tmp_path / "gbr" / "world").exists()  # 没落盘
 
 
 # ---- 收尾：整理 memory 后关会话 ----

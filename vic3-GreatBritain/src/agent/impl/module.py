@@ -3,7 +3,7 @@
 消息队列＋会话起止：订 message、new_year 收进消息队列——会话空闲即送进会话唤醒，
 忙时攒着、空闲了把攒下的合并成一段上下文送进会话；私信到达即落盘 world/chat/。
 会话本体在 session.py（Claude Agent SDK 的封装），本模块经注入的 factory 起会话
-（单测用假 factory）；GBR 随会话起止——起会话建全新的（三区＋装 profile），收尾让
+（单测用假 factory）；gbr 随会话起止——起会话建全新的（三区＋装 profile），收尾让
 会话整理 memory 后结束。
 """
 
@@ -39,7 +39,7 @@ world/chat/dialogue.jsonl 是与玩家的对话（只读）；memory/ 是你自�
 # 收尾批：保存游戏时让会话整理自己的文件夹（memory 收尾）
 CLOSING_PROMPT = "这局要存档了。把 memory/ 整理收尾——补全大事记、把该记的账记全；不用给玩家发消息。"
 
-# 私信对话落盘的文件（GBR 下）
+# 私信对话落盘的文件（gbr 下）
 CHAT_FILE = Path("world") / "chat" / "dialogue.jsonl"
 
 
@@ -51,7 +51,7 @@ def default_session_factory(cwd: Path, tools: SessionTools, auth: SessionAuth) -
 
 
 class AgentModuleImpl:
-    """AgentModule 协议（src/agent/module.py）的实现：消息队列、落盘、GBR 起止。"""
+    """AgentModule 协议（src/agent/module.py）的实现：消息队列、落盘、gbr 起止。"""
 
     def __init__(
         self,
@@ -150,9 +150,9 @@ class AgentModuleImpl:
         await self.stop_session()
 
     def _build_gbr(self) -> None:
-        """建全新的 GBR：残留清掉，三区建齐，profile 整个装进来。"""
+        """建全新的 gbr：残留清掉，三区建齐，profile 整个装进来。"""
         shutil.rmtree(self._gbr_dir, ignore_errors=True)
         (self._gbr_dir / "world" / "chat").mkdir(parents=True)
         (self._gbr_dir / "memory").mkdir()
         shutil.copytree(self._profile_src, self._gbr_dir / "profile")
-        logger.info("建了全新的 GBR（三区＋装入 profile）：%s", self._gbr_dir)
+        logger.info("建了全新的 gbr（三区＋装入 profile）：%s", self._gbr_dir)
