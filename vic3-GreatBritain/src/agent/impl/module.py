@@ -5,7 +5,7 @@
 即落盘 world/chat/。
 会话本体在 session.py（Claude Agent SDK 的封装，system prompt 吃项目里的
 agent-system-prompt.md），本模块经注入的 factory 起会话（单测用假 factory）；gbr 随
-会话起止——起会话把开发文件夹的 gbr-template/ 整个复制成全新的 gbr，收尾让会话整理
+会话起止——起会话把开发文件夹 prompt/ 的 gbr-template/ 整个复制成全新的 gbr，收尾让会话整理
 memory 后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见 docs/prd/日志功能.md）
 建本局运行记录文件，路径递进会话、由会话逐条追加。
 """

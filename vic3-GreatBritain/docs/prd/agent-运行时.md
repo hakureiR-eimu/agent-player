@@ -4,13 +4,13 @@ agent 是玩维多利亚3的玩家：与人机同局的人类玩家对等，只�
 
 运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Code 装成库）起的一个会话：agent 循环、文件工具、上下文管理都是 SDK 自带的，harness 不自研循环，只在会话外面包六件事——注 system prompt、给文件夹、挂工具、递消息、管起止、留运行记录。会话的模型与凭证由 config 三项配（anthropic_base_url、anthropic_auth_token、agent_model，如接 GLM 的 Anthropic 兼容入口），与玩家自己的 Claude Code 分开；三项全空走本机 Claude Code 的登录态。
 
-system prompt 吃开发文件夹下的 agent-system-prompt.md（固定内容，完全替换 SDK 默认的 system prompt——agent 是玩家，不吃助手默认人设）。
+system prompt 吃开发文件夹 prompt/ 下的 agent-system-prompt.md（固定内容，完全替换 SDK 默认的 system prompt——agent 是玩家，不吃助手默认人设）。
 
 ## 文件夹
 
 - 运行时文件夹固定一个：C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\vic3-GreatBritain；agent 的一切文件在它下面的 gbr 文件夹
 - 会话的工作目录设在 gbr——agent 的文件世界就是这一个文件夹
-- gbr 的生灭随局：开始游戏把开发文件夹的 gbr-template/ 整个复制成全新的 gbr，结束游戏清掉；模板里有什么、记忆怎么分区见 [agent-记忆和人格](agent-记忆和人格.md)
+- gbr 的生灭随局：开始游戏把开发文件夹 prompt/ 的 gbr-template/ 整个复制成全新的 gbr，结束游戏清掉；模板里有什么、记忆怎么分区见 [agent-记忆和人格](agent-记忆和人格.md)
 
 ## 工具
 

@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 # 没有意义，解析确认才是准的——间隔几秒就够
 NEW_YEAR_POLL_INTERVAL_SECONDS = 3.0
 
-# gbr 模板源：开发文件夹下的 gbr-template/（开始游戏时整个复制成全新的 gbr）
-GBR_TEMPLATE_SRC = Path(__file__).resolve().parents[1] / "gbr-template"
+# gbr 模板源：开发文件夹 prompt/ 下的 gbr-template/（开始游戏时整个复制成全新的 gbr）
+GBR_TEMPLATE_SRC = Path(__file__).resolve().parents[1] / "prompt" / "gbr-template"
 
 
 async def poll_new_year(bus: EventBus, game: GameModule) -> None:

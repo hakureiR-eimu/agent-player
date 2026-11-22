@@ -4,8 +4,8 @@ agent 的设计分两块，本文件写记忆与人格：会话活着不等于�
 
 人格与玩法分三层装载，各管各的：
 
-- **system prompt**——开发文件夹下的 agent-system-prompt.md，固定内容，起会话时注入（完全替换 SDK 默认的 system prompt——agent 是玩家，不吃助手默认人设）：你是谁、文件夹世界怎么用、被叫醒的节律、说话的规则、"你只知道你查的"认知模型
-- **gbr-template/**——开发文件夹下的 agent 工作空间模板，开始游戏时整个复制成全新的 gbr：CLAUDE.md 是大不列颠玩家手册（开局流程、年度循环、怎么和玩家处），会话启动时由 SDK 作为项目指令自动装载；world/chat 与 memory 的目录结构也在模板里
+- **system prompt**——开发文件夹 prompt/ 下的 agent-system-prompt.md，固定内容，起会话时注入（完全替换 SDK 默认的 system prompt——agent 是玩家，不吃助手默认人设）：你是谁、文件夹世界怎么用、被叫醒的节律、说话的规则、"你只知道你查的"认知模型
+- **gbr-template/**——开发文件夹 prompt/ 下的 agent 工作空间模板，开始游戏时整个复制成全新的 gbr：CLAUDE.md 是大不列颠玩家手册（开局流程、年度循环、怎么和玩家处），会话启动时由 SDK 作为项目指令自动装载；world/chat 与 memory 的目录结构也在模板里
 - **memory/——agent 唯一可写**：账本、立场、大事记、年度研判的底稿；历年的世界格局也由 agent 自己逐年记在这里。内部结构先不规定，玩一两局看它自然记什么再固化（固化就往 gbr-template 里加）
 
 另一区是 world/——运行时写、agent 只读的事实源：chat/ 下私信对话逐条追加（agent 模块把消息送进会话的同时落盘）。翻旧账、会话上下文压缩后找回记忆靠它。游戏状态的事实源是 error.log（游戏接入解析）：当下看走 get_state 工具，历年的格局走 memory。

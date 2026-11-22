@@ -3,7 +3,7 @@
 一次随局的会话：每批一次 query（prompt 进、最终回复出），批与批之间靠 session_id 续
 上下文（SDK 把会话记在盘上，resume 即续，没有要维护的长连接）；工具经 SDK 的进程内
 MCP 挂进——主体递入的 SessionTools 在这包成 SdkMcpTool。system prompt 吃开发文件夹
-下的 agent-system-prompt.md（固定内容，完全替换 SDK 默认的 system prompt——agent 是
+prompt/ 下的 agent-system-prompt.md（固定内容，完全替换 SDK 默认的 system prompt——agent 是
 玩家，不吃助手默认人设），gbr 里复制的 CLAUDE.md 手册由 SDK 作为项目指令自动装载。
 上下文压缩归 SDK 的上下文管理。写权限先走软约束（system prompt 写明只有 memory/
 可写），路径级的硬限制随后实测再配。
@@ -42,9 +42,9 @@ logger = logging.getLogger(__name__)
 # 挂进会话的进程内 MCP 服务器名（工具在会话里以 mcp__<服务器名>__<工具名> 出现）
 MCP_SERVER_NAME = "agent-tools"
 
-# agent 的 system prompt 源：开发文件夹下的 agent-system-prompt.md（起会话时读进来，
-# 每批 query 都带上——完全替换 SDK 默认的 system prompt）
-SYSTEM_PROMPT_PATH = Path(__file__).resolve().parents[3] / "agent-system-prompt.md"
+# agent 的 system prompt 源：开发文件夹 prompt/ 下的 agent-system-prompt.md（起会话时
+# 读进来，每批 query 都带上——完全替换 SDK 默认的 system prompt）
+SYSTEM_PROMPT_PATH = Path(__file__).resolve().parents[3] / "prompt" / "agent-system-prompt.md"
 
 
 class AgentSession(ABC):
