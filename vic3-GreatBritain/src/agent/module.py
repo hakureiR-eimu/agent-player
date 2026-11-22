@@ -1,5 +1,5 @@
 """agent 的接口声明：agent 本体是 Claude Code 会话。已实现——实现在 impl/（消息队列
-与 gbr 起止在 module.py、SDK 会话封装在 session.py），设计见 docs/prd/agent.md。
+与 gbr 起止在 module.py、SDK 会话封装在 session.py），设计见 docs/prd/agent-运行时.md。
 
 会话的工具由主体装配时递入（主体把游戏接入的方法与 IM 接入的收发包成会话工具，
 agent 调工具由主体翻译成实际函数），agent 模块只管把它挂进会话，不知道工具背后是什么。

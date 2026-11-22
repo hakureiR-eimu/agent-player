@@ -1,4 +1,4 @@
-"""agent 模块本体（接口声明见 src/agent/module.py，设计见 docs/prd/agent.md）。
+"""agent 模块本体（接口声明见 src/agent/module.py，设计见 docs/prd/agent-运行时.md）。
 
 消息队列＋会话起止：订 message、new_year 收进消息队列——会话空闲即送进会话唤醒，
 忙时攒着、空闲了把攒下的合并成一段上下文（最前面带一行忙期间标注）送进会话；私信到达

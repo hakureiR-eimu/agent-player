@@ -1,6 +1,6 @@
 # harness
 
-harness 是整个程序的主体，一个 Python 进程，装四块：主体负责整个程序的生命周期、调用其余三块实现功能；三个子模块各管一摊——游戏接入（game）、agent、IM 接入。三个子模块在本文档只写声明（能力是什么），实现各在自己的文档：游戏接入已实现，见[游戏接入-harness侧](游戏接入-harness侧.md)；IM 接入已实现，见[Discord 接入](discord接入.md)；agent 已实现，见[agent](agent.md)。
+harness 是整个程序的主体，一个 Python 进程，装四块：主体负责整个程序的生命周期、调用其余三块实现功能；三个子模块各管一摊——游戏接入（game）、agent、IM 接入。三个子模块在本文档只写声明（能力是什么），实现各在自己的文档：游戏接入已实现，见[游戏接入-harness侧](游戏接入-harness侧.md)；IM 接入已实现，见[Discord 接入](discord接入.md)；agent 已实现，见[agent-运行时](agent-运行时.md)。
 
 ## 主体
 
@@ -36,7 +36,7 @@ agent 本体是 Claude Code 会话。局文件夹固定一个：C:\Users\ZhangJu
 - 消息队列——收（订 message、new_year）：两类到达收进队列，会话空闲即送进会话、唤醒它；会话在忙则攒着，空闲了把攒下的合并成一段上下文送进会话、唤醒它
 - 发消息——说：会话里挂的发消息工具，agent 填玩家的 Discord 用户 ID（从收到的私信里学）把话发到他的私信（工具背后是 IM 接入的发送方法）
 
-细化与实现见[agent](agent.md)。
+细化与实现见[agent-运行时](agent-运行时.md)。
 
 ## IM 接入
 

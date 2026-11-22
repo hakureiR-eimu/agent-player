@@ -1,4 +1,4 @@
-"""Claude Agent SDK 的会话封装（agent 模块的会话本体，设计见 docs/prd/agent.md）。
+"""Claude Agent SDK 的会话封装（agent 模块的会话本体，设计见 docs/prd/agent-运行时.md）。
 
 一次随局的会话：每批一次 query（prompt 进、最终回复出），批与批之间靠 session_id 续
 上下文（SDK 把会话记在盘上，resume 即续，没有要维护的长连接）；工具经 SDK 的进程内

@@ -1,20 +1,16 @@
-# agent
+# agent-运行时
 
-agent 是玩维多利亚3的玩家：与人机同局的人类玩家对等，只是他执掌的国家是大不列颠。他通过 harness 拿到两件游戏能力——读取世界状态、发起外交博弈；在 Discord 上收得到玩家的私信、回得上话。本文件细化设计与预期结果，接口声明见 [harness](harness.md) 的 agent 节。
+agent 是玩维多利亚3的玩家：与人机同局的人类玩家对等，只是他执掌的国家是大不列颠。他通过 harness 拿到两件游戏能力——读取世界状态、发起外交博弈；在 Discord 上收得到玩家的私信、回得上话。他的设计分两块：本文件写运行时——harness 用 Claude Agent SDK 起一个会话，配上文件夹、工具、消息队列，会话随局起止，让 agent 跑得起来；记忆与人格见 [agent-记忆和人格](agent-记忆和人格.md)。接口声明见 [harness](harness.md) 的 agent 节。
 
-他的设计分两块：**运行时**——harness 用 Claude Agent SDK 起一个会话，配上文件夹、工具、消息队列，会话随局起止，让 agent 跑得起来；**记忆与人格**——盘上的记忆三区与开局装入的角色设定，让他在整局里记得自己是谁、玩得连贯。
+运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Code 装成库）起的一个会话：agent 循环、文件工具、上下文管理都是 SDK 自带的，harness 不自研循环，只在会话外面包五件事——给文件夹、挂工具、递消息、管起止、留运行记录。会话的模型与凭证由 config 三项配（anthropic_base_url、anthropic_auth_token、agent_model，如接 GLM 的 Anthropic 兼容入口），与玩家自己的 Claude Code 分开；三项全空走本机 Claude Code 的登录态。
 
-## 运行时
-
-agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Code 装成库）起的一个会话：agent 循环、文件工具、上下文管理都是 SDK 自带的，harness 不自研循环，只在会话外面包五件事——给文件夹、挂工具、递消息、管起止、留运行记录。会话的模型与凭证由 config 三项配（anthropic_base_url、anthropic_auth_token、agent_model，如接 GLM 的 Anthropic 兼容入口），与玩家自己的 Claude Code 分开；三项全空走本机 Claude Code 的登录态。
-
-### 文件夹
+## 文件夹
 
 - 运行时文件夹固定一个：C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\vic3-GreatBritain；agent 的一切文件在它下面的 gbr 文件夹
 - 会话的工作目录设在 gbr——agent 的文件世界就是这一个文件夹
-- gbr 的生灭随局：开始游戏建全新的（装入 profile），结束游戏清掉；记忆三区怎么分见「记忆与人格」
+- gbr 的生灭随局：开始游戏建全新的（装入 profile），结束游戏清掉；记忆三区怎么分见 [agent-记忆和人格](agent-记忆和人格.md)
 
-### 工具
+## 工具
 
 - 文件读写——SDK 内置工具，围着 gbr 文件夹转，写权限配在 memory/
 - 游戏动作——get_state（读取世界局势）、start_play（发起外交博弈）
@@ -22,7 +18,7 @@ agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Co
 
 后两类都是主体装配时经 SDK 的进程内 MCP 递入，agent 模块只管挂进会话，不知道工具背后是什么。
 
-### 消息队列
+## 消息队列
 
 消息的接收与读取是两回事：接收是队列的事，读取是会话里的工具（见「工具」）。两类到达进队列——玩家私信 gbr bot（IM 接入推 message 事件，收下即落盘 world/chat/）、游戏进新年（游戏接入推 new_year 事件）。队列到会话之间隔着 agent 模块，攒与送都在模块里：
 
@@ -42,23 +38,11 @@ agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Co
 
     游戏进入了 1837 年。
 
-### 会话随局起止
+## 会话随局起止
 
 - 开始游戏：建本局频道（GreatBritain），建全新的 gbr 文件夹（装入 profile），起一个基于它的会话。频道已在（上次局没结束）就拒绝
 - 保存游戏：让会话整理自己的文件夹（memory 收尾），然后结束会话；频道留着，局还挂着
 - 结束游戏：会话在跑先按保存游戏收尾，然后销频道、清 gbr——这局彻底完
-
-## 记忆与人格
-
-会话活着不等于玩得对：玩一整局，靠的是盘上的记忆三区与开局装入的设定。记忆在 gbr 文件夹下的三个区，会话起时读文件装载：
-
-- profile/——开局装入、整局只读：大不列颠玩家的设定与开局指令。开始游戏建全新的 gbr 文件夹时装入（每局都从全新的 gbr 开始）
-- world/——运行时写、agent 只读的事实源：chat/ 下私信对话逐条追加（agent 模块把消息送进会话的同时落盘）。翻旧账、会话上下文压缩后找回记忆靠它
-- memory/——agent 唯一可写：账本、立场、大事记、年度研判的底稿；历年的世界格局也由 agent 自己逐年记在这里。内部结构先不规定，玩一两局看它自然记什么再固化
-
-游戏状态的事实源是 error.log（游戏接入解析）：当下看走 get_state 工具，历年的格局走 memory。
-
-一局之内记忆的连续性走文件夹：三区都在盘上，局挂着的期间一直在；结束游戏把局连同记忆一起收掉，下一局从全新的 gbr 开始。
 
 ## 预期结果
 
