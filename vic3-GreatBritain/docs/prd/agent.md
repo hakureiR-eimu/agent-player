@@ -6,7 +6,7 @@ agent 是玩维多利亚3的玩家：与人机同局的人类玩家对等，只�
 
 ## 运行时
 
-agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Code 装成库）起的一个会话：agent 循环、文件工具、上下文管理都是 SDK 自带的，harness 不自研循环，只在会话外面包四件事——给文件夹、挂工具、递消息、管起止。
+agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Code 装成库）起的一个会话：agent 循环、文件工具、上下文管理都是 SDK 自带的，harness 不自研循环，只在会话外面包四件事——给文件夹、挂工具、递消息、管起止。会话的模型与凭证由 config 三项配（anthropic_base_url、anthropic_auth_token、agent_model，如接 GLM 的 Anthropic 兼容入口），与玩家自己的 Claude Code 分开；三项全空走本机 Claude Code 的登录态。
 
 ### 文件夹
 
@@ -69,4 +69,4 @@ agent 的运行时是 Claude Agent SDK（Python 包 claude-agent-sdk，Claude Co
 - 攒批与送批：消息到了先攒，会话空闲了把攒下的一批拼进会话跑完
 - 落盘：私信对话到达时逐条追加进 world/chat/
 - 上下文：长会话的压缩归 SDK 的上下文管理，压缩丢了细节不要紧——world/ 与 memory/ 在盘上
-- 测试：单测盖消息队列（空闲即送、忙时攒批）、拼批、对话落盘；e2e 起真会话手动跑（样式照 test/game/ 的单测＋手动 e2e）
+- 测试：单测盖消息队列（空闲即送、忙时攒批）、拼批、对话落盘；集成测试起真会话（test/agent/test_agent_integration.py，在 VSCode 测试面板里跑，样式照 test/game/）

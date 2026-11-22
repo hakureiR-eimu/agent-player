@@ -26,7 +26,7 @@ Discord 平台侧要办的活：建两个 bot、拉进服务器、token 交给 h
 ## 人类玩家侧要办的（一次性）
 
 - 允许服务器成员私信：右键服务器图标 → 隐私设置 → 打开"允许来自服务器成员的私信"——玩家隐私设置允许 bot 私信是一等前提（一等，Channels 文档），关着的话 bot 私信发出去被拒（403）
-- 开发者模式（用户设置 → 高级 → 开发者模式）：右键头像能复制用户 ID——e2e 测试的 E2E_DISCORD_PLAYER_ID 用它
+- 开发者模式（用户设置 → 高级 → 开发者模式）：右键头像能复制用户 ID——config.toml 的 player_id（agent 的发消息工具与 im 集成测试的收信人）用它复制
 
 ## 网络
 
@@ -42,7 +42,7 @@ token 填好后（在 vic3-GreatBritain/ 目录执行）：
 - `uv run python -m main` 启动——日志出现"dm bot 已登录 Discord""gbr bot 已登录 Discord"即连上
 - 公屏 @ dm bot 发开始游戏：命令行打印命令内容，Discord 公屏收到回执（agent 未建的现在，回执如实报"agent 模块未建"，频道不建——agent 落地后这条会真建出 GreatBritain 频道）
 - 私信 gbr bot 一句话：命令行打印私信内容
-- e2e 一轮（给人发真私信）：`E2E_DISCORD_PLAYER_ID=<玩家ID> uv run pytest -m e2e test/im/test_im_e2e.py -s`
+- 集成测试一轮（给人发真私信）：VSCode 测试面板跑 test/im/test_im_integration.py 的两个测试（收信人取 config.toml 的 player_id，见[集成测试](../运行与测试/集成测试.md)局部一节）
 
 ## 日常管理
 

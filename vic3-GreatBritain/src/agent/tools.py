@@ -23,3 +23,14 @@ class SessionTools:
     start_play: Callable[[], str]
     send_message: Callable[[str], Awaitable[None]]
     read_message: Callable[[], Awaitable[list[dict[str, str]]]]
+
+
+@dataclass(frozen=True)
+class SessionAuth:
+    """会话的模型与凭证（config.toml 的三项）：配了走 config——与玩家自己的 Claude Code
+    分开（比如接 GLM 的 Anthropic 兼容入口）；全空走本机默认（Claude Code 的登录态）。
+    """
+
+    base_url: str | None = None
+    auth_token: str | None = None
+    model: str | None = None

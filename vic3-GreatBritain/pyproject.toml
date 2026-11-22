@@ -28,8 +28,8 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
-markers = ["e2e: game 模块端到端测试，直接对真实游戏验证，需要游戏在跑，默认不跑；跑法 uv run pytest -m e2e -s"]
-addopts = ["-m", "not e2e"]
+markers = ["integration: 子模块集成测试，直接打系统外的东西（真游戏、真 Discord、真 SDK 会话），前提不满足时失败并报错，默认不跑"]
+addopts = ["-m", "not integration"]
 
 [tool.mypy]
 python_version = "3.11"

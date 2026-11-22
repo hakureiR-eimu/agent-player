@@ -21,6 +21,9 @@ def test_默认配置即真实值(tmp_path):
     assert "Victoria 3" in str(config.log_path)
     assert config.game_dir == DEFAULT_GAME_DIR
     assert config.player_id == ""
+    assert config.anthropic_base_url is None
+    assert config.anthropic_auth_token is None
+    assert config.agent_model is None
 
 
 def test_配置文件覆盖(tmp_path):
@@ -34,6 +37,9 @@ log_path = 'D:\somewhere\error.log'
 game_process = "vic3-test.exe"
 game_dir = 'D:\somewhere\game'
 player_id = "123456789012345678"
+anthropic_base_url = "https://api.z.ai/api/anthropic"
+anthropic_auth_token = "sk-xxx"
+agent_model = "glm-4.7"
 """,
     )
     config = load_config(path)
@@ -44,6 +50,9 @@ player_id = "123456789012345678"
     assert config.game_process == "vic3-test.exe"
     assert str(config.game_dir) == r"D:\somewhere\game"
     assert config.player_id == "123456789012345678"
+    assert config.anthropic_base_url == "https://api.z.ai/api/anthropic"
+    assert config.anthropic_auth_token == "sk-xxx"
+    assert config.agent_model == "glm-4.7"
 
 
 def test_GBR路径随局文件夹派生(tmp_path):

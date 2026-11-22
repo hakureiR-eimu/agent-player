@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TypedDict
 
-from agent.tools import SessionTools
+from agent.tools import SessionAuth, SessionTools
 from claude_agent_sdk import (
     AssistantMessage,
     ClaudeAgentOptions,
@@ -92,12 +92,24 @@ def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
 
 
 class SdkSession(AgentSession):
-    """真会话：Claude Agent SDK 的 query，批间靠 session_id 续。"""
+    """真会话：Claude Agent SDK 的 query，批间靠 session_id 续。模型与凭证吃 SessionAuth
+    （config 配了走 config——模型名进 options、入口与 token 化成子进程环境变量；全空
+    走本机 Claude Code 的默认）。"""
 
-    def __init__(self, cwd: Path, tools: SessionTools) -> None:
+    def __init__(self, cwd: Path, tools: SessionTools, auth: SessionAuth = SessionAuth()) -> None:
         self._cwd = cwd
+        self._auth = auth
         self._session_id: str | None = None
         self._server = build_mcp_server(tools)
+
+    def _env(self) -> dict[str, str]:
+        """凭证进子进程环境变量：只在配了的时候设，没配的留给本机默认。"""
+        env: dict[str, str] = {}
+        if self._auth.base_url:
+            env["ANTHROPIC_BASE_URL"] = self._auth.base_url
+        if self._auth.auth_token:
+            env["ANTHROPIC_AUTH_TOKEN"] = self._auth.auth_token
+        return env
 
     async def send(self, prompt: str) -> str:
         options = ClaudeAgentOptions(
@@ -105,6 +117,11 @@ class SdkSession(AgentSession):
             permission_mode="bypassPermissions",
             mcp_servers={MCP_SERVER_NAME: self._server},
             resume=self._session_id,  # None 即新会话，有 id 即续上批
+            model=self._auth.model,
+            env=self._env(),
+            # 不读本机 Claude Code 的 settings（~/.claude/settings.json 的 env 段会把
+            # 传入的凭证覆盖回去——2026-11-22 实测），配置只来自显式传入的这些项
+            setting_sources=[],
         )
         texts: list[str] = []
         async for message in query(prompt=prompt, options=options):

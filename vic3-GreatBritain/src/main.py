@@ -13,7 +13,7 @@ from pathlib import Path
 
 from agent.impl.module import AgentModuleImpl
 from agent.module import AgentModule
-from agent.tools import SessionTools
+from agent.tools import SessionAuth, SessionTools
 from config import Config, load_config
 from dispatcher import Dispatcher
 from events import Event, EventBus, EventType
@@ -72,7 +72,9 @@ def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
     """装配第一步：按配置把三大模块建出来。
 
     - 游戏接入：GameModuleImpl（src/game/impl/），吃总配置的 error.log 路径与游戏进程名
-    - agent：AgentModuleImpl（src/agent/impl/），吃 GBR 路径、会话工具与 profile 模板源
+    - agent：AgentModuleImpl（src/agent/impl/），吃 GBR 路径、会话工具、profile 模板源与
+      会话的模型凭证（SessionAuth，总配置三项——配了 agent 会话走它，与玩家自己的
+      Claude Code 分开）
     - IM 接入：ImModuleImpl（src/im/impl/），吃总配置的两个 Discord bot token
     """
     game: GameModule = GameModuleImpl(config)
@@ -81,6 +83,11 @@ def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
         config.gbr_dir,
         build_session_tools(game, im, config.player_id),
         PROFILE_SRC,
+        SessionAuth(
+            base_url=config.anthropic_base_url,
+            auth_token=config.anthropic_auth_token,
+            model=config.agent_model,
+        ),
     )
     return game, agent, im
 

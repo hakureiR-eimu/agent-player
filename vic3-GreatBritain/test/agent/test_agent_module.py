@@ -1,7 +1,7 @@
 """agent 模块单测：消息队列（空闲即送、忙时攒批合并送）、私信落盘、GBR 随会话起止。
 
 会话用假替身（FakeSession 记收到的批与开关，经 factory 注入）——SDK 的真会话走
-test/agent/ 的手动 e2e（起真会话跑一局，样式照 test/im/）。
+test/agent/test_agent_integration.py（起真会话跑一局，样式照 test/im/）。
 """
 
 import asyncio
@@ -52,7 +52,7 @@ def make_agent(tmp_path, sessions: list[FakeSession]) -> tuple[AgentModuleImpl, 
     profile_src.mkdir()
     (profile_src / "PROFILE.md").write_text("大不列颠玩家的设定", encoding="utf-8")
 
-    def factory(cwd, tools):
+    def factory(cwd, tools, auth):
         session = FakeSession()
         sessions.append(session)
         return session

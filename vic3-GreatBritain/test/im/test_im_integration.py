@@ -1,15 +1,16 @@
-"""IM 模块端到端测试（只能手动运行，默认排除；跑法：uv run pytest -m e2e -s）。
+"""IM 模块集成测试（在 VSCode 测试面板里点跑——命令行全量跑默认排除集成测试，
+面板的 pytestArgs 已配 --override-ini=addopts= 绕开排除）。
 
-前提：开发文件夹下的 config.toml 填好 dm_token、gbr_token；环境变量
-E2E_DISCORD_PLAYER_ID 填人类玩家的 Discord 用户 ID（开发者模式右键头像复制用户 ID，
-测试要给他发私信）。两个测试对应 IM 接入的两头：
+前提：开发文件夹下的 config.toml 填好 dm_token、gbr_token 与 player_id（私信发给
+player_id 这位人类玩家），代理能到 Discord——前提没满足时测试立即失败并报错。
+两个测试对应 IM 接入的两头：
 
 1. 发（send_message）：起两个真 bot，给玩家发私信——Discord 上应真的收到 gbr bot 的私信
 2. 收（回调）：在公屏 @ dm bot 下一条命令（开始游戏 / 保存游戏 / 结束游戏 任一）、给
    gbr bot 发一条私信，回调应真的收到；测试再用 send_receipt / send_message 回话，Discord
    上能看到回执落回公屏原处、回话落回私信
 
-等待时长默认 300 秒，环境变量 E2E_IM_WAIT_SECONDS 可调。
+等待时长默认 300 秒，环境变量 INTEGRATION_IM_WAIT_SECONDS 可调。
 """
 
 import asyncio
@@ -21,9 +22,9 @@ import pytest
 from config import load_config
 from im.impl.module import ImModuleImpl
 
-pytestmark = pytest.mark.e2e
+pytestmark = pytest.mark.integration
 
-WAIT_SECONDS = int(os.environ.get("E2E_IM_WAIT_SECONDS", "300"))
+WAIT_SECONDS = int(os.environ.get("INTEGRATION_IM_WAIT_SECONDS", "300"))
 
 
 def require_config() -> None:
@@ -34,9 +35,11 @@ def require_config() -> None:
 
 
 def require_player_id() -> str:
-    player = os.environ.get("E2E_DISCORD_PLAYER_ID", "")
+    """收信人：环境变量 INTEGRATION_DISCORD_PLAYER_ID 优先（临时换人用），没有则取
+    config.toml 的 player_id——面板点跑不带环境变量，config 是常规路径。"""
+    player = os.environ.get("INTEGRATION_DISCORD_PLAYER_ID", "") or load_config().player_id
     if not player:
-        pytest.fail("环境变量 E2E_DISCORD_PLAYER_ID 没填：人类玩家的 Discord 用户 ID（开发者模式右键头像复制）")
+        pytest.fail("不知道私信发给谁：环境变量 INTEGRATION_DISCORD_PLAYER_ID 没填，config.toml 的 player_id 也是空——填上其一（人类玩家的 Discord 用户 ID，开发者模式右键头像复制）")
     return player
 
 
@@ -49,7 +52,7 @@ def test_send_message_给人发私信discord上收得到():
         im = ImModuleImpl(load_config())
         await im.start()
         try:
-            await im.send_message(player, "端到端测试：这是 gbr bot 通过 send_message 发出的私信")
+            await im.send_message(player, "集成测试：这是 gbr bot 通过 send_message 发出的私信")
         finally:
             await im.stop()
 

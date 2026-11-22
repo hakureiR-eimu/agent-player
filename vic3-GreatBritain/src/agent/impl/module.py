@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
-from agent.tools import SessionTools
+from agent.tools import SessionAuth, SessionTools
 from events import Event, EventBus, EventType
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # 会话类型标注的字符串引用（运行时不 import session，单测不需要装 SDK）
-SessionFactory = Callable[[Path, SessionTools], "AgentSession"]
+SessionFactory = Callable[[Path, SessionTools, SessionAuth], "AgentSession"]
 
 # 开局送进会话的第一批：固定引导（你是谁、记忆三区在哪）＋亮相指令
 OPENING_PROMPT = """你是玩维多利亚3的玩家，与同局的人类玩家对等，执掌大不列颠。
@@ -43,11 +43,11 @@ CLOSING_PROMPT = "这局要存档了。把 memory/ 整理收尾——补全大�
 CHAT_FILE = Path("world") / "chat" / "dialogue.jsonl"
 
 
-def default_session_factory(cwd: Path, tools: SessionTools) -> AgentSession:
+def default_session_factory(cwd: Path, tools: SessionTools, auth: SessionAuth) -> AgentSession:
     """真会话工厂：Claude Agent SDK 的封装在 session.py（延迟 import，SDK 只在真起会话时碰）。"""
     from agent.impl.session import SdkSession
 
-    return SdkSession(cwd, tools)
+    return SdkSession(cwd, tools, auth)
 
 
 class AgentModuleImpl:
@@ -58,11 +58,13 @@ class AgentModuleImpl:
         gbr_dir: Path,
         tools: SessionTools,
         profile_src: Path,
+        auth: SessionAuth = SessionAuth(),
         session_factory: SessionFactory = default_session_factory,
     ) -> None:
         self._gbr_dir = gbr_dir
         self._tools = tools
         self._profile_src = profile_src
+        self._auth = auth
         self._session_factory = session_factory
         self._session: AgentSession | None = None
         self._pending: list[str] = []
@@ -125,7 +127,7 @@ class AgentModuleImpl:
         if self._session is not None:
             raise RuntimeError("会话已在跑，先保存游戏再开新的一局")
         self._build_gbr()
-        self._session = self._session_factory(self._gbr_dir, self._tools)
+        self._session = self._session_factory(self._gbr_dir, self._tools, self._auth)
         self._closing = False
         self._pending.append(OPENING_PROMPT)
         self._try_send_batch()

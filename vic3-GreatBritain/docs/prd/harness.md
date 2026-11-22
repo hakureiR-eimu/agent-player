@@ -13,7 +13,7 @@ harness 是整个程序的主体，一个 Python 进程，装四块：主体负�
 
 主体是装配加调度的一层，自身没有业务逻辑，实现写在本节、不另起文档。代码在 vic3-GreatBritain/src/（测试在 test/，按模块分目录）：main 管入口与装配，调度模块管分流、局状态与命令执行，三大模块各成一个包（agent、game、im，实现进各包 impl/）。
 
-- 入口与配置：进程从 main 起，读开发文件夹下的 config.toml（模板 config.example.toml）——两个 bot 的 Discord token（dm_token、gbr_token）、error.log 路径、游戏进程名、局文件夹与 GBR 路径、人类玩家的 Discord 用户 ID（player_id，发消息工具定向发他的私信）
+- 入口与配置：进程从 main 起，读开发文件夹下的 config.toml（模板 config.example.toml）——两个 bot 的 Discord token（dm_token、gbr_token）、error.log 路径、游戏进程名、局文件夹与 GBR 路径、人类玩家的 Discord 用户 ID（player_id，发消息工具定向发他的私信）、agent 会话的模型与凭证三项（anthropic_base_url、anthropic_auth_token、agent_model——配了 agent 会话走它，与玩家自己的 Claude Code 分开）
 - 装配：按配置把三大模块建出来、接上——游戏接入是进程内模块，直接实例化；IM 接入挂上命令与消息的回调（闭包里包事件推进队列），再登录 Discord；agent 持会话。模块之间互不引用，谁接谁只有主体知道。主体还干两件接线：会话工具由主体构造——把游戏接入的方法与 IM 接入的收发（读私信历史、发私信）包成 agent 会话的工具（agent 调工具由主体翻译成实际函数），装配时递给 agent 模块挂进会话；年度节拍由主体起——定时调游戏接入的新年判定，查到新年份推 new_year 事件。profile 模板源在开发文件夹 profile/，起会话建全新 GBR 时装入
 - 事件循环：一个主循环（asyncio），进程活着就在等事件——模块包成事件推进队列，主循环逐个取、按事件类型投给订了它的模块，一次投一个，投递串行
 - 局状态与命令执行：主体记一个状态——会话在不在跑；本局频道（GreatBritain）在不在是局挂没挂着的外显（问 IM 接入）。命令到了按状态排动作：开始游戏先看频道——已在就拒绝，没有就建频道、建全新的 GBR 文件夹起 agent 会话（接线已在装配完成：工具装配时递进 agent 模块），永远开新局；保存游戏让会话整理自己的文件夹，然后结束会话，频道留着；结束游戏先看频道——没有就拒绝，有则会话在跑先按保存游戏收尾，然后销频道、清 GBR。主体只排顺序，动作本身调三大模块干。执行完调 IM 接入发回执（固定文案，发到命令来的频道），没执行成（拒绝重复起这类）回执带原因

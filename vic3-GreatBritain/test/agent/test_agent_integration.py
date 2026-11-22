@@ -1,15 +1,21 @@
-"""agent 模块端到端测试（只能手动运行，默认排除；跑法：uv run pytest test/agent/test_agent_e2e.py -m e2e -s）。
+"""agent 模块集成测试（在 VSCode 测试面板里点跑——命令行全量跑默认排除集成测试，
+面板的 pytestArgs 已配 --override-ini=addopts= 绕开排除）。
 
-前提：本机装好 Claude Code CLI（SDK 起会话靠它跑）。不起 Discord 与游戏——工具用
-假的，只验会话本体：SDK 会话起得来、批送得进、回复收得回、session_id 续得上
-（第二批能记得第一批）。真 Discord/真游戏的整局循环在游戏与 bot 都在线时手动跑。
+前提：本机装好 Claude Code CLI（SDK 起会话靠它跑）；config.toml 配了模型凭证三项
+（anthropic_base_url/anthropic_auth_token/agent_model）就走它（比如 GLM），全空走
+本机 Claude Code 的登录态。不起 Discord 与游戏——工具用假的，只验会话本体：SDK 会话
+起得来、批送得进、回复收得回、session_id 续得上（第二批能记得第一批）。真 Discord/
+真游戏的整局循环在游戏与 bot 都在线时手动跑。
 """
 
 import asyncio
 
 import pytest
 
-pytestmark = pytest.mark.e2e
+from agent.tools import SessionAuth
+from config import load_config
+
+pytestmark = pytest.mark.integration
 
 
 def test_真会话送批收回复并续上下文(tmp_path):
@@ -35,7 +41,17 @@ def test_真会话送批收回复并续上下文(tmp_path):
     (profile_src / "PROFILE.md").write_text(
         "# 大不列颠玩家\n\n你是玩维多利亚3的玩家，执掌大不列颠。", encoding="utf-8"
     )
-    agent = AgentModuleImpl(tmp_path / "GBR", tools, profile_src)
+    config = load_config()
+    agent = AgentModuleImpl(
+        tmp_path / "GBR",
+        tools,
+        profile_src,
+        SessionAuth(
+            base_url=config.anthropic_base_url,
+            auth_token=config.anthropic_auth_token,
+            model=config.agent_model,
+        ),
+    )
 
     async def scenario() -> None:
         await agent.start_session()  # 开局批：读 profile、亮相（假工具只记录不真发）
