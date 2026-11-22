@@ -21,7 +21,7 @@ Discord 平台侧要办的活：建两个 bot、拉进服务器、token 交给 h
 - 后台 OAuth2 → URL Generator：SCOPES 勾 bot，BOT PERMISSIONS 勾 View Channel、Send Messages（dm bot 再加勾 Manage Channels），复制底部生成的 URL，浏览器打开 → 选服务器 → 授权
 - 直接拼链接：`https://discord.com/oauth2/authorize?client_id=<应用ID>&scope=bot&permissions=3072`（gbr bot 用这个；dm bot 把 3072 换成 3088——3072＝View Channel＋Send Messages，3088 再加 Manage Channels。应用 ID 在后台 General Information 页）
 
-权限：View Channel（读公屏消息）、Send Messages（公屏提示与回执）两个 bot 都要；dm bot 还要 Manage Channels——开始游戏建本局频道（GreatBritain）、结束游戏销掉（一等前提，见 Discord 接入的平台事实节）。私信通道不走服务器权限，玩家侧的开销见下节。
+权限：View Channel（读公屏消息）、Send Messages（公屏提示与回执）两个 bot 都要；dm bot 还要 Manage Channels——开始新游戏建本局频道（GreatBritain）、保存并结束游戏销掉（一等前提，见 Discord 接入的平台事实节）。私信通道不走服务器权限，玩家侧的开销见下节。
 
 ## 人类玩家侧要办的（一次性）
 
@@ -39,7 +39,7 @@ Discord 平台侧要办的活：建两个 bot、拉进服务器、token 交给 h
 token 填好后（在 vic3-GreatBritain/ 目录执行）：
 
 - `uv run python -m main` 启动——日志出现"dm bot 已登录 Discord""gbr bot 已登录 Discord"即连上
-- 公屏 @ dm bot 发开始游戏：命令行打印命令内容，Discord 公屏收到回执（agent 未建的现在，回执如实报"agent 模块未建"，频道不建——agent 落地后这条会真建出 GreatBritain 频道）
+- 公屏 @ dm bot 发开始新游戏：命令行打印命令内容，Discord 公屏收到回执（agent 未建的现在，回执如实报"agent 模块未建"，频道不建——agent 落地后这条会真建出 GreatBritain 频道）
 - 私信 gbr bot 一句话：命令行打印私信内容
 - 集成测试一轮（收发真消息）：VSCode 测试面板跑 test/im/test_im_integration.py（见[集成测试](../运行与测试/集成测试.md)局部一节）
 

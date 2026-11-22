@@ -3,10 +3,11 @@
 消息队列＋会话起止：订 message、new_year 收进消息队列——会话空闲即送进会话唤醒，
 忙时攒着、空闲了把攒下的合并成一段上下文（最前面带一行忙期间标注）送进会话。
 会话本体在 session.py（Claude Agent SDK 的封装，system prompt 吃项目里的
-agent-system-prompt.md），本模块经注入的 factory 起会话（单测用假 factory）；gbr 随
-会话起止——起会话把开发文件夹 prompt/ 的 gbr-template/ 整个复制成全新的 gbr，收尾让会话整理
-账本后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见 docs/prd/日志功能.md）
-建本局运行记录文件，路径递进会话、由会话逐条追加。
+agent-system-prompt.md），本模块经注入的 factory 起会话（单测用假 factory）；会话
+起法分两种——开始新游戏起全新的一局（gbr-template 整个复制成全新的 gbr），继续
+游戏在挂着的局上接着起（gbr 不动，账本都在）；收尾让会话整理账本后结束。起会话
+还在 agent 日志目录（局文件夹 logs/agent，见 docs/prd/日志功能.md）建本局运行记录
+文件，路径递进会话、由会话逐条追加。
 """
 
 from __future__ import annotations
@@ -36,7 +37,11 @@ SessionFactory = Callable[[Path, SessionTools, SessionAuth, Path], "AgentSession
 OPENING_PROMPT = """新的一局开始了：把开局的事办了（怎么办见你文件夹里的 CLAUDE.md）。
 玩家还没跟你说话，先别主动发他私信——等他第一条私信来了，再自我介绍、开谈。"""
 
-# 收尾批：保存游戏时让会话整理自己的文件夹（账本收尾）
+# 继续批：继续游戏起会话送的第一批——会话是新起的，局是旧的，让 agent 自己从账本恢复
+RESUME_PROMPT = """这局接着玩：上回会话收了尾，现在重新起。翻翻你的账本，把局势和
+跟玩家的关系捡起来。玩家还没跟你说话，先别主动发他私信——等他来了再谈。"""
+
+# 收尾批：停会话前让会话整理自己的文件夹（账本收尾）
 CLOSING_PROMPT = "这局要存档了。把账本整理收尾——补全历史记录、把该记的账记全；不用给玩家发消息。"
 
 # 忙时攒下的批送进会话时的开头标注：告诉 agent 这段是它忙期间积下的事件
@@ -130,13 +135,24 @@ class AgentModuleImpl:
     # ---- 会话随局起止（dispatcher 按命令排着调） ----
 
     async def start_session(self) -> None:
+        """开始新游戏起会话：先建全新的 gbr（模板整个复制），再起会话送开局批。"""
         if self._session is not None:
-            raise RuntimeError("会话已在跑，先保存游戏再开新的一局")
+            raise RuntimeError("会话已在跑，起不了新的一局")
         self._build_gbr()
+        await self._boot_session(OPENING_PROMPT)
+
+    async def resume_session(self) -> None:
+        """继续游戏起会话：gbr 不动（账本都在，上局记忆延续），起会话送继续批。"""
+        if self._session is not None:
+            raise RuntimeError("会话已在跑，这局正进行着")
+        await self._boot_session(RESUME_PROMPT)
+
+    async def _boot_session(self, opening: str) -> None:
+        """起会话的公共路：建本局运行记录、起会话、把第一批排进队列。"""
         record_path = self._new_record_path()
         self._session = self._session_factory(self._gbr_dir, self._tools, self._auth, record_path)
         self._closing = False
-        self._pending.append(OPENING_PROMPT)
+        self._pending.append(opening)
         self._try_send_batch()
 
     async def stop_session(self) -> None:
@@ -153,7 +169,7 @@ class AgentModuleImpl:
             await session.close()
 
     async def stop(self) -> None:
-        """进程收摊用：会话还在跑就按保存游戏的收尾来（正常流里 dispatcher 已收过）。"""
+        """进程收摊用：会话还在跑就按收尾批收掉（正常流里 dispatcher 已收过）。"""
         await self.stop_session()
 
     def _build_gbr(self) -> None:

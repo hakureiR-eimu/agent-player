@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # 没有意义，解析确认才是准的——间隔几秒就够
 NEW_YEAR_POLL_INTERVAL_SECONDS = 3.0
 
-# gbr 模板源：开发文件夹 prompt/ 下的 gbr-template/（开始游戏时整个复制成全新的 gbr）
+# gbr 模板源：开发文件夹 prompt/ 下的 gbr-template/（开始新游戏时整个复制成全新的 gbr）
 GBR_TEMPLATE_SRC = Path(__file__).resolve().parents[1] / "prompt" / "gbr-template"
 
 
@@ -126,8 +126,8 @@ async def run(config: Config) -> None:
     try:
         await bus.run()
     finally:
-        # 进程收摊：先停年度节拍，会话还在跑再按保存游戏收尾，最后按装配的反序让模块停
-        logger.info("进程收摊：停年度节拍，会话按保存游戏收尾，模块按装配反序停")
+        # 进程收摊：先停年度节拍，会话还在跑先收尾（局还挂着），最后按装配的反序让模块停
+        logger.info("进程收摊：停年度节拍，会话收尾，模块按装配反序停")
         year_poll.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await year_poll

@@ -138,16 +138,16 @@ def direct_message(content: str, *, author_id: int = 7, channel: FakeChannel | N
 
 
 def test_strip_mention_剥掉普通与昵称两种前缀():
-    assert strip_mention(f"<@{SELF_ID}> 开始游戏", SELF_ID) == "开始游戏"
-    assert strip_mention(f"<@!{SELF_ID}> 结束游戏 ", SELF_ID) == "结束游戏"
-    assert strip_mention(f"  <@{SELF_ID}>   保存游戏  ", SELF_ID) == "保存游戏"
+    assert strip_mention(f"<@{SELF_ID}> 开始新游戏", SELF_ID) == "开始新游戏"
+    assert strip_mention(f"<@!{SELF_ID}> 保存并结束游戏 ", SELF_ID) == "保存并结束游戏"
+    assert strip_mention(f"  <@{SELF_ID}>   继续游戏  ", SELF_ID) == "继续游戏"
     assert strip_mention(f"<@{SELF_ID}>", SELF_ID) == ""
 
 
 def test_strip_mention_没到本bot返回None():
-    assert strip_mention(f"<@999> 开始游戏", SELF_ID) is None  # @ 的是别的 bot
-    assert strip_mention("开始游戏", SELF_ID) is None  # 根本没 @
-    assert strip_mention("开始游戏 <@100>", SELF_ID) is None  # @ 不在开头不算叫它
+    assert strip_mention(f"<@999> 开始新游戏", SELF_ID) is None  # @ 的是别的 bot
+    assert strip_mention("开始新游戏", SELF_ID) is None  # 根本没 @
+    assert strip_mention("开始新游戏 <@100>", SELF_ID) is None  # @ 不在开头不算叫它
 
 
 # ---- 回调分发：dm bot（公屏命令） ----
@@ -160,9 +160,9 @@ def test_dm_bot_公屏命中白名单调命令回调并记回执去处():
     bot = make_dm_bot(callbacks)
     lobby = FakeChannel()
 
-    asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> 开始游戏", channel=lobby)))
+    asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> 开始新游戏", channel=lobby)))
 
-    assert commands == ["开始游戏"]
+    assert commands == ["开始新游戏"]
     assert bot.receipt_channel() is lobby
 
 
@@ -173,7 +173,7 @@ def test_dm_bot_白名单三条都认():
     bot = make_dm_bot(callbacks)
     for command in COMMANDS:
         asyncio.run(bot.on_message(dm_message(f"<@{SELF_ID}> {command}")))
-    assert commands == ["开始游戏", "保存游戏", "结束游戏"]
+    assert commands == ["开始新游戏", "继续游戏", "保存并结束游戏"]
 
 
 def test_dm_bot_不认识的词直回固定提示不调回调():
@@ -198,12 +198,12 @@ def test_dm_bot_滤bot账号与没到的消息():
 
     asyncio.run(
         bot.on_message(
-            FakeMessage(FakeUser(id=1, bot=True), f"<@{SELF_ID}> 开始游戏", FakeChannel(), object())
+            FakeMessage(FakeUser(id=1, bot=True), f"<@{SELF_ID}> 开始新游戏", FakeChannel(), object())
         )
     )  # bot 账号（回执、别的 bot、自己）：一律不搭理
-    asyncio.run(bot.on_message(dm_message(f"<@999> 开始游戏")))  # @ 的是别的 bot
-    asyncio.run(bot.on_message(dm_message("开始游戏")))  # 没 @
-    asyncio.run(bot.on_message(direct_message(f"<@{SELF_ID}> 开始游戏")))  # 私信不归主持 bot 管
+    asyncio.run(bot.on_message(dm_message(f"<@999> 开始新游戏")))  # @ 的是别的 bot
+    asyncio.run(bot.on_message(dm_message("开始新游戏")))  # 没 @
+    asyncio.run(bot.on_message(direct_message(f"<@{SELF_ID}> 开始新游戏")))  # 私信不归主持 bot 管
 
     assert commands == []
 
@@ -215,7 +215,7 @@ def make_channel_bot(guild: FakeGuild) -> DmBot:
     """已收到过一条命令的 dm bot：频道操作都在命令来的服务器（假 guild）里。"""
     bot = make_dm_bot()
     lobby = FakeChannel(guild=guild)
-    message = cast(discord.Message, dm_message(f"<@{SELF_ID}> 开始游戏", channel=lobby))
+    message = cast(discord.Message, dm_message(f"<@{SELF_ID}> 开始新游戏", channel=lobby))
     asyncio.run(bot.on_message(message))
     return bot
 
@@ -372,17 +372,17 @@ def test_send_receipt_发到命令来的频道(tmp_path):
     module.on_command(commands.append)
     lobby = FakeChannel()
 
-    asyncio.run(module._dm.on_message(dm_message(f"<@{SELF_ID}> 开始游戏", channel=lobby)))
-    asyncio.run(module.send_receipt("开始游戏 执行完成"))
+    asyncio.run(module._dm.on_message(dm_message(f"<@{SELF_ID}> 开始新游戏", channel=lobby)))
+    asyncio.run(module.send_receipt("开始新游戏 执行完成"))
 
-    assert commands == ["开始游戏"]
-    assert lobby.sent == ["开始游戏 执行完成"]
+    assert commands == ["开始新游戏"]
+    assert lobby.sent == ["开始新游戏 执行完成"]
 
 
 def test_send_receipt_还没命令来过明确报错(tmp_path):
     module = make_module(tmp_path)
     with pytest.raises(RuntimeError):
-        asyncio.run(module.send_receipt("开始游戏 执行完成"))
+        asyncio.run(module.send_receipt("开始新游戏 执行完成"))
 
 
 def test_start_缺token明确报缺哪项(tmp_path):
@@ -405,7 +405,7 @@ def test_模块转发频道的建销查(tmp_path):
     module = make_module(tmp_path)
     guild = FakeGuild()
     lobby = FakeChannel(guild=guild)
-    asyncio.run(module._dm.on_message(dm_message(f"<@{SELF_ID}> 开始游戏", channel=lobby)))
+    asyncio.run(module._dm.on_message(dm_message(f"<@{SELF_ID}> 开始新游戏", channel=lobby)))
 
     asyncio.run(module.create_channel())
     assert asyncio.run(module.has_channel()) is True

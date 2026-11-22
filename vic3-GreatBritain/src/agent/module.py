@@ -22,7 +22,11 @@ class AgentModule(Protocol):
         ...
 
     async def start_session(self) -> None:
-        """起一个基于全新 gbr 的 agent 会话：先把 gbr-template 复制成全新的 gbr 文件夹再起。"""
+        """开始新游戏起会话：先把 gbr-template 复制成全新的 gbr 文件夹再起（送开局批）。"""
+        ...
+
+    async def resume_session(self) -> None:
+        """继续游戏起会话：gbr 不动（挂着的局，账本延续），起会话送继续批。"""
         ...
 
     async def stop_session(self) -> None:

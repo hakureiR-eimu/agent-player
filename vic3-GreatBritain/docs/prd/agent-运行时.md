@@ -10,7 +10,7 @@ system prompt 吃开发文件夹 prompt/ 下的 agent-system-prompt.md（固定�
 
 - 运行时文件夹固定一个：C:\Users\ZhangJunWei\Documents\Paradox Interactive\Victoria 3\vic3-GreatBritain；agent 的一切文件在它下面的 gbr 文件夹
 - 会话的工作目录设在 gbr——agent 的文件世界就是这一个文件夹
-- gbr 的生灭随局：开始游戏把开发文件夹 prompt/ 的 gbr-template/ 整个复制成全新的 gbr，结束游戏清掉；模板里有什么、记忆怎么分区见 [agent-记忆和人格](agent-记忆和人格.md)
+- gbr 的生灭随局：开始新游戏把开发文件夹 prompt/ 的 gbr-template/ 整个复制成全新的 gbr，继续游戏沿用挂着的 gbr（账本延续），保存并结束游戏清掉；模板里有什么、记忆怎么分区见 [agent-记忆和人格](agent-记忆和人格.md)
 
 ## 工具
 
@@ -42,19 +42,19 @@ system prompt 吃开发文件夹 prompt/ 下的 agent-system-prompt.md（固定�
 
 ## 会话随局起止
 
-- 开始游戏：建本局频道（GreatBritain），把 gbr-template/ 整个复制成全新的 gbr 文件夹，起一个基于它的会话。频道已在（上次局没结束）就拒绝
-- 保存游戏：让会话整理自己的文件夹（账本收尾），然后结束会话；频道留着，局还挂着
-- 结束游戏：会话在跑先按保存游戏收尾，然后销频道、清 gbr——这局彻底完
+- 开始新游戏：建本局频道（GreatBritain），把 gbr-template/ 整个复制成全新的 gbr 文件夹，起一个基于它的会话（送开局批）。频道已在（上次局没结束）就拒绝
+- 继续游戏：在挂着的局上重新起会话——gbr 不动（账本延续），起会话送继续批（让 agent 翻账本把局势捡起来）；典型场景是进程收摊后回来接着玩。没有频道就拒绝，会话在跑就无事可做
+- 保存并结束游戏：会话在跑先收尾（让会话整理自己的文件夹、账本收尾），然后销频道、清 gbr——这局彻底完
 
 ## 预期结果
 
 一局跑起来后的样子：
 
-- 开局：玩家在大厅频道 @ dm bot 下开始游戏，harness 建本局频道（GreatBritain）、把 gbr-template 复制成全新的 gbr、起会话；agent 按手册（gbr 里的 CLAUDE.md）把开局事办了，话等玩家先说——玩家第一条私信进来（带着他的 Discord 用户 ID），他才亮相回话：他是谁、这局想干什么
+- 开局：玩家在大厅频道 @ dm bot 下开始新游戏，harness 建本局频道（GreatBritain）、把 gbr-template 复制成全新的 gbr、起会话；agent 按手册（gbr 里的 CLAUDE.md）把开局事办了，话等玩家先说——玩家第一条私信进来（带着他的 Discord 用户 ID），他才亮相回话：他是谁、这局想干什么
 - 年度：游戏每进一个新年，new_year 把 agent 叫醒；他调 get_state 看世界格局，把研判记进账本
 - 对话：玩家私信 gbr bot 谈外交——交易、结盟、威胁、试探；agent 结合盘上的记忆回话，两位玩家就各自执掌的国家讨价还价
 - 博弈：谈拢或谈崩，agent 调 start_play 在游戏里发起外交博弈，博弈之后的游戏操作由游戏原生 AI 消化（写侧的其余注入后续版本再做）
-- 收档：保存游戏让 agent 整理账本后结束会话，局还挂着（频道在）；结束游戏销频道、清 gbr，这局彻底完，下一局从全新的记忆开始
+- 收档：进程收摊时 agent 整理账本后结束会话，局还挂着（频道在），玩家下次继续游戏回来；保存并结束游戏销频道、清 gbr，这局彻底完，下一局从全新的记忆开始
 
 第一版验证的就是这条循环：观察、研判、对话、发起博弈。
 

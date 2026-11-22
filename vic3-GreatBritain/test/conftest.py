@@ -27,6 +27,9 @@ class RecordingAgentModule(RecordingModule):
     async def start_session(self) -> None:
         self.calls.append("agent.start_session")
 
+    async def resume_session(self) -> None:
+        self.calls.append("agent.resume_session")
+
     async def stop_session(self) -> None:
         self.calls.append("agent.stop_session")
 

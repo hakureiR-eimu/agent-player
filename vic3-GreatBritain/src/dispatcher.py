@@ -30,7 +30,7 @@ class Dispatcher:
         self._game = game
         self._agent = agent  # agent 未建时为 None：起会话的命令回执会明确报未实现
         self._im = im
-        self._gbr_dir = gbr_dir  # 结束游戏时清掉（这局彻底完）
+        self._gbr_dir = gbr_dir  # 保存并结束游戏时清掉（这局彻底完）
         self._session_running = False
         bus.subscribe(EventType.COMMAND, self._handle_command)
 
@@ -50,18 +50,22 @@ class Dispatcher:
             await self._im.send_receipt(f"{event.data} 执行完成")
 
     async def execute_command(self, command: str) -> None:
-        if command == "开始游戏":
+        if command == "开始新游戏":
             if await self._im.has_channel():
-                raise CommandError("GreatBritain 频道已在，先结束游戏再开新的一局")
+                raise CommandError("GreatBritain 频道已在，先保存并结束游戏再开新的一局")
             agent = self._require_agent()
             await self._im.create_channel()
             await agent.start_session()
             self._session_running = True
-        elif command == "保存游戏":
+        elif command == "继续游戏":
+            if not await self._im.has_channel():
+                raise CommandError("没有 GreatBritain 频道，没有挂着的局")
             if self._session_running:
-                await self._require_agent().stop_session()
-                self._session_running = False
-        elif command == "结束游戏":
+                return  # 会话已在跑，这局正进行着，无事可做
+            agent = self._require_agent()
+            await agent.resume_session()
+            self._session_running = True
+        elif command == "保存并结束游戏":
             if not await self._im.has_channel():
                 raise CommandError("没有 GreatBritain 频道，没有挂着的局")
             if self._session_running:
@@ -79,6 +83,7 @@ class Dispatcher:
         return self._agent
 
     async def shutdown(self) -> None:
-        """进程收摊用：会话还在跑就先按保存游戏收尾（局还挂着，频道与 gbr 都不动）。"""
+        """进程收摊用：会话还在跑就收尾（局还挂着，频道与 gbr 都不动，下次继续游戏回来）。"""
         if self._session_running:
-            await self.execute_command("保存游戏")
+            await self._require_agent().stop_session()
+            self._session_running = False

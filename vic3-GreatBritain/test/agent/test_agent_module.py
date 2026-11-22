@@ -9,7 +9,7 @@ import asyncio
 import re
 import time
 
-from agent.impl.module import BUSY_PREFIX, CLOSING_PROMPT, OPENING_PROMPT, AgentModuleImpl
+from agent.impl.module import BUSY_PREFIX, CLOSING_PROMPT, OPENING_PROMPT, RESUME_PROMPT, AgentModuleImpl
 from agent.tools import SessionTools
 from events import Event, EventBus, EventType
 
@@ -86,7 +86,7 @@ async def settle(seconds: float = 1.0) -> None:
         await asyncio.sleep(0.01)
 
 
-# ---- 起会话：模板复制成全新 gbr 并送开局批 ----
+# ---- 起会话：新局复制模板成全新 gbr、继续沿用挂着的 gbr，各送各的第一批 ----
 
 
 def test_起会话从模板复制全新gbr并送开局批(tmp_path):
@@ -146,6 +146,37 @@ def test_起会话建本局运行记录文件带时刻(tmp_path):
     assert record_path.parent == tmp_path / "logs" / "agent"  # 在 agent 日志目录下
     assert record_path.exists()  # 起会话即建
     assert re.fullmatch(r"agent-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.jsonl", record_path.name)
+
+
+def test_继续会话不动gbr送继续批(tmp_path):
+    sessions: list[FakeSession] = []
+    agent, _ = make_agent(tmp_path, sessions)
+    gbr = tmp_path / "gbr"
+    gbr.mkdir()  # 挂着的局：gbr 已在（进程收摊收过尾，账本留下）
+    (gbr / "历史记录.md").write_text("# 这一局的记忆", encoding="utf-8")
+
+    async def main():
+        await agent.resume_session()
+        await settle()
+
+    asyncio.run(main())
+    assert (gbr / "历史记录.md").read_text(encoding="utf-8") == "# 这一局的记忆"  # 记忆延续，模板不复制
+    assert sessions[0].prompts[0] == RESUME_PROMPT
+
+
+def test_会话已在跑再继续明确报错(tmp_path):
+    sessions: list[FakeSession] = []
+    agent, _ = make_agent(tmp_path, sessions)
+
+    async def main():
+        await agent.start_session()
+        try:
+            await agent.resume_session()
+            raise AssertionError("应报错")
+        except RuntimeError:
+            pass
+
+    asyncio.run(main())
 
 
 # ---- 消息队列：空闲即送、忙时攒批 ----
