@@ -1,4 +1,4 @@
-# 游戏接入 mod 侧：scripted_effect 库——年度状态导出（gb_agent_export_state）＋发起博弈（gb_agent_start_play）
+﻿# 游戏接入 mod 侧：scripted_effect 库——年度状态导出（gb_agent_export_state）＋发起博弈（gb_agent_start_play）
 # 年度导出：每年（游戏内）把世界格局写进 error.log：rank 1-16 每国一行国家行，GBR 追加一行财政行。
 # 行格式是 mod 侧与 mcp 侧的交接面，见 docs/prd/游戏接入-mod侧.md；字段取值写法的可行性随首次跑 mod 实测，
 # 回退路径写在本文件各字段注释里。

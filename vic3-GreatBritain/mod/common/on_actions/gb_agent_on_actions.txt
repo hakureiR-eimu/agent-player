@@ -1,4 +1,4 @@
-# 游戏接入 mod 侧：年度状态导出的挂钩
+﻿# 游戏接入 mod 侧：年度状态导出的挂钩
 # 交接面（error.log 行格式）见 docs/prd/游戏接入-mod侧.md
 #
 # 挂法（wiki On action 官方模板）：给基础 on_action 只能追加 on_actions/events 块，

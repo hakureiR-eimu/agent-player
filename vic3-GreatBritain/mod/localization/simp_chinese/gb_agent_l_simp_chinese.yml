@@ -1,4 +1,6 @@
 ﻿l_simp_chinese:
+ # 分组名：日志面板里该 JE 所在分组的标题
+ journalentrygroup_gb_agent:0 "agent 大不列颠"
  je_great_britain_start_play:0 "GreatBritainStartPlay"
  je_great_britain_start_play_reason:0 "agent 大不列颠的操作入口：承载发起外交博弈的操作。"
  gb_agent_start_play_button_name:0 "对玩家发起外交博弈"

@@ -76,13 +76,13 @@ mod 在 vic3-GreatBritain/mod/，是游戏内的唯一改动面，别的组件�
 
 实现拆解（数据流：挂载 → 按钮 → 效果）：
 
-- 挂载：JE 定义里 `is_shown_when_inactive` 与 `possible` 都写 `always = yes`（wiki Journal 文档已证：两个 trigger 块都为真即激活），开局每个国家自动激活这条日志；GBR 灭国时 `invalid` 触发清场。日志不带 modifier、不带 pulse、不带 goal，对游戏进程零影响
+- 挂载：JE 定义里 `is_shown_when_inactive` 与 `possible` 都写 `always = yes`（wiki Journal 文档已证：两个 trigger 块都为真即激活），开局每个国家自动激活这条日志（2026-11-22 实测：玩家开自己国家的日志面板看得到本条，按钮显示但灰着）。两个必带字段是 2026-11-22 实测踩出来的（此前 JE 不挂载）：`group`（JE 必须属于分组，无分组 error.log 报 need to belong to a group；分组定义在 `common/journal_entry_groups/`，`context = country` 按国分组）与 `activation_description = { always = yes }`（原版每条 JE 都带）；当前版本 JE 不认 `invalid` 字段（error.log 报 Unexpected token，原版全量零用例），GBR 灭国清场未实现。日志不带 modifier、不带 pulse、不带 goal，对游戏进程零影响
 - 按钮：`common/scripted_buttons/` 的 scripted_button（wiki Journal 文档"Scripted buttons"节已证：日志条目用 `scripted_button =` 挂按钮，结构与 decision 同族——visible 管、possible 管、effect 干）；visible 无门槛（每国日志上都显示），possible 收口可点条件（ROOT 为 GBR、GBR 非玩家等），effect 只会在 possible 全真时执行，所以效果恒在 GBR 作用域
 - 效果：`common/scripted_effects/` 的 `gb_agent_start_play`——`every_country` 限 `is_player = yes` 存 scope 找到玩家国，`create_diplomatic_play`（wiki Effect 表已证：以 scope 国家为发起者，target_country/type 为必要参数）以 GBR 为发起者对玩家国发起，最后在玩家国 scope 里写回执行
 - 回执行格式（`<>` 为占位）：`vic3-GreatBritain cmd start_play status=ok target=<tag> type=dp_open_market`——与 state/fin 行同样落 error.log、同样被游戏加头，harness 侧将来按 `cmd` 前缀识别
+  - 实测行（2026-11-22）：`[21:45:14][jomini_effect_impl.cpp:475]: common/scripted_effects/gb_agent_effects.txt:53: vic3-GreatBritain cmd start_play status=ok target=CHI type=dp_open_market`
 
 待实测：
 
-- 进游戏看：每个国家的日志面板出现 GreatBritainStartPlay；人类玩家自己国家的这条日志按钮显示但灰着（不可点）；error.log 无本 mod 的脚本报错
-- create_diplomatic_play 效果链路（博弈真被发起、回执行真落盘）常态验不了——按钮点不到，等触发通道接入时闭环；调试需要时临时把 visible 放宽到玩家国即可走一遍
+- create_diplomatic_play 效果链路收尾：回执行落盘已实证（2026-11-22 实测行见上）；博弈真被发起（外交局势里出现这场博弈）下次进游戏确认，发起者是不是 GBR（按钮 possible 收口下应恒为 GBR）一并看
 - scripted_button 的 effect 是否尊重 `dp_open_market` 自身 possible（引擎可能直接强制执行），实测看无 type 条件时的行为

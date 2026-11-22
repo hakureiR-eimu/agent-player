@@ -1,4 +1,4 @@
-# 游戏接入 mod 侧：发起博弈的按钮（挂在 je_great_britain_start_play 日志上）
+﻿# 游戏接入 mod 侧：发起博弈的按钮（挂在 je_great_britain_start_play 日志上）
 # 需求与边界条件见 docs/prd/游戏接入-mod侧.md"发起博弈"节。
 #
 # 结构与 decision 同族（wiki Journal 文档"Scripted buttons"节已证）：visible 管显示、possible 管可用、effect 干活。

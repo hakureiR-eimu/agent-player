@@ -1,0 +1,6 @@
+﻿# 游戏接入 mod 侧：JE 分组
+# 引擎要求每条 JE 必须属于一个分组（2026-11-22 error.log 实测：need to belong to a group），
+# 无分组的 JE 不挂载。context = country：按国分组，配合 je_great_britain_start_play 每国一条。
+journalentrygroup_gb_agent = {
+	context = country
+}
