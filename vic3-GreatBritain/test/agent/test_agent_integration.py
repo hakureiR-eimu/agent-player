@@ -46,8 +46,6 @@ def make_gbr_template(tmp_path: Path, instruction: str) -> Path:
     (template_src / "CLAUDE.md").write_text(
         f"# 大不列颠玩家手册\n\n{instruction}\n", encoding="utf-8"
     )
-    (template_src / "world" / "chat").mkdir(parents=True)
-    (template_src / "memory").mkdir()
     return template_src
 
 
@@ -101,8 +99,8 @@ def test_agent_reads_state_into_test_state_file(tmp_path):
     template_src = make_gbr_template(
         tmp_path,
         "【测试指令】调用 get_state 工具读取当前世界局势，把工具返回的结果写进你文件夹"
-        "根下的 test_state.md 文件（就在 world/、memory/ 旁边——本条指令优先于"
-        "「只有 memory/ 可写」的常规约束）。写完就待着，不用给任何玩家发消息。",
+        "根下的 test_state.md 文件（就在账本旁边——本条指令优先于「md 账本可写」"
+        "的常规约束）。写完就待着，不用给任何玩家发消息。",
     )
     agent = make_agent(tmp_path, tools, template_src)
     state_path = tmp_path / "gbr" / "test_state.md"
@@ -138,8 +136,8 @@ def test_agent_replies_dm_and_records_test_message(tmp_path):
     template_src = make_gbr_template(
         tmp_path,
         "【测试指令】接下来会有玩家给你发 Discord 私信。收到后做两件事：一、把私信原文"
-        "写进你文件夹根下的 test_message 文件（就在 world/、memory/ 旁边——本条"
-        "指令优先于「只有 memory/ 可写」的常规约束）；二、用 send_message 工具回复该玩家，"
+        "写进你文件夹根下的 test_message 文件（就在账本旁边——本条指令优先于"
+        "「md 账本可写」的常规约束）；二、用 send_message 工具回复该玩家，"
         "就说两个字「收到」，player_id 填私信里带的 Discord 用户 ID。在玩家开口之前，先别"
         "主动发信。",
     )

@@ -1,4 +1,4 @@
-"""agent 模块单测：消息队列（空闲即送、忙时攒批合并送）、私信落盘、gbr 随会话起止、
+"""agent 模块单测：消息队列（空闲即送、忙时攒批合并送）、gbr 随会话起止、
 本局运行记录文件的建立。
 
 会话用假替身（FakeSession 记收到的批与开关，经 factory 注入）——SDK 的真会话走
@@ -6,7 +6,6 @@ test/agent/test_agent_integration.py（起真会话跑一局，样式照 test/im
 """
 
 import asyncio
-import json
 import re
 import time
 
@@ -54,9 +53,9 @@ def make_agent(tmp_path, sessions: list[FakeSession]) -> tuple[AgentModuleImpl, 
     """建模块＋总线（已订）：gbr、日志目录、工具、gbr 模板源都在临时目录，factory 记录
     造出的假会话（也记递进的记录文件路径）。"""
     template_src = tmp_path / "gbr-template"
-    (template_src / "world" / "chat").mkdir(parents=True)
-    (template_src / "memory").mkdir()
+    template_src.mkdir()
     (template_src / "CLAUDE.md").write_text("大不列颠玩家手册", encoding="utf-8")
+    (template_src / "历史记录.md").write_text("# 历史记录", encoding="utf-8")
 
     def factory(cwd, tools, auth, record_path):
         session = FakeSession()
@@ -100,8 +99,7 @@ def test_起会话从模板复制全新gbr并送开局批(tmp_path):
 
     asyncio.run(main())
     assert (tmp_path / "gbr" / "CLAUDE.md").read_text(encoding="utf-8") == "大不列颠玩家手册"
-    assert (tmp_path / "gbr" / "world" / "chat").is_dir()
-    assert (tmp_path / "gbr" / "memory").is_dir()
+    assert (tmp_path / "gbr" / "历史记录.md").is_file()
     assert sessions[0].prompts[0] == OPENING_PROMPT
 
 
@@ -153,7 +151,7 @@ def test_起会话建本局运行记录文件带时刻(tmp_path):
 # ---- 消息队列：空闲即送、忙时攒批 ----
 
 
-def test_私信到达落盘并送进会话(tmp_path):
+def test_私信到达送进会话(tmp_path):
     sessions: list[FakeSession] = []
     agent, bus = make_agent(tmp_path, sessions)
 
@@ -169,10 +167,6 @@ def test_私信到达落盘并送进会话(tmp_path):
     assert "在吗，谈谈关税" in sessions[0].prompts[1]
     assert "7" in sessions[0].prompts[1]
     assert not sessions[0].prompts[1].startswith(BUSY_PREFIX)  # 空闲即送的单条不带忙期间标注
-    lines = (tmp_path / "gbr" / "world" / "chat" / "dialogue.jsonl").read_text(encoding="utf-8").splitlines()
-    assert len(lines) == 1
-    record = json.loads(lines[0])
-    assert record["player"] == "7" and record["text"] == "在吗，谈谈关税" and record["time"]
 
 
 def test_忙时攒批空闲合并成一段送(tmp_path):
@@ -213,7 +207,7 @@ def test_新年进队列送到会话(tmp_path):
     assert "游戏进入了 1837 年。" in sessions[0].prompts[1]
 
 
-def test_局外的私信与新年不炸不落盘(tmp_path):
+def test_局外的私信与新年不炸(tmp_path):
     sessions: list[FakeSession] = []
     agent, bus = make_agent(tmp_path, sessions)
 
@@ -225,10 +219,9 @@ def test_局外的私信与新年不炸不落盘(tmp_path):
 
     asyncio.run(main())
     assert sessions == []  # 没起过会话
-    assert not (tmp_path / "gbr" / "world").exists()  # 没落盘
 
 
-# ---- 收尾：整理 memory 后关会话 ----
+# ---- 收尾：整理账本后关会话 ----
 
 
 def test_收尾送整理批并关会话(tmp_path):

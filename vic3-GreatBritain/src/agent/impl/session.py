@@ -5,8 +5,8 @@
 MCP 挂进——主体递入的 SessionTools 在这包成 SdkMcpTool。system prompt 吃开发文件夹
 prompt/ 下的 agent-system-prompt.md（固定内容，完全替换 SDK 默认的 system prompt——agent 是
 玩家，不吃助手默认人设），gbr 里复制的 CLAUDE.md 手册由 SDK 作为项目指令自动装载。
-上下文压缩归 SDK 的上下文管理。写权限先走软约束（system prompt 写明只有 memory/
-可写），路径级的硬限制随后实测再配。
+上下文压缩归 SDK 的上下文管理。写权限先走软约束（system prompt 写明 md 账本可写），
+路径级的硬限制随后实测再配。
 
 送批期间流过的消息按四类逐条追加进本局运行记录（jsonl，agent 模块起会话时建好递进
 来，格式见 docs/prd/日志功能.md）：agent 说的话（assistant）、工具调用（tool_use）、

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # 登录后等 bot 在线的时限：超时按没连上处理（token 错或网络不通）
 READY_TIMEOUT_SECONDS = 30.0
 
-# 读私信历史的条数上限：只翻最近的，不读太多（更早的对话在 world/chat/ 落盘里）
+# 读私信历史的条数上限：只翻最近的，不读太多
 DM_HISTORY_LIMIT = 100
 
 

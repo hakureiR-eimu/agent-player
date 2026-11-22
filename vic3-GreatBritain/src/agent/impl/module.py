@@ -1,19 +1,17 @@
 """agent 模块本体（接口声明见 src/agent/module.py，设计见 docs/prd/agent-运行时.md）。
 
 消息队列＋会话起止：订 message、new_year 收进消息队列——会话空闲即送进会话唤醒，
-忙时攒着、空闲了把攒下的合并成一段上下文（最前面带一行忙期间标注）送进会话；私信到达
-即落盘 world/chat/。
+忙时攒着、空闲了把攒下的合并成一段上下文（最前面带一行忙期间标注）送进会话。
 会话本体在 session.py（Claude Agent SDK 的封装，system prompt 吃项目里的
 agent-system-prompt.md），本模块经注入的 factory 起会话（单测用假 factory）；gbr 随
 会话起止——起会话把开发文件夹 prompt/ 的 gbr-template/ 整个复制成全新的 gbr，收尾让会话整理
-memory 后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见 docs/prd/日志功能.md）
+账本后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见 docs/prd/日志功能.md）
 建本局运行记录文件，路径递进会话、由会话逐条追加。
 """
 
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import shutil
 from datetime import datetime
@@ -38,14 +36,11 @@ SessionFactory = Callable[[Path, SessionTools, SessionAuth, Path], "AgentSession
 OPENING_PROMPT = """新的一局开始了：把开局的事办了（怎么办见你文件夹里的 CLAUDE.md）。
 玩家还没跟你说话，先别主动发他私信——等他第一条私信来了，再自我介绍、开谈。"""
 
-# 收尾批：保存游戏时让会话整理自己的文件夹（memory 收尾）
-CLOSING_PROMPT = "这局要存档了。把 memory/ 整理收尾——补全大事记、把该记的账记全；不用给玩家发消息。"
+# 收尾批：保存游戏时让会话整理自己的文件夹（账本收尾）
+CLOSING_PROMPT = "这局要存档了。把账本整理收尾——补全历史记录、把该记的账记全；不用给玩家发消息。"
 
 # 忙时攒下的批送进会话时的开头标注：告诉 agent 这段是它忙期间积下的事件
 BUSY_PREFIX = "你在忙期间发生了以下事件："
-
-# 私信对话落盘的文件（gbr 下）
-CHAT_FILE = Path("world") / "chat" / "dialogue.jsonl"
 
 
 def default_session_factory(
@@ -58,7 +53,7 @@ def default_session_factory(
 
 
 class AgentModuleImpl:
-    """AgentModule 协议（src/agent/module.py）的实现：消息队列、落盘、gbr 起止。"""
+    """AgentModule 协议（src/agent/module.py）的实现：消息队列、gbr 起止。"""
 
     def __init__(
         self,
@@ -92,7 +87,6 @@ class AgentModuleImpl:
         if self._session is None:
             logger.warning("没挂着的局，玩家 %s 的私信没人接：%s", player, text)
             return
-        self._append_chat(player, text)
         self._defer(f"玩家 {player} 发来私信：\n{text}")
 
     async def _on_new_year(self, event: Event) -> None:
@@ -133,12 +127,6 @@ class AgentModuleImpl:
             self._batch_task = None
             self._try_send_batch()  # 攒下的接着送
 
-    def _append_chat(self, player: str, text: str) -> None:
-        """私信到达即落盘：world/chat/dialogue.jsonl 逐条追加（一行一条 json）。"""
-        record = {"time": datetime.now().isoformat(timespec="seconds"), "player": player, "text": text}
-        with (self._gbr_dir / CHAT_FILE).open("a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
     # ---- 会话随局起止（dispatcher 按命令排着调） ----
 
     async def start_session(self) -> None:
@@ -169,7 +157,7 @@ class AgentModuleImpl:
         await self.stop_session()
 
     def _build_gbr(self) -> None:
-        """建全新的 gbr：残留清掉，模板整个复制过来（手册 CLAUDE.md、world/chat、memory）。"""
+        """建全新的 gbr：残留清掉，模板整个复制过来（手册 CLAUDE.md 与账本 md）。"""
         shutil.rmtree(self._gbr_dir, ignore_errors=True)
         shutil.copytree(self._gbr_template_src, self._gbr_dir)
         logger.info("建了全新的 gbr（从模板复制）：%s", self._gbr_dir)
