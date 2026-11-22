@@ -10,7 +10,7 @@ import json
 import re
 import time
 
-from agent.impl.module import CLOSING_PROMPT, OPENING_PROMPT, AgentModuleImpl
+from agent.impl.module import BUSY_PREFIX, CLOSING_PROMPT, OPENING_PROMPT, AgentModuleImpl
 from agent.tools import SessionTools
 from events import Event, EventBus, EventType
 
@@ -167,6 +167,7 @@ def test_私信到达落盘并送进会话(tmp_path):
     assert len(sessions[0].prompts) == 2  # 开局批＋私信批
     assert "在吗，谈谈关税" in sessions[0].prompts[1]
     assert "7" in sessions[0].prompts[1]
+    assert not sessions[0].prompts[1].startswith(BUSY_PREFIX)  # 空闲即送的单条不带忙期间标注
     lines = (tmp_path / "gbr" / "world" / "chat" / "dialogue.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     record = json.loads(lines[0])
@@ -189,6 +190,7 @@ def test_忙时攒批空闲合并成一段送(tmp_path):
         sessions[0].gate.set()  # 放行：开局批跑完，攒下的合并送
         await settle()
         assert len(sessions[0].prompts) == 2
+        assert sessions[0].prompts[1].startswith(BUSY_PREFIX)  # 忙时攒的批，最前面带忙期间标注
         for text in ("第一句", "第二句", "第三句"):
             assert text in sessions[0].prompts[1]
 

@@ -1,7 +1,8 @@
 """agent 模块本体（接口声明见 src/agent/module.py，设计见 docs/prd/agent.md）。
 
 消息队列＋会话起止：订 message、new_year 收进消息队列——会话空闲即送进会话唤醒，
-忙时攒着、空闲了把攒下的合并成一段上下文送进会话；私信到达即落盘 world/chat/。
+忙时攒着、空闲了把攒下的合并成一段上下文（最前面带一行忙期间标注）送进会话；私信到达
+即落盘 world/chat/。
 会话本体在 session.py（Claude Agent SDK 的封装），本模块经注入的 factory 起会话
 （单测用假 factory）；gbr 随会话起止——起会话建全新的（三区＋装 profile），收尾让
 会话整理 memory 后结束。起会话还在 agent 日志目录（局文件夹 logs/agent，见
@@ -41,6 +42,9 @@ world/chat/dialogue.jsonl 是与玩家的对话（只读）；memory/ 是你自�
 # 收尾批：保存游戏时让会话整理自己的文件夹（memory 收尾）
 CLOSING_PROMPT = "这局要存档了。把 memory/ 整理收尾——补全大事记、把该记的账记全；不用给玩家发消息。"
 
+# 忙时攒下的批送进会话时的开头标注：告诉 agent 这段是它忙期间积下的事件
+BUSY_PREFIX = "你在忙期间发生了以下事件："
+
 # 私信对话落盘的文件（gbr 下）
 CHAT_FILE = Path("world") / "chat" / "dialogue.jsonl"
 
@@ -75,6 +79,7 @@ class AgentModuleImpl:
         self._session: AgentSession | None = None
         self._pending: list[str] = []
         self._batch_task: asyncio.Task[None] | None = None
+        self._busy_deferred = False
         self._closing = False
 
     # ---- 总线（start 时订：收进消息队列） ----
@@ -89,13 +94,18 @@ class AgentModuleImpl:
             logger.warning("没挂着的局，玩家 %s 的私信没人接：%s", player, text)
             return
         self._append_chat(player, text)
-        self._pending.append(f"玩家 {player} 发来私信：\n{text}")
-        self._try_send_batch()
+        self._defer(f"玩家 {player} 发来私信：\n{text}")
 
     async def _on_new_year(self, event: Event) -> None:
         if self._session is None:
             return  # 局都没挂着，年不年的无所谓
-        self._pending.append(f"游戏进入了 {event.data} 年。")
+        self._defer(f"游戏进入了 {event.data} 年。")
+
+    def _defer(self, item: str) -> None:
+        """收进消息队列：会话在忙时到达的记一笔，合并送批时好在最前面标注。"""
+        if self._batch_task is not None:
+            self._busy_deferred = True
+        self._pending.append(item)
         self._try_send_batch()
 
     # ---- 消息队列：攒与送 ----
@@ -105,6 +115,9 @@ class AgentModuleImpl:
         if self._session is None or self._closing or self._batch_task is not None or not self._pending:
             return
         prompt = "\n\n".join(self._pending)
+        if self._busy_deferred:
+            prompt = f"{BUSY_PREFIX}\n\n{prompt}"
+            self._busy_deferred = False
         self._pending.clear()
         self._batch_task = asyncio.create_task(self._run_batch(prompt))
 
