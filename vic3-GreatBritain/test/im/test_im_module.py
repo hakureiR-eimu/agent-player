@@ -1,5 +1,6 @@
 """im 模块单测：命令解析（@ 前缀剥离、白名单）、回调分发（喂假消息断言回调收到、bot 账号
-被滤）、发送方法（回执发到命令来的频道、回复发回玩家私信）、本局频道的建销查（假服务器）。
+被滤）、发送与读取方法（回执发到命令来的频道、agent 的话发回玩家私信、读私信历史）、
+本局频道的建销查（假服务器）。
 
 喂的是假消息（自含 FakeUser/FakeChannel/FakeMessage/FakeGuild，只带 bot 会用的字段）；
 bot 的 self.user 登录后才有值，单测直接往 _connection.user 里塞。模块方法走真路径：
@@ -38,9 +39,37 @@ class FakeUser:
 class FakeChannel:
     sent: list = field(default_factory=list)
     guild: object | None = None
+    history_messages: list = field(default_factory=list)  # 由新到旧（照 Discord API 的顺序）
 
     async def send(self, text: str) -> None:
         self.sent.append(text)
+
+    async def history(self, limit: int):
+        """照 discord.py 的 history：由新到旧迭代，最多 limit 条。"""
+        for message in self.history_messages[:limit]:
+            yield message
+
+
+@dataclass
+class FakeHistoryAuthor:
+    display_name: str
+
+
+@dataclass
+class FakeTime:
+    iso: str
+
+    def isoformat(self) -> str:
+        return self.iso
+
+
+@dataclass
+class FakeHistoryMessage:
+    """频道历史里的消息（read_dm 用）：author 只带 display_name、time 只带 isoformat。"""
+
+    author: FakeHistoryAuthor
+    content: str
+    created_at: FakeTime
 
 
 @dataclass
@@ -284,17 +313,57 @@ def make_module(tmp_path):
     return module
 
 
-def test_send_reply_发回玩家的私信频道(tmp_path):
+def test_send_message_发回玩家的私信频道(tmp_path):
     module = make_module(tmp_path)
     received: list = []
     module.on_message(lambda player, text: received.append((player, text)))
     channel = FakeChannel()
 
     asyncio.run(module._gbr.on_message(direct_message("在吗", author_id=7, channel=channel)))
-    asyncio.run(module.send_reply("7", "回话：在"))
+    asyncio.run(module.send_message("7", "回话：在"))
 
     assert received == [("7", "在吗")]
     assert channel.sent == ["回话：在"]
+
+
+def history_message(name: str, text: str, time: str) -> FakeHistoryMessage:
+    return FakeHistoryMessage(FakeHistoryAuthor(name), text, FakeTime(time))
+
+
+def test_read_message_读最近对话从新到旧(tmp_path):
+    module = make_module(tmp_path)
+    channel = FakeChannel(
+        history_messages=[  # 由新到旧（照 Discord API）
+            history_message("人类玩家", "成交", "t003"),
+            history_message("GBR", "关税换铁路通行，如何", "t002"),
+            history_message("人类玩家", "在吗", "t001"),
+        ]
+    )
+    asyncio.run(module._gbr.on_message(direct_message("在吗", author_id=7, channel=channel)))
+
+    messages = asyncio.run(module.read_message("7"))
+
+    assert messages == [
+        {"author": "人类玩家", "text": "成交", "time": "t003"},
+        {"author": "GBR", "text": "关税换铁路通行，如何", "time": "t002"},
+        {"author": "人类玩家", "text": "在吗", "time": "t001"},
+    ]
+
+
+def test_read_message_只读最近100条(tmp_path):
+    module = make_module(tmp_path)
+    channel = FakeChannel(
+        history_messages=[  # 由新到旧：第 105 条最新在前、第 1 条最旧在后
+            history_message(f"玩家{i}", f"第{i}条", f"t{i:03d}") for i in range(105, 0, -1)
+        ]
+    )
+    asyncio.run(module._gbr.on_message(direct_message("在吗", author_id=7, channel=channel)))
+
+    messages = asyncio.run(module.read_message("7"))
+
+    assert len(messages) == 100
+    assert messages[0]["text"] == "第105条"  # 105 条里丢最旧的 5 条，最新的在最前
+    assert messages[-1]["text"] == "第6条"
 
 
 def test_send_receipt_发到命令来的频道(tmp_path):

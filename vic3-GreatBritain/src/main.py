@@ -9,9 +9,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from typing import NoReturn
+from pathlib import Path
 
+from agent.impl.module import AgentModuleImpl
 from agent.module import AgentModule
+from agent.tools import SessionTools
 from config import Config, load_config
 from dispatcher import Dispatcher
 from events import Event, EventBus, EventType
@@ -25,6 +27,9 @@ logger = logging.getLogger(__name__)
 # 年度节拍：一年才触发一次、mod 记录攒批落盘、error.log 混有引擎自己的行，精确即时
 # 没有意义，解析确认才是准的——间隔几秒就够
 NEW_YEAR_POLL_INTERVAL_SECONDS = 3.0
+
+# profile 模板源：开发文件夹下的 profile/（开始游戏时装进全新的 GBR）
+PROFILE_SRC = Path(__file__).resolve().parents[1] / "profile"
 
 
 async def poll_new_year(bus: EventBus, game: GameModule) -> None:
@@ -41,31 +46,49 @@ async def poll_new_year(bus: EventBus, game: GameModule) -> None:
             logger.info("游戏进入 %s 年，推 new_year 事件", year)
 
 
-def build_session_tools(game: GameModule) -> NoReturn:
-    """会话工具（主体是翻译层）：把游戏接入的方法包成 agent 会话的工具——agent 调
-    get_state/start_play 工具时，翻译成对 game.get_state()/start_play() 的实际调用。
-    经 SDK 的进程内 MCP 实现，随 agent 模块落地。
+def build_session_tools(game: GameModule, im: ImModule, player_id: str) -> SessionTools:
+    """会话工具（主体是翻译层）：把游戏接入的方法（get_state/start_play）与 IM 接入的
+    收发对接成 SessionTools——Discord 收发定向当前局的人类玩家（player_id），agent 调
+    工具时翻译成对模块方法的实际调用。挂进会话的 SDK 细节在 agent/impl/session.py。
     """
-    raise NotImplementedError("会话工具随 agent 模块落地：主体把 game 的方法包成会话工具")
+    if not player_id:
+        logger.warning("config 没填 player_id：agent 的发消息/读消息工具定向不了人类玩家")
+
+    async def send_message(text: str) -> None:
+        await im.send_message(player_id, text)
+
+    async def read_message() -> list[dict[str, str]]:
+        return await im.read_message(player_id)
+
+    return SessionTools(
+        get_state=game.get_state,
+        start_play=game.start_play,
+        send_message=send_message,
+        read_message=read_message,
+    )
 
 
-def build_modules(config: Config) -> tuple[GameModule, AgentModule | None, ImModule]:
-    """装配第一步：按配置把三大模块建出来。游戏接入与 IM 接入已落地，agent 待建（返回
-    None，进程照跑：起会话的命令执行时回执会明确报未实现）：
+def build_modules(config: Config) -> tuple[GameModule, AgentModule, ImModule]:
+    """装配第一步：按配置把三大模块建出来。
 
     - 游戏接入：GameModuleImpl（src/game/impl/），吃总配置的 error.log 路径与游戏进程名
-    - agent：src/agent/impl/ 实现后在此实例化（构造时吃主体建的会话工具，起会话挂上）
+    - agent：AgentModuleImpl（src/agent/impl/），吃 GBR 路径、会话工具与 profile 模板源
     - IM 接入：ImModuleImpl（src/im/impl/），吃总配置的两个 Discord bot token
     """
     game: GameModule = GameModuleImpl(config)
-    agent: AgentModule | None = None  # 待建：src/agent/impl/
     im: ImModule = ImModuleImpl(config)
+    agent: AgentModule = AgentModuleImpl(
+        config.gbr_dir,
+        build_session_tools(game, im, config.player_id),
+        PROFILE_SRC,
+    )
     return game, agent, im
 
 
 def wire_im(bus: EventBus, im: ImModule) -> None:
     """装配处的 IM 接线：收经回调交进来（闭包在装配处把事件包进队列——模块零总线知识），
-    reply 事件接到发送方法上。message 带玩家（Discord 用户 ID 字符串）与正文，reply 同。
+    message 带玩家（Discord 用户 ID 字符串）与正文。发与读由主体包成 agent 的会话工具
+    （build_session_tools），不经总线。
     """
     im.on_command(lambda command: bus.put(Event(EventType.COMMAND, command)))
 
@@ -73,11 +96,6 @@ def wire_im(bus: EventBus, im: ImModule) -> None:
         bus.put(Event(EventType.MESSAGE, {"player": player, "text": text}))
 
     im.on_message(put_message)
-
-    async def send_reply(event: Event) -> None:
-        await im.send_reply(event.data["player"], event.data["text"])
-
-    bus.subscribe(EventType.REPLY, send_reply)
 
 
 async def run() -> None:
@@ -88,8 +106,7 @@ async def run() -> None:
     wire_im(bus, im)
     # 年度节拍：主体定时调游戏接入的新年判定，模块自己不碰总线
     year_poll = asyncio.create_task(poll_new_year(bus, game))
-    if agent is not None:
-        await agent.start(bus)
+    await agent.start(bus)
     await im.start()
     try:
         await bus.run()
@@ -100,8 +117,7 @@ async def run() -> None:
             await year_poll
         await dispatcher.shutdown()
         await im.stop()
-        if agent is not None:
-            await agent.stop()
+        await agent.stop()
 
 
 def main() -> None:

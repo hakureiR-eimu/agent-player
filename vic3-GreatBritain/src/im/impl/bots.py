@@ -163,5 +163,5 @@ class GbrBot(BotBase):
         return self._dm_channels.get(player)
 
     def remember_dm_channel(self, player: str, channel: discord.DMChannel) -> None:
-        """记下玩家的私信频道（send_reply 给没私信过的玩家开频道后记下，下次直用）。"""
+        """记下玩家的私信频道（send_message/read_message 给没私信过的玩家开频道后记下，下次直用）。"""
         self._dm_channels[player] = channel

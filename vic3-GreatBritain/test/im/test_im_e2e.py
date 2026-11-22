@@ -4,10 +4,10 @@
 E2E_DISCORD_PLAYER_ID 填人类玩家的 Discord 用户 ID（开发者模式右键头像复制用户 ID，
 测试要给他发私信）。两个测试对应 IM 接入的两头：
 
-1. 发（send_reply）：起两个真 bot，给玩家发私信——Discord 上应真的收到 gbr bot 的私信
+1. 发（send_message）：起两个真 bot，给玩家发私信——Discord 上应真的收到 gbr bot 的私信
 2. 收（回调）：在公屏 @ dm bot 下一条命令（开始游戏 / 保存游戏 / 结束游戏 任一）、给
-   gbr bot 发一条私信，回调应真的收到；测试再用 send_receipt / send_reply 回话，Discord
-   上能看到回执落回公屏原处、回复落回私信
+   gbr bot 发一条私信，回调应真的收到；测试再用 send_receipt / send_message 回话，Discord
+   上能看到回执落回公屏原处、回话落回私信
 
 等待时长默认 300 秒，环境变量 E2E_IM_WAIT_SECONDS 可调。
 """
@@ -40,8 +40,8 @@ def require_player_id() -> str:
     return player
 
 
-def test_send_reply_给人发私信discord上收得到():
-    """能力一 发（send_reply）：起两个真 bot，给玩家发私信，Discord 上应收到。"""
+def test_send_message_给人发私信discord上收得到():
+    """能力一 发（send_message）：起两个真 bot，给玩家发私信，Discord 上应收到。"""
     require_config()
     player = require_player_id()
 
@@ -49,7 +49,7 @@ def test_send_reply_给人发私信discord上收得到():
         im = ImModuleImpl(load_config())
         await im.start()
         try:
-            await im.send_reply(player, "端到端测试：这是 gbr bot 通过 send_reply 发出的私信")
+            await im.send_message(player, "端到端测试：这是 gbr bot 通过 send_message 发出的私信")
         finally:
             await im.stop()
 
@@ -81,7 +81,7 @@ def test_收命令与私信后回话discord上看得到():
                 await im.send_receipt(f"收到命令：{received['command'][0]}")
             if received["message"]:
                 player, text = received["message"][0]
-                await im.send_reply(player, f"收到私信：{text}")
+                await im.send_message(player, f"收到私信：{text}")
             await im.stop()
         return received
 

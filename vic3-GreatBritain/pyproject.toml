@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "维多利亚3大不列颠 agent 玩家的 harness（文档见 docs/prd/harness.md）"
 requires-python = ">=3.11"
 dependencies = [
+    "claude-agent-sdk>=0.2.187",
     "discord-py>=2.4",
 ]
 
@@ -13,6 +14,11 @@ dev = ["pytest>=8", "mypy>=1.14"]
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+# 包源走清华镜像：本机直连 pypi 拉不动大 wheel（claude-agent-sdk 带 CLI 二进制上百 MB）
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
 
 [tool.setuptools]
 py-modules = ["main", "config", "events", "dispatcher"]

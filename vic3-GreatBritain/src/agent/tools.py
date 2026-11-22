@@ -1,0 +1,25 @@
+"""会话工具集：主体装配时把模块方法对接成这四件，递给 agent 模块挂进会话。
+
+agent 调工具由主体翻译成对模块方法的实际调用（主体是翻译层，见 docs/prd/harness.md
+主体实现·装配）；把工具挂进会话的 SDK 细节在 impl/session.py，本文件只有形状。
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Awaitable, Callable
+
+from game.module import WorldSnapshot
+
+
+@dataclass(frozen=True)
+class SessionTools:
+    """会话工具集（四件）：游戏两件、Discord 收发两件。
+
+    send_message/read_message 定向当前局的人类玩家（主体装配时闭包定向，agent 只给正文）。
+    """
+
+    get_state: Callable[[], WorldSnapshot]
+    start_play: Callable[[], str]
+    send_message: Callable[[str], Awaitable[None]]
+    read_message: Callable[[], Awaitable[list[dict[str, str]]]]

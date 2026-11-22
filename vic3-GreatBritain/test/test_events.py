@@ -44,9 +44,9 @@ def test_同一事件多个订者按订阅顺序串行():
         async def second(event):
             order.append("second 进")
 
-        bus.subscribe(EventType.REPLY, first)
-        bus.subscribe(EventType.REPLY, second)
-        bus.put(Event(EventType.REPLY, "回复"))
+        bus.subscribe(EventType.NEW_YEAR, first)
+        bus.subscribe(EventType.NEW_YEAR, second)
+        bus.put(Event(EventType.NEW_YEAR, 1838))
         await bus.dispatch_next()
         assert order == ["first 进", "first 出", "second 进"]
 

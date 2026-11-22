@@ -1,6 +1,6 @@
 # Discord 接入
 
-Discord 接入就是 harness 的 IM 接入子模块（接口声明见 [harness](harness.md) 的 IM 接入节），通 Discord、收发两头：收玩家的命令与消息，发 agent 的回复与研判。本文件细化声明、写实现设计，代码落在 src/im/impl/。平台侧的建号、邀请与 token 管理见 [discord侧管理](discord侧管理.md)。
+Discord 接入就是 harness 的 IM 接入子模块（接口声明见 [harness](harness.md) 的 IM 接入节），通 Discord、收发两头：收玩家的命令与消息，发 agent 的话。本文件细化声明、写实现设计，代码落在 src/im/impl/。平台侧的建号、邀请与 token 管理见 [discord侧管理](discord侧管理.md)。
 
 ## 先例：CivAgent 的 Discord 结构
 
@@ -25,7 +25,7 @@ CivAgent（网易伏羲，LLM 扮演文明玩 Unciv 的数字玩家，论文 arX
 
 对话只发生在一个场所：玩家私信 gbr bot——两位玩家就各自执掌的国家谈交易、结盟、威胁、试探，只有双方知道；gbr bot 的回复也回到私信里。
 
-message 事件带玩家（谁在私信），agent 订到叫醒会话；reply 事件带目标玩家（发谁的私信），gbr bot 照此发回。年度研判这类主动发言也发玩家私信。gbr bot 主动开口（先私信玩家）随外交博弈（start_play）一起做，声明在案、实现随后。
+message 事件带玩家（谁在私信），agent 收进消息队列；agent 发话走会话工具（发消息——主体装配时把本模块的发送方法包成工具），gbr bot 把话发到玩家私信，年度研判这类主动发言同路。gbr bot 主动开口（先私信玩家）随外交博弈（start_play）一起做，声明在案、实现随后。
 
 ## 平台事实
 
@@ -38,14 +38,15 @@ message 事件带玩家（谁在私信），agent 订到叫醒会话；reply 事
 
 ## 实现：怎么做
 
-收发的分界：收是被动的——bot 在线收着（Gateway 长连接，心跳重连归 discord.py 管），收到消息先滤掉 bot 账号（含 dm bot 的回执、自己的消息，防互触发），再调主体注册的回调；IM 接入零总线知识，包事件推进队列在装配处。发是主动的——主体调模块的发送方法。
+收发的分界：收是被动的——bot 在线收着（Gateway 长连接，心跳重连归 discord.py 管），收到消息先滤掉 bot 账号（含 dm bot 的回执、自己的消息，防互触发），再调主体注册的回调；IM 接入零总线知识，包事件推进队列在装配处。发与读是主动的——主体调模块的发送与读取方法（包成 agent 的会话工具：发消息、读消息）。
 
 - 登录：harness 进程内两个 discord.py client 并行登录（dm bot、gbr bot），token 两项进 config.toml（dm_token、gbr_token），两个 client 跑在同一个事件循环里——回调与事件队列同循环，无跨线程问题
 - bot 结构：每个 bot 一个子类 Client（构造时存回调），on_message 里滤 bot 账号再调回调
 - dm bot：监听大厅频道 @ 自己的消息，正文命令词对白名单匹配——命中调命令回调（带命令词）；不认识的词模块内直回固定提示（Discord 侧的应酬话留在此层）
 - gbr bot：监听自己的私信，调消息回调（带玩家、正文）；在大厅频道被 @ 模块内直回一句固定指引（请私信我）
 - 交给主体：回调在装配时挂（on_command/on_message 注册），闭包里包事件推进队列——回调在 discord.py 的事件任务里被同步调，只做入队立刻返回，事件总线为此补一个同步 push（put_nowait 的同步皮）
-- reply 发送：主体订 reply 事件（订在装配处），订到后调发送方法（send_reply），按事件里的目标玩家发他的私信频道
+- 发消息：发送方法（send_message）由主体包成 agent 会话的发消息工具，agent 调工具时按目标玩家发他的私信频道
+- 读消息：读取方法（read_message）由主体包成会话的读消息工具，翻与玩家的私信频道里最近的消息（只取最近 100 条，从新到旧排）
 - 命令回执：主体执行完 command（起会话、拒绝重复起、收尾完成）调发送方法（send_receipt），回执发到大厅频道原处，固定文案
 - 本局频道：dm bot 管建与销（guild.create_text_channel / channel.delete），在哪个服务器操作取最近一条命令来的频道。边界判定归主体——先问 IM 接入频道在不在（has_channel）再排动作，模块方法里的报错只是兜底
-- 测试：单测盖命令解析（@ 前缀剥离、白名单）、回调分发（喂假消息断言回调收到、bot 账号被滤）、发送方法；e2e 起真 bot 手动收发，样式照 test/game/ 三件（单测＋手动 e2e）
+- 测试：单测盖命令解析（@ 前缀剥离、白名单）、回调分发（喂假消息断言回调收到、bot 账号被滤）、发送与读取方法；e2e 起真 bot 手动收发，样式照 test/game/ 三件（单测＋手动 e2e）

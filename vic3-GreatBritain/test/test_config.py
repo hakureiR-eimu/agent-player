@@ -20,6 +20,7 @@ def test_默认配置即真实值(tmp_path):
     assert config.log_path.name == "error.log"
     assert "Victoria 3" in str(config.log_path)
     assert config.game_dir == DEFAULT_GAME_DIR
+    assert config.player_id == ""
 
 
 def test_配置文件覆盖(tmp_path):
@@ -32,6 +33,7 @@ discord_proxy = "http://127.0.0.1:7890"
 log_path = 'D:\somewhere\error.log'
 game_process = "vic3-test.exe"
 game_dir = 'D:\somewhere\game'
+player_id = "123456789012345678"
 """,
     )
     config = load_config(path)
@@ -41,6 +43,7 @@ game_dir = 'D:\somewhere\game'
     assert str(config.log_path) == r"D:\somewhere\error.log"
     assert config.game_process == "vic3-test.exe"
     assert str(config.game_dir) == r"D:\somewhere\game"
+    assert config.player_id == "123456789012345678"
 
 
 def test_GBR路径随局文件夹派生(tmp_path):

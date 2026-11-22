@@ -1,8 +1,9 @@
 """IM 接入的接口声明（agent 的嘴和耳朵，通 Discord）：实现在 impl/。
 
-收是被动、发是主动：bot 在线收着（Gateway 长连接），收到的命令与消息调主体注册的
-回调交出去——包事件推进队列在装配处，本模块零总线知识；发回复与回执是主体调方法。
-文档见 docs/prd/harness.md 的 IM 接入节、docs/prd/discord接入.md。
+收是被动、发与读是主动：bot 在线收着（Gateway 长连接），收到的命令与消息调主体注册的
+回调交出去——包事件推进队列在装配处，本模块零总线知识；发消息与回执、读私信历史是
+主体调方法（发与读在主体装配时包成 agent 的会话工具）。文档见 docs/prd/harness.md 的
+IM 接入节、docs/prd/discord接入.md。
 """
 
 from __future__ import annotations
@@ -34,8 +35,13 @@ class ImModule(Protocol):
 
     # ---- 发（主动）：主体调 ----
 
-    async def send_reply(self, player: str, text: str) -> None:
-        """把 agent 的回复发到该玩家的私信频道（主体订到 reply 事件后调）。"""
+    async def send_message(self, player: str, text: str) -> None:
+        """把 agent 的话发到该玩家的私信频道（主体装配时包成会话的发消息工具）。"""
+        ...
+
+    async def read_message(self, player: str) -> list[dict[str, str]]:
+        """读与该玩家的私信频道里最近的消息（只取最近 100 条，从新到旧排，每条
+        author/text/time 三键；主体装配时包成会话的读消息工具，供 agent 翻对话）。"""
         ...
 
     async def send_receipt(self, text: str) -> None:

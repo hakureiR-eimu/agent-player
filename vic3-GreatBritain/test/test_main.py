@@ -1,21 +1,22 @@
-"""入口与装配单测：装配现状（game 与 im 落地、agent 待建）、进程从装配到退出的完整顺序。替身模块见 conftest。"""
+"""入口与装配单测：三大模块全落地、进程从装配到退出的完整顺序。替身模块见 conftest。"""
 
 import asyncio
 import contextlib
 
 from conftest import RecordingAgentModule, RecordingGame, RecordingIm
 
+from agent.impl.module import AgentModuleImpl
 from config import load_config
 from game.impl.module import GameModuleImpl
 from im.impl.module import ImModuleImpl
 import main as main_module
 
 
-def test_build_modules_game与im落地agent待建(tmp_path):
+def test_build_modules_三大模块全落地(tmp_path):
     game, agent, im = main_module.build_modules(load_config(tmp_path / "config.toml"))
     assert isinstance(game, GameModuleImpl)
+    assert isinstance(agent, AgentModuleImpl)
     assert isinstance(im, ImModuleImpl)
-    assert agent is None
 
 
 def test_run_从装配经命令到退出的完整顺序(monkeypatch):

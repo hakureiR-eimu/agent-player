@@ -50,8 +50,12 @@ class RecordingIm(RecordingModule):
     def on_message(self, callback) -> None:
         self.message_callback = callback
 
-    async def send_reply(self, player: str, text: str) -> None:
-        self.calls.append(("im.send_reply", player, text))
+    async def send_message(self, player: str, text: str) -> None:
+        self.calls.append(("im.send_message", player, text))
+
+    async def read_message(self, player: str) -> list[dict[str, str]]:
+        self.calls.append(("im.read_message", player))
+        return []
 
     async def send_receipt(self, text: str) -> None:
         self.calls.append(("im.send_receipt", text))
