@@ -20,6 +20,8 @@ system prompt 吃开发文件夹 prompt/ 下的 agent-system-prompt.md（固定�
 
 后两类都是主体装配时经 SDK 的进程内 MCP 递入，agent 模块只管挂进会话，不知道工具背后是什么。
 
+SDK 对工具返回值的形状有硬约束：@tool 的 handler 返回一个 dict，SDK 只取其中的 content 键（值是内容块列表，一段文本就是 {"type": "text", "text": ...} 一块），放在别的键里的数据被静默丢弃、工具沦为空返回（2026-11-23 实测：快照放在 state 键里，agent 连拿三年 "completed with no output"，日志与解析层全好，坑只在包装层）。所以四件工具的返回一律 content 键＋文本块：数据型的（get_state 的快照、read_message 的消息列表）JSON 序列化进 text，文本型的（start_play 的应答、send_message 的"已发送"回执）直接进 text。
+
 ## 消息队列
 
 消息的接收与读取是两回事：接收是队列的事，读取是会话里的工具（见「工具」）。两类到达进队列——玩家私信 gbr bot（IM 接入推 message 事件）、游戏进新年（游戏接入推 new_year 事件）。队列到会话之间隔着 agent 模块，攒与送都在模块里：

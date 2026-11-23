@@ -28,6 +28,7 @@ from claude_agent_sdk import (
     ClaudeAgentOptions,
     McpSdkServerConfig,
     ResultMessage,
+    SdkMcpTool,
     TextBlock,
     ToolResultBlock,
     ToolUseBlock,
@@ -74,7 +75,16 @@ class _SendMessageInput(TypedDict):
     text: str
 
 
-def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
+def _text(text: str) -> dict[str, Any]:
+    """handler 返回值 → SDK 认的形状：数据放 content 键的 text 块里。
+
+    SDK 只取返回 dict 的 content 键（其余键静默丢弃），数据放自定义键（state、
+    ok 之类）工具就成了空返回——2026-11-23 实测 get_state 连年空返回即此因。
+    """
+    return {"content": [{"type": "text", "text": text}]}
+
+
+def build_tools(tools: SessionTools) -> list[SdkMcpTool[Any]]:
     """把主体递入的 SessionTools 包成进程内 MCP 工具（名字与描述就是 agent 看到的说明）。"""
 
     @tool(
@@ -83,11 +93,11 @@ def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
         input_schema=_NoInput,
     )
     async def get_state(args: _NoInput) -> dict:
-        return {"state": tools.get_state()}
+        return _text(json.dumps(tools.get_state(), ensure_ascii=False))
 
     @tool(name="start_play", description="发起一局外交博弈", input_schema=_NoInput)
     async def start_play(args: _NoInput) -> dict:
-        return {"result": tools.start_play()}
+        return _text(tools.start_play())
 
     @tool(
         name="send_message",
@@ -96,7 +106,7 @@ def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
     )
     async def send_message(args: _SendMessageInput) -> dict:
         await tools.send_message(args["player_id"], args["text"])
-        return {"ok": True}
+        return _text("已发送")
 
     @tool(
         name="read_message",
@@ -104,11 +114,13 @@ def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
         input_schema=_PlayerInput,
     )
     async def read_message(args: _PlayerInput) -> dict:
-        return {"messages": await tools.read_message(args["player_id"])}
+        return _text(json.dumps(await tools.read_message(args["player_id"]), ensure_ascii=False))
 
-    return create_sdk_mcp_server(
-        MCP_SERVER_NAME, tools=[get_state, start_play, send_message, read_message]
-    )
+    return [get_state, start_play, send_message, read_message]
+
+
+def build_mcp_server(tools: SessionTools) -> McpSdkServerConfig:
+    return create_sdk_mcp_server(MCP_SERVER_NAME, tools=build_tools(tools))
 
 
 def _now() -> str:

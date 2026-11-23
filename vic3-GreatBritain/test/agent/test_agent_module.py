@@ -6,10 +6,12 @@ test/agent/test_agent_integration.py（起真会话跑一局，样式照 test/im
 """
 
 import asyncio
+import json
 import re
 import time
 
 from agent.impl.module import BUSY_PREFIX, CLOSING_PROMPT, OPENING_PROMPT, RESUME_PROMPT, AgentModuleImpl
+from agent.impl.session import build_tools
 from agent.tools import SessionTools
 from events import Event, EventBus, EventType
 
@@ -84,6 +86,41 @@ async def settle(seconds: float = 1.0) -> None:
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         await asyncio.sleep(0.01)
+
+
+# ---- 工具包装：handler 返回值带 content 键（SDK 只取 content 键，数据放别的键会被静默丢弃） ----
+
+
+def test_tool_handlers_return_sdk_content_shape():
+    """四件工具的 handler 返回值都是 content 键＋text 块，数据在 text 里原样可达。"""
+    sent: list[tuple[str, str]] = []
+
+    async def send_message(player_id: str, text: str) -> None:
+        sent.append((player_id, text))
+
+    async def read_message(player_id: str) -> list[dict[str, str]]:
+        return [{"player": player_id, "text": "你好"}]
+
+    tools = SessionTools(
+        get_state=lambda: {"powers": [], "gbr_finance": None},
+        start_play=lambda: "未实现：当前只读。",
+        send_message=send_message,
+        read_message=read_message,
+    )
+    by_name = {t.name: t for t in build_tools(tools)}
+
+    state = asyncio.run(by_name["get_state"].handler({}))
+    assert json.loads(state["content"][0]["text"]) == {"powers": [], "gbr_finance": None}
+
+    play = asyncio.run(by_name["start_play"].handler({}))
+    assert "未实现" in play["content"][0]["text"]
+
+    send_receipt = asyncio.run(by_name["send_message"].handler({"player_id": "7", "text": "你好"}))
+    assert send_receipt["content"][0]["text"]  # 有回执文本
+    assert sent == [("7", "你好")]  # 副作用照常发生
+
+    messages = asyncio.run(by_name["read_message"].handler({"player_id": "7"}))
+    assert json.loads(messages["content"][0]["text"]) == [{"player": "7", "text": "你好"}]
 
 
 # ---- 起会话：新局复制模板成全新 gbr、继续沿用挂着的 gbr，各送各的第一批 ----
